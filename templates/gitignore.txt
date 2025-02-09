@@ -46,3 +46,4 @@ debug.log
 /build
 /Debug
 /juce_binarydata_Assets
+WebView2
