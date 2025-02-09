@@ -1,0 +1,137 @@
+/* Base Widget Style */
+QWidget {
+    background-color: #2E3440;
+    color: #FFFFFF;  /* Use white for text */
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Group Boxes: Containers & Sections */
+QGroupBox {
+    background-color: #3B4252;
+    border: 2px solid #5E81AC;
+    border-radius: 5px;
+    margin-top: 18px;
+    padding: 12px;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0px 5px 0px 5px;
+    font-size: 14px;
+    color: #5E81AC;
+}
+
+/* Labels: All labels use white text with a transparent background */
+QLabel {
+    font-size: 13px;
+    color: #FFFFFF;
+    background-color: transparent;
+}
+
+/* LineEdits: Input fields */
+QLineEdit {
+    background-color: #434C5E;
+    border: 1px solid #5E81AC;
+    border-radius: 3px;
+    padding: 5px;
+    color: #FFFFFF;
+}
+
+QLineEdit::placeholder {
+    color: rgba(94, 129, 172, 0.5);
+}
+
+/* Push Buttons */
+QPushButton {
+    background-color: #5E81AC;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #81A1C1;
+}
+
+/* Check Boxes */
+QCheckBox {
+    color: #FFFFFF;
+}
+
+/* Scroll Area */
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+/* Vertical Scroll Bar */
+QScrollBar:vertical {
+    background-color: #3B4252;
+    width: 12px;
+    margin: 0px;
+    border: none;
+}
+QScrollBar::handle:vertical {
+    background: #5E81AC;
+    min-height: 20px;
+    border-radius: 5px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #81A1C1;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+    background: none;
+}
+
+/* Horizontal Scroll Bar */
+QScrollBar:horizontal {
+    background-color: #3B4252;
+    height: 12px;
+    margin: 0px;
+    border: none;
+}
+QScrollBar::handle:horizontal {
+    background: #5E81AC;
+    min-width: 20px;
+    border-radius: 5px;
+}
+QScrollBar::handle:horizontal:hover {
+    background: #81A1C1;
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+    background: none;
+}
+
+/* Text Edit: Multiline text fields (e.g., progress log) */
+QTextEdit {
+    background-color: #434C5E;
+    border: 1px solid #5E81AC;
+    border-radius: 4px;
+    padding: 5px;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    color: #FFFFFF;
+}
+
+/* Progress Bar: Progress indicator */
+QProgressBar {
+    background-color: #434C5E;
+    border: 1px solid #5E81AC;
+    border-radius: 5px;
+    text-align: center;
+    height: 12px;
+    color: #FFFFFF;
+}
+
+QProgressBar::chunk {
+    background-color: #5E81AC;
+    border-radius: 5px;
+}
