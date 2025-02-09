@@ -1,26 +1,27 @@
 import uuid
-
+import os
 
 # region template_cmake
 
 # Variables
 
-
+README_TEMPLATE = open("templates/README.md", "r").read()
+GITIGNORE_TEMPLATE = open("templates/gitignore.txt", "r").read() # we need to use a txt file since the .gitignore file would actually do something in this repo
 
 # endregion
-
-
-
-
-
-
-
 
 def testerFunction():
     print("This is a test function")
     return True
 
-def create_cmake_file(output_dir, variables):
+def generate_plugin_id():
+    # return a unique 4 character plugin id
+    # they must begin with a capital letter.
+    capitals = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    return capitals[uuid.uuid4().int % 26] + "".join([characters[uuid.uuid4().int % len(characters)] for i in range(3)])
+
+def create_cmake_file(output_dir, variables: dict):
     
     # Variables
     PROJECT_NAME = variables.get("PROJECT_NAME")
@@ -223,10 +224,114 @@ include(GitHubENV)
         print("CMakeLists.txt file created")
         f.close()
     
+def update_workflow_files(output_dir, variables: dict):
+    # Read the existing content of the workflow file
+    workflow_file_path = f"{output_dir}/.github/workflows/build_and_test.yml"
+    with open(workflow_file_path, "r") as f:
+        content = f.readlines()
 
-def generate_plugin_id():
-    # return a unique 4 character plugin id
-    # they must begin with a capital letter.
-    capitals = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    return capitals[uuid.uuid4().int % 26] + "".join([characters[uuid.uuid4().int % len(characters)] for i in range(3)])
+    # Modify the first line
+    content[0] = f"name: {variables.get('PROJECT_NAME')}\n"
+
+    # Write the modified content back to the file
+    with open(workflow_file_path, "w") as f:
+        f.writelines(content)
+        print("build_and_test.yml file updated")
+
+    pass
+
+def create_gitignore_file(output_dir):
+    os.remove(f"{output_dir}/.gitignore") # remove the default .gitignore file
+    with open(f"{output_dir}/.gitignore", "w") as f: # create a new .gitignore file
+        f.write(GITIGNORE_TEMPLATE)
+        print(".gitignore file created")
+        f.close()
+
+def create_readme_from_variables(output_dir, variables: dict):
+    """
+    Renders the given template by replacing placeholders with the provided variables.
+    
+    Args:
+        template (str): The Markdown template with placeholders.
+        variables (dict): A dictionary of values for placeholders.
+        
+    Returns:
+        str: The rendered template.
+
+
+    Example:
+    ```variables = {
+        "plugin_name": "MyPlugin",
+        "plugin_description": "an innovative audio processing tool",
+        "plugin_overview": "It offers advanced controls to enhance your audio workflow.",
+        "plugin_features": "- Advanced Audio Effects\n- Real-time Processing\n- Customizable Interface",
+        "installation_instructions": (
+            "1. **Download:** Get the latest version from the [Releases](#).\n"
+            "2. **Install:** Follow the on-screen instructions for your OS.\n"
+            "3. **Rescan:** Refresh your plugin list in your DAW."
+        ),
+        "usage_instructions": (
+            "1. Insert **MyPlugin** on your desired track.\n"
+            "2. Adjust the settings as needed.\n"
+            "3. Enjoy the enhanced audio experience!"
+        ),
+        "additional_info": "This plugin supports Windows, macOS, and Linux. See the documentation for detailed system requirements.",
+        "roadmap": "- Add support for MIDI control\n- Introduce new effects modules",
+        "feedback_instructions": "Found a bug or have a feature request? Please open an [issue](#) or submit a Pull Request."
+    }```
+    """
+    template = """# {plugin_name}
+
+    **{plugin_name}** is {plugin_description}. {plugin_overview}
+
+    ---
+
+    ## Features
+
+    {plugin_features}
+
+    ---
+
+    ## Installation
+
+    {installation_instructions}
+
+    ---
+
+    ## Usage
+
+    {usage_instructions}
+
+    ---
+
+    ## Additional Information
+
+    {additional_info}
+
+    ---
+
+    ## Roadmap
+
+    {roadmap}
+
+    ---
+
+    ## Feedback and Contributions
+
+    {feedback_instructions}
+
+    Enjoy using **{plugin_name}**!
+    """
+    
+    TEMPLATE_FILE = template.format(**variables)
+
+    os.remove(f"{output_dir}/README.md")
+    with open(f"{output_dir}/README.md", "w") as f:
+            f.write(TEMPLATE_FILE)
+            print("README.md file created")
+            f.close()
+
+# TODO: Implement functions for creating .vscode tasks to build the project
+
+def create_vscode_tasks_file(output_dir):
+    pass

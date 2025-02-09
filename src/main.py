@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QThread, QObject, pyqtSignal
 import sys
 import os
-
+import stat
 import functions as fn
 
 
@@ -20,15 +20,27 @@ class ProjectWorker(QObject):
         super().__init__()
         self.params = params
 
+    def remove_readonly(self, func, path, excinfo):
+        """
+        Error handler for shutil.rmtree.
+        Changes the file permission and retries the removal.
+        """
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
     def run(self):
         import subprocess as sp
         try:
+            import os
+            import shutil
+
             # --- Clone the repository ---
             fork_url = "https://github.com/DirektDSP/pamplejuce.git"
             self.progress.emit("Cloning pamplejuce repo...")
             sp.run(["git", "clone", fork_url, self.params["output_directory"]], check=True)
             self.progress.emit("Cloned pamplejuce repo successfully.")
             self.pbar.emit(10)
+
         except Exception as e:
             self.progress.emit("Error during cloning.")
             self.error.emit("An error occurred while cloning the pamplejuce repo. Ensure you have git installed and try again.")
@@ -110,11 +122,9 @@ class ProjectWorker(QObject):
             self.finished.emit()
             return
         
-        # --- Generate the CMake File ---
-        self.progress.emit("Generating CMake File...")
-        self.pbar.emit(70)
 
-        fn.create_cmake_file(self.params['output_directory'], {
+        # --- Generate the variables dictionary ---
+        project_variables = {
             "PROJECT_NAME": PROJECT_NAME,
             "PRODUCT_NAME": PRODUCT_NAME,
             "COMPANY_NAME": COMPANY_NAME,
@@ -127,10 +137,47 @@ class ProjectWorker(QObject):
             "JUCE_WEB_BROWSER": JUCE_WEB_BROWSER,
             "JUCE_USE_CURL": JUCE_USE_CURL,
             "JUCE_VST3_CAN_REPLACE_VST2": JUCE_VST3_CAN_REPLACE_VST2,
-            "MOONBASE": self.params.get("moonbase", False)
-        })
+            "MOONBASE": self.params.get("moonbase", False),
+            "plugin_name": PROJECT_NAME,
+            "plugin_description": "",
+            "plugin_overview": "",
+            "plugin_features": "",
+            "installation_instructions": "",
+            "usage_instructions": "",
+            "additional_info": "",
+            "roadmap": "",
+            "feedback_instructions": ""
+        }
+        self.pbar.emit(65)
+
+        # --- Generate the CMake File ---
+        self.progress.emit("Generating CMake File...")
+        self.pbar.emit(70)
+
+        fn.create_cmake_file(self.params['output_directory'], project_variables)
         self.progress.emit("CMake File Generated.")
         self.pbar.emit(90)
+
+        # --- Update the .gitignore file ---
+        fn.create_gitignore_file(self.params['output_directory'])
+
+        # --- Update the README.md file ---
+        fn.create_readme_from_variables(self.params['output_directory'], project_variables)
+
+        # --- Update the workflow file ---
+        fn.update_workflow_files(self.params['output_directory'], project_variables)
+
+        # --- Remove the existing git history to treat it as a template ---
+        git_dir = os.path.join(self.params["output_directory"], ".git")
+        if os.path.exists(git_dir):
+            try:
+                shutil.rmtree(git_dir, onerror=self.remove_readonly)
+                self.progress.emit("Removed existing git history.")
+            except Exception as e:
+                self.progress.emit("Error removing git history: " + str(e))
+                self.error.emit("Could not remove the .git folder from the cloned repository.")
+                self.finished.emit()
+                return
 
         # --- Optionally make a git repo ---
         if self.params.get("create_git_repo", True):
