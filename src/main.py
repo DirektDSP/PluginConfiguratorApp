@@ -35,7 +35,7 @@ class ProjectWorker(QObject):
             import shutil
 
             # --- Clone the repository ---
-            fork_url = "https://github.com/DirektDSP/pamplejuce.git"
+            fork_url = "https://github.com/SeamusMullan/PluginTemplate.git"
             self.progress.emit("Cloning pamplejuce repo...")
             sp.run(["git", "clone", fork_url, self.params["output_directory"]], check=True)
             self.progress.emit("Cloned pamplejuce repo successfully.")
@@ -75,9 +75,13 @@ class ProjectWorker(QObject):
                 self.progress.emit("Fetched moonbase submodule successfully.")
                 self.pbar.emit(60)
             except Exception as e:
-                self.progress.emit("Error fetching moonbase submodule.")
-                self.error.emit("An error occurred while fetching the moonbase submodule. Ensure you have access to the moonbase repo.")
-                self.finished.emit()
+                if (e := str(e)).find("already exists") != -1:
+                    self.progress.emit("Moonbase submodule already exists.")
+                    self.pbar.emit(60)
+                else:
+                    self.progress.emit("Error fetching moonbase submodule.")
+                    self.error.emit("An error occurred while fetching the moonbase submodule. Ensure you have access to the moonbase repo.")
+                    self.finished.emit()
                 return
 
         # --- Plugin Info Generation ---
