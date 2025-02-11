@@ -1,14 +1,16 @@
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox,
     QFileDialog, QVBoxLayout, QHBoxLayout, QGroupBox, QTextEdit, QMessageBox,
-    QScrollArea, QProgressBar, QFrame
+    QScrollArea, QProgressBar, QFrame, QMenuBar, QMenu
 )
+from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, QThread, QObject, pyqtSignal
 import sys
 import os
 import stat
 import functions as fn
 
+import xml.etree.ElementTree as ET
 
 class ProjectWorker(QObject):
     progress = pyqtSignal(str)
@@ -35,7 +37,8 @@ class ProjectWorker(QObject):
             import shutil
 
             # --- Clone the repository ---
-            fork_url = "https://github.com/SeamusMullan/PluginTemplate.git"
+            # fork_url = "https://github.com/SeamusMullan/PluginTemplate.git"
+            fork_url = self.params["fork_url"]
             self.progress.emit("Cloning pamplejuce repo...")
             sp.run(["git", "clone", fork_url, self.params["output_directory"]], check=True)
             self.progress.emit("Cloned pamplejuce repo successfully.")
@@ -211,10 +214,75 @@ class ProjectGenerator(QWidget):
         self.setStyleSheet(open("src/style.qss", "r").read())
         self.initUI()
 
+    def open_config_action(self):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        file_dialog.setNameFilter("XML Files (*.xml)")
+        if file_dialog.exec():
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                file_path = selected_files[0]
+                self.fill_fields_from_xml(file_path)
+
+    def export_config_action(self):
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getSaveFileName(self, "Save Config", "", "XML Files (*.xml)")
+        if file_path:
+            self.save_config_to_xml(file_path)
+
+    def save_config_to_xml(self, file_path):
+        root = ET.Element("config")
+        ET.SubElement(root, "project_name").text = self.project_name.text()
+        ET.SubElement(root, "fork_url").text = self.fork_url.text()
+        ET.SubElement(root, "product_name").text = self.product_name.text()
+        ET.SubElement(root, "company_name").text = self.company_name.text()
+        ET.SubElement(root, "bundle_id").text = self.bundle_id.text()
+        ET.SubElement(root, "manufacturer_code").text = self.manufacturer_code.text()
+
+        tree = ET.ElementTree(root)
+        tree.write(file_path)
+
+    def fill_fields_from_xml(self, file_path):
+        try:
+            tree = ET.parse(file_path)
+            root = tree.getroot()
+            self.project_name.setText(root.find("project_name").text)
+            self.fork_url.setText(root.find("fork_url").text)
+            self.product_name.setText(root.find("product_name").text)
+            self.company_name.setText(root.find("company_name").text)
+            self.bundle_id.setText(root.find("bundle_id").text)
+            self.manufacturer_code.setText(root.find("manufacturer_code").text)
+
+        except Exception as e:
+            print(f"Error: {e}")
+
     def initUI(self):
         # Main vertical layout: top area (project info & options) and bottom progress section
         main_layout = QVBoxLayout(self)
         top_layout = QHBoxLayout()
+        
+        # === Menu Bar (Fixed) ===
+        self.menu_bar = QMenuBar(self)  # Explicitly create a QMenuBar
+
+        # File Menu
+        file_menu = QMenu("File", self)
+        self.menu_bar.addMenu(file_menu)
+
+        # Import Action
+        import_action = QAction("Import XML Config", self)
+        import_action.triggered.connect(self.open_config_action)
+        file_menu.addAction(import_action)
+
+        # Export Action
+        export_action = QAction("Export XML Config", self)
+        export_action.triggered.connect(self.export_config_action)
+        file_menu.addAction(export_action)
+
+        # Add Menu Bar to Layout
+        main_layout.setMenuBar(self.menu_bar)  # Correct way to add a menu bar in QWidget
+
+        
+        
 
         # === Project Info Section ===
         project_info_box = QGroupBox("Project Info")
@@ -223,6 +291,9 @@ class ProjectGenerator(QWidget):
         self.project_name = QLineEdit()
         self.project_name.setPlaceholderText("No spaces, only letters and numbers")
         self.project_name.textChanged.connect(self.update_bundle_id)
+
+        self.fork_url = QLineEdit()
+        self.fork_url.setPlaceholderText("Fork URL from GitHub")
 
         self.product_name = QLineEdit()
         self.product_name.setPlaceholderText("Plugin Name")
@@ -235,6 +306,9 @@ class ProjectGenerator(QWidget):
 
         self.manufacturer_code = QLineEdit()
         self.manufacturer_code.setPlaceholderText("Manu")
+
+        project_layout.addWidget(QLabel("Fork URL"))
+        project_layout.addWidget(self.fork_url)
 
         project_layout.addWidget(QLabel("Project Name (internal naming w/o spaces)"))
         project_layout.addWidget(self.project_name)
@@ -412,7 +486,7 @@ class ProjectGenerator(QWidget):
 
     def activate_generate_button(self):
         # Enable the generate button if project name, product name, and output directory are set
-        if self.project_name.text() and self.product_name.text() and self.output_directory.text():
+        if self.fork_url.text() and self.project_name.text() and self.product_name.text() and self.output_directory.text():
             self.generate_button.setEnabled(True)
 
     def browse_output(self):
@@ -442,6 +516,7 @@ class ProjectGenerator(QWidget):
     def generate_project(self):
         # --- Verify Inputs ---
         try:
+            assert self.fork_url.text(), "Fork URL is required"
             assert self.project_name.text(), "Project Name is required"
             assert self.project_name.text().isalnum(), "Project Name must be alphanumeric"
             assert self.project_name.text().islower(), "Project Name must be lowercase"
@@ -454,6 +529,7 @@ class ProjectGenerator(QWidget):
 
         # --- Gather parameters for the worker ---
         params = {
+            "fork_url": self.fork_url.text(),
             "project_name": self.project_name.text().lower(),
             "product_name": self.product_name.text(),
             "company_name": (self.company_name.text() if self.company_name.text() else "DirektDSP"),
