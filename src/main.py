@@ -232,13 +232,32 @@ class ProjectGenerator(QWidget):
 
     def save_config_to_xml(self, file_path):
         root = ET.Element("config")
+        
+        # Project Info
         ET.SubElement(root, "project_name").text = self.project_name.text()
         ET.SubElement(root, "fork_url").text = self.fork_url.text()
         ET.SubElement(root, "product_name").text = self.product_name.text()
         ET.SubElement(root, "company_name").text = self.company_name.text()
         ET.SubElement(root, "bundle_id").text = self.bundle_id.text()
         ET.SubElement(root, "manufacturer_code").text = self.manufacturer_code.text()
-
+        
+        # Checkboxes
+        ET.SubElement(root, "standalone").text = str(self.standalone_checkbox.isChecked())
+        ET.SubElement(root, "vst3").text = str(self.vst3_checkbox.isChecked())
+        ET.SubElement(root, "au").text = str(self.au_checkbox.isChecked())
+        ET.SubElement(root, "clap").text = str(self.clap_checkbox.isChecked())
+        
+        ET.SubElement(root, "create_git_repo").text = str(self.create_git_repo_checkbox.isChecked())
+        ET.SubElement(root, "melatonin").text = str(self.melatonin_checkbox.isChecked())
+        ET.SubElement(root, "moonbase").text = str(self.moonbase_checkbox.isChecked())
+        ET.SubElement(root, "clap_export").text = str(self.clap_export_checkbox.isChecked())
+        ET.SubElement(root, "juce_develop").text = str(self.juce_develop_checkbox.isChecked())
+        ET.SubElement(root, "xcode_prettify").text = str(self.xcode_prettify_checkbox.isChecked())
+        
+        ET.SubElement(root, "juce_curl").text = str(self.juce_curl_checkbox.isChecked())
+        ET.SubElement(root, "juce_web_browser").text = str(self.juce_web_browser_checkbox.isChecked())
+        ET.SubElement(root, "juce_vst2").text = str(self.juce_vst2_checkbox.isChecked())
+        
         tree = ET.ElementTree(root)
         tree.write(file_path)
 
