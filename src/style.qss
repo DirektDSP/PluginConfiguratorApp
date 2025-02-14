@@ -1,20 +1,38 @@
+/*
+Theme:
+background-color = {background-color}              
+foreground-color = {foreground-color}              
+primary-color = {primary-color}                 
+secondary-color = {secondary-color}               
+highlight-color = {highlight-color}               
+input-background-color = {input-background-color}        
+input-placeholder-color = {input-placeholder-color}       
+border-color = {border-color}                  
+scrollbar-background-color = {scrollbar-background-color}    
+scrollbar-handle-color = {scrollbar-handle-color}        
+scrollbar-handle-hover-color = {scrollbar-handle-hover-color}  
+textedit-background-color = {textedit-background-color}     
+progressbar-background-color = {progressbar-background-color}  
+progressbar-chunk-color = {progressbar-chunk-color}       
+ */
+
 /* Base Widget Style */
 QWidget {
-    background-color: #2E3440;
-    color: #FFFFFF;  /* Use white for text */
+    background-color: {background-color};  /* Use dynamic background color */
+    color: {foreground-color};  /* Use dynamic text color */
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
 
 /* Group Boxes: Containers & Sections */
 QGroupBox {
-    background-color: #3B4252;
-    border: 2px solid #5E81AC;
+    background-color: {background-color};
+    border: 2px solid {border-color};
     border-radius: 5px;
     margin-top: 18px;
     padding: 12px;
     font-weight: bold;
-    color: #FFFFFF;
+    color: {foreground-color};  /* Use dynamic text color */
 }
 
 QGroupBox::title {
@@ -22,46 +40,46 @@ QGroupBox::title {
     subcontrol-position: top left;
     padding: 0px 5px 0px 5px;
     font-size: 14px;
-    color: #5E81AC;
+    color: {primary-color};  /* Use dynamic primary color */
 }
 
-/* Labels: All labels use white text with a transparent background */
+/* Labels: All labels use dynamic foreground color with a transparent background */
 QLabel {
     font-size: 13px;
-    color: #FFFFFF;
+    color: {foreground-color};  /* Use dynamic text color */
     background-color: transparent;
 }
 
 /* LineEdits: Input fields */
 QLineEdit {
-    background-color: #434C5E;
-    border: 1px solid #5E81AC;
+    background-color: {input-background-color};  /* Use dynamic input background color */
+    border: 1px solid {border-color};  /* Use dynamic border color */
     border-radius: 3px;
     padding: 5px;
-    color: #FFFFFF;
+    color: {foreground-color};  /* Use dynamic text color */
 }
 
 QLineEdit::placeholder {
-    color: rgba(94, 129, 172, 0.5);
+    color: {placeholder}
 }
 
 /* Push Buttons */
 QPushButton {
-    background-color: #5E81AC;
+    background-color: {primary-color};  /* Use dynamic primary color */
     border: none;
     padding: 8px;
     border-radius: 5px;
-    color: #FFFFFF;
+    color: {foreground-color};  /* Use dynamic text color */
     font-weight: bold;
 }
 
 QPushButton:hover {
-    background-color: #81A1C1;
+    background-color: {secondary-color};  /* Use dynamic secondary color */
 }
 
 /* Check Boxes */
 QCheckBox {
-    color: #FFFFFF;
+    color: {foreground-color};  /* Use dynamic foreground color */
 }
 
 /* Scroll Area */
@@ -72,18 +90,18 @@ QScrollArea {
 
 /* Vertical Scroll Bar */
 QScrollBar:vertical {
-    background-color: #3B4252;
+    background-color: {scrollbar-background-color};  /* Use dynamic scrollbar background color */
     width: 12px;
     margin: 0px;
     border: none;
 }
 QScrollBar::handle:vertical {
-    background: #5E81AC;
+    background: {scrollbar-handle-color};  /* Use dynamic scrollbar handle color */
     min-height: 20px;
     border-radius: 5px;
 }
 QScrollBar::handle:vertical:hover {
-    background: #81A1C1;
+    background: {scrollbar-handle-hover-color};  /* Use dynamic scrollbar handle hover color */
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
@@ -92,18 +110,18 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 
 /* Horizontal Scroll Bar */
 QScrollBar:horizontal {
-    background-color: #3B4252;
+    background-color: {scrollbar-background-color};  /* Use dynamic scrollbar background color */
     height: 12px;
     margin: 0px;
     border: none;
 }
 QScrollBar::handle:horizontal {
-    background: #5E81AC;
+    background: {scrollbar-handle-color};  /* Use dynamic scrollbar handle color */
     min-width: 20px;
     border-radius: 5px;
 }
 QScrollBar::handle:horizontal:hover {
-    background: #81A1C1;
+    background: {scrollbar-handle-hover-color};  /* Use dynamic scrollbar handle hover color */
 }
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     width: 0px;
@@ -112,26 +130,26 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
 
 /* Text Edit: Multiline text fields (e.g., progress log) */
 QTextEdit {
-    background-color: #434C5E;
-    border: 1px solid #5E81AC;
+    background-color: {textedit-background-color};  /* Use dynamic text edit background color */
+    border: 1px solid {border-color};  /* Use dynamic border color */
     border-radius: 4px;
     padding: 5px;
     font-family: "Courier New", monospace;
     font-size: 12px;
-    color: #FFFFFF;
+    color: {foreground-color};  /* Use dynamic text color */
 }
 
 /* Progress Bar: Progress indicator */
 QProgressBar {
-    background-color: #434C5E;
-    border: 1px solid #5E81AC;
+    background-color: {progressbar-background-color};  /* Use dynamic background color */
+    border: 1px solid {border-color};  /* Use dynamic border color */
     border-radius: 5px;
     text-align: center;
     height: 12px;
-    color: #FFFFFF;
+    color: {foreground-color};  /* Use dynamic text color */
 }
 
 QProgressBar::chunk {
-    background-color: #5E81AC;
+    background-color: {progressbar-chunk-color};  /* Use dynamic chunk color */
     border-radius: 5px;
 }

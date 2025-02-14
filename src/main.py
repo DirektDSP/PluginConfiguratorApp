@@ -9,6 +9,7 @@ import sys
 import os
 import stat
 import functions as fn
+import styles
 
 import xml.etree.ElementTree as ET
 
@@ -39,14 +40,14 @@ class ProjectWorker(QObject):
             # --- Clone the repository ---
             # fork_url = "https://github.com/SeamusMullan/PluginTemplate.git"
             fork_url = self.params["fork_url"]
-            self.progress.emit("Cloning pamplejuce repo...")
+            self.progress.emit("Cloning template repo...")
             sp.run(["git", "clone", fork_url, self.params["output_directory"]], check=True)
-            self.progress.emit("Cloned pamplejuce repo successfully.")
+            self.progress.emit("Cloned template repo successfully.")
             self.pbar.emit(10)
 
         except Exception as e:
             self.progress.emit("Error during cloning.")
-            self.error.emit("An error occurred while cloning the pamplejuce repo. Ensure you have git installed and try again.")
+            self.error.emit("An error occurred while cloning the template repo. Ensure you have git installed and try again.")
             self.finished.emit()
             return
 
@@ -211,7 +212,7 @@ class ProjectGenerator(QWidget):
         super().__init__()
         self.setWindowTitle("DirektDSP Project Generator")
         self.setGeometry(100, 100, 920, 640)
-        self.setStyleSheet(open("src/style.qss", "r").read())
+        self.setStyleSheet(styles.create_stylesheet(styles.dark_theme))
         self.initUI()
 
     def open_config_action(self):
