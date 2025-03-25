@@ -1,2 +1,83 @@
-# PluginConfiguratorApp
-Desktop app to create new plugin projects using PluginTemplate Repository
+# Plugin Configurator App
+
+A desktop application for creating and configuring audio plugin projects based on custom template repositories.
+
+## Overview
+
+Plugin Configurator is a tool designed for audio developers to quickly set up new plugin projects with proper structure and build configuration. It's inspired by JUCE's Projucer but focused on modern CMake-based workflows.
+
+## Features
+
+- Create new audio plugin projects with proper CMake configuration
+- **Use any compatible GitHub template repository** as your project base
+- Configure support for VST3, AU, AUv3, CLAP, and Standalone formats
+- Set up GitHub Actions for CI/CD
+- Include testing frameworks and optional modules
+- Generate consistent, well-structured plugin projects
+
+## Template Compatibility
+
+While the app works out of the box with our [PluginTemplate](https://github.com/SeamusMullan/PluginTemplate.git) repository, you can use any GitHub template that follows the same structure:
+
+- CMake-based build system
+- JUCE as a submodule
+- Standard plugin source file organization
+- Support for the same plugin formats
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/SeamusMullan/PluginConfiguratorApp.git
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python src/main.py
+```
+
+## Usage
+
+1. Launch the application
+2. Enter the GitHub URL of your template repository (or use the default)
+3. Enter basic project information (name, company, etc.)
+4. Select which plugin formats to support
+5. Choose optional extensions and modules
+6. Generate your project
+7. Open in your preferred IDE and start developing!
+
+## Creating Compatible Template Repositories
+
+To create a repository that works with this configurator:
+
+1. Fork the [PluginTemplate](https://github.com/SeamusMullan/PluginTemplate.git) repository
+2. Modify it to your needs while keeping the basic structure
+3. Ensure your CMakeLists.txt can accept the same variables our configurator provides
+4. Use your fork's URL in the configurator
+
+## Building from Source
+
+This application is built with Python and PyQt6. To build from source:
+
+```bash
+# Install PyInstaller
+pip install pyinstaller
+
+# Create executable
+pyinstaller --onefile --windowed src/main.py
+```
+
+## Requirements
+
+- Python 3.8 or higher
+- Git (for cloning the template and managing submodules)
+- CMake 3.15 or higher (for building the generated projects)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
