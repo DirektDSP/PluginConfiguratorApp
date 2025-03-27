@@ -1,5 +1,3 @@
-
-
 # Purpose
 
 Take a starting project, apply a set of defined changes to the project and then create it on the local device.
