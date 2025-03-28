@@ -8,6 +8,36 @@ Take a starting project, apply a set of defined changes to the project and then 
 
 Based on PampleJuce by sudara.
 
+## Project Structure
+
+```txt
+PluginConfiguratorApp/
+├── src/                        # Main source code
+│   ├── main.py                 # Entry point
+│   ├── ui/                     # UI components
+│   │   ├── __init__.py
+│   │   ├── main_window.py      # Main application window
+│   │   ├── project_panel.py    # Project info panel
+│   │   ├── options_panel.py    # Options panel
+│   │   └── progress_panel.py   # Progress and log panel
+│   ├── core/                   # Business logic
+│   │   ├── __init__.py
+│   │   ├── project_worker.py   # Project generation worker
+│   │   ├── config_manager.py   # Config loading/saving
+│   │   └── utils.py            # Utility functions
+│   └── resources/              # Static resources
+│       ├── style.qss           # QSS stylesheet
+│       └── themes/             # Theme color definitions
+│           ├── __init__.py
+│           └── theme_manager.py
+├── templates/                  # Project templates
+├── tests/                      # Unit tests
+├── docs/                       # Documentation
+├── LICENSE
+├── README.md
+└── requirements.txt
+```
+
 ## Modifications
 
 implement in a xml file, when generating a new project, allow a config file to be saved as a preset config.

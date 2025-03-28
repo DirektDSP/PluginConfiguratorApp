@@ -26,26 +26,80 @@ While the app works out of the box with our [PluginTemplate](https://github.com/
 
 ## Installation
 
+### Prerequisites
+
+- Python 3.8 or higher
+- Git (for cloning the template and managing submodules)
+- CMake 3.15 or higher (for building the generated projects)
+
+### Method 1: Running from source
+
 ```bash
 # Clone the repository
 git clone https://github.com/SeamusMullan/PluginConfiguratorApp.git
+cd PluginConfiguratorApp
+
+# Create a virtual environment (optional but recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Run the application
-python src/main.py
+python run.py
+```
+
+### Method 2: Installation via pip
+
+```bash
+# Clone the repository
+git clone https://github.com/SeamusMullan/PluginConfiguratorApp.git
+cd PluginConfiguratorApp
+
+# Install the package
+pip install .
+
+# Run the application
+plugin-configurator
 ```
 
 ## Usage
 
-1. Launch the application
+1. Launch the application using one of the methods above
 2. Enter the GitHub URL of your template repository (or use the default)
-3. Enter basic project information (name, company, etc.)
-4. Select which plugin formats to support
-5. Choose optional extensions and modules
-6. Generate your project
-7. Open in your preferred IDE and start developing!
+3. Enter basic project information:
+   - Project Name: Internal name (no spaces)
+   - Product Name: Display name in DAWs
+   - Company Name: Your company
+   - Bundle ID: Unique identifier for your plugin
+   - Manufacturer Code: 4-character manufacturer code
+4. Select output directory where your project will be created
+5. Configure plugin formats and options in the Options panel
+6. Click "Generate Project"
+7. Open the generated project in your IDE and start developing!
+
+## Configuration Options
+
+### Plugin Formats
+- VST3
+- Audio Unit (AU)
+- Audio Unit v3 (AUv3)
+- CLAP
+- Standalone Application
+
+### Features
+- Initialize Git Repository
+- Include Melatonin Inspector (debugging UI)
+- Moonbase Licensing
+- CLAP Export Support
+- Use JUCE Develop Branch
+- XCode Prettify (for macOS development)
+
+### JUCE Options
+- Enable JUCE_USE_CURL
+- Enable JUCE_WEB_BROWSER
+- Enable JUCE_VST3_CAN_REPLACE_VST2
 
 ## Creating Compatible Template Repositories
 
@@ -55,24 +109,6 @@ To create a repository that works with this configurator:
 2. Modify it to your needs while keeping the basic structure
 3. Ensure your CMakeLists.txt can accept the same variables our configurator provides
 4. Use your fork's URL in the configurator
-
-## Building from Source
-
-This application is built with Python and PyQt6. To build from source:
-
-```bash
-# Install PyInstaller
-pip install pyinstaller
-
-# Create executable
-pyinstaller --onefile --windowed src/main.py
-```
-
-## Requirements
-
-- Python 3.8 or higher
-- Git (for cloning the template and managing submodules)
-- CMake 3.15 or higher (for building the generated projects)
 
 ## Contributing
 
