@@ -1,3 +1,5 @@
+# Component Diagram
+
 ```mermaid
 flowchart TB
     subgraph ProjectTemplatingEngine["Project Templating Engine"]

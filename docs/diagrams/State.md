@@ -1,3 +1,5 @@
+# State Diagram
+
 ```mermaid
 stateDiagram-v2
     [*] --> TemplateSelection

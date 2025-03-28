@@ -1,3 +1,5 @@
+# Workflow Sequence Diagram
+
 ```mermaid
 sequenceDiagram
     participant User
