@@ -8,14 +8,13 @@ Take a starting project, apply a set of defined changes to the project and then 
 
 Based on PampleJuce by sudara.
 
-
 ## Modifications
 
 implement in a xml file, when generating a new project, allow a config file to be saved as a preset config.
 
 ### Possible Modifications
 
-#### Implementations
+####  Implementations
 
 - Implementing Moonbase_Sh Licensing client
 - Implementing Melatonin Inspector
