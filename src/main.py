@@ -29,6 +29,12 @@ def setup_environment():
     if not templates_dir.exists():
         templates_dir.mkdir(parents=True, exist_ok=True)
         print(f"Created templates directory: {templates_dir}")
+    
+    # Create preset directory if it doesn't exist
+    preset_dir = Path.home() / ".plugin_configurator" / "presets"
+    if not preset_dir.exists():
+        preset_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Created preset directory: {preset_dir}")
 
 def main():
     """Main application entry point"""

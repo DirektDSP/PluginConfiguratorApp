@@ -218,3 +218,29 @@ class ProjectPanel(QWidget):
         self.bundle_id.setText(config.get("bundle_id", ""))
         self.manufacturer_code.setText(config.get("manufacturer_code", ""))
         self.output_directory.setText(config.get("output_directory", ""))
+    
+    def load_preset(self, config):
+        """Load preset configuration into form fields
+        
+        Args:
+            config: Dictionary containing configuration values
+        """
+        try:
+            self.fill_form_from_config(config)
+            self.log_message.emit("Preset loaded into form")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load preset: {str(e)}")
+    
+    def get_full_config(self):
+        """Get complete configuration including project parameters and options
+        
+        Returns:
+            dict: Complete configuration dictionary
+        """
+        # Get basic project parameters
+        config = self.get_form_config()
+        
+        # Additional options will be added by main window
+        # when connected to options panel
+        
+        return config

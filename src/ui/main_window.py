@@ -1,179 +1,195 @@
 from PySide6.QtWidgets import (
-    QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, 
-    QMenu, QMenuBar, QStatusBar, QSplitter, QMessageBox
+    QMainWindow, QWidget, QVBoxLayout, QSplitter,
+    QMenuBar, QMenu, QMessageBox, QToolBar,
+    QStatusBar, QApplication
 )
-from PySide6.QtCore import Qt, Slot, QThread
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon, QAction
 
 from ui.project_panel import ProjectPanel
 from ui.options_panel import OptionsPanel
 from ui.progress_panel import ProgressPanel
-from core.project_worker import ProjectWorker  # Changed from workers.project_worker to core.project_worker
+from ui.preset_panel import PresetPanel
 
 class MainWindow(QMainWindow):
     """Main application window"""
     
-    def __init__(self, theme_manager, parent=None):
+    def __init__(self, theme_manager=None, parent=None):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.setup_ui()
-        self.setup_actions()
-        self.setup_menus()
         self.setup_connections()
+        self.setup_menu()
+        self.setup_toolbar()
+        self.setup_statusbar()
+        
+        # Set window properties
         self.setWindowTitle("Plugin Configurator")
-        self.resize(1000, 700)
+        self.resize(900, 700)
     
     def setup_ui(self):
         """Initialize UI components"""
-        # Central widget and main layout
+        # Create central widget and main layout
         self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout(self.central_widget)
         
-        # Horizontal layout for panels
-        self.panel_splitter = QSplitter(Qt.Orientation.Horizontal)
+        # Create preset panel at the top
+        self.preset_panel = PresetPanel()
+        self.main_layout.addWidget(self.preset_panel)
         
-        # Create panels
+        # Create horizontal splitter for main content
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # Left side: project and options in a vertical splitter
+        self.left_splitter = QSplitter(Qt.Orientation.Vertical)
         self.project_panel = ProjectPanel()
         self.options_panel = OptionsPanel()
+        self.left_splitter.addWidget(self.project_panel)
+        self.left_splitter.addWidget(self.options_panel)
+        self.left_splitter.setStretchFactor(0, 1)  # Project panel gets more space
+        self.left_splitter.setStretchFactor(1, 2)  # Options panel gets more space
         
-        # Add panels to splitter
-        self.panel_splitter.addWidget(self.project_panel)
-        self.panel_splitter.addWidget(self.options_panel)
-        self.panel_splitter.setSizes([400, 600])
-        
-        # Progress panel at the bottom
+        # Right side: progress panel
         self.progress_panel = ProgressPanel()
         
-        # Add widgets to main layout
-        self.main_layout.addWidget(self.panel_splitter, 3)
-        self.main_layout.addWidget(self.progress_panel, 1)
+        # Add panels to main splitter
+        self.main_splitter.addWidget(self.left_splitter)
+        self.main_splitter.addWidget(self.progress_panel)
+        self.main_splitter.setStretchFactor(0, 2)  # Left side gets more space
+        self.main_splitter.setStretchFactor(1, 1)  # Right side gets less space
         
-        # Status bar
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
-    
-    def setup_actions(self):
-        """Create actions for menus and toolbars"""
-        # File actions
-        self.action_new = QAction("New Configuration", self)
-        self.action_open = QAction("Open Configuration...", self)
-        self.action_save = QAction("Save Configuration...", self)
-        self.action_exit = QAction("Exit", self)
+        # Add main splitter to layout
+        self.main_layout.addWidget(self.main_splitter)
         
-        # Theme actions
-        self.action_theme_light = QAction("Light Theme", self)
-        self.action_theme_dark = QAction("Dark Theme", self)
-        
-        # Help actions
-        self.action_about = QAction("About", self)
-        self.action_docs = QAction("Documentation", self)
-    
-    def setup_menus(self):
-        """Create application menus"""
-        self.menu_bar = QMenuBar()
-        self.setMenuBar(self.menu_bar)
-        
-        # File menu
-        self.file_menu = QMenu("&File", self)
-        self.file_menu.addAction(self.action_new)
-        self.file_menu.addAction(self.action_open)
-        self.file_menu.addAction(self.action_save)
-        self.file_menu.addSeparator()
-        self.file_menu.addAction(self.action_exit)
-        
-        # View menu
-        self.view_menu = QMenu("&View", self)
-        self.themes_menu = QMenu("Themes", self)
-        self.themes_menu.addAction(self.action_theme_light)
-        self.themes_menu.addAction(self.action_theme_dark)
-        self.view_menu.addMenu(self.themes_menu)
-        
-        # Help menu
-        self.help_menu = QMenu("&Help", self)
-        self.help_menu.addAction(self.action_docs)
-        self.help_menu.addAction(self.action_about)
-        
-        # Add menus to menu bar
-        self.menu_bar.addMenu(self.file_menu)
-        self.menu_bar.addMenu(self.view_menu)
-        self.menu_bar.addMenu(self.help_menu)
+        # Set central widget
+        self.setCentralWidget(self.central_widget)
     
     def setup_connections(self):
-        """Connect signals to slots"""
-        # File actions
-        self.action_open.triggered.connect(self.open_config)
-        self.action_save.triggered.connect(self.save_config)
-        self.action_exit.triggered.connect(self.close)
-        
-        # Theme actions
-        self.action_theme_light.triggered.connect(lambda: self.change_theme("light"))
-        self.action_theme_dark.triggered.connect(lambda: self.change_theme("dark"))
-        
-        # Connect project panel to progress panel
+        """Connect signals between UI components"""
+        # Connect project panel signals to progress panel
         self.project_panel.log_message.connect(self.progress_panel.log_message)
         self.project_panel.update_progress.connect(self.progress_panel.update_progress)
         
-        # Connect project generation button directly (alternative to parent traversal)
-        self.project_panel.generate_button.clicked.connect(self.generate_project)
-
-    @Slot()
-    def open_config(self):
-        """Open and load a configuration file"""
-        self.project_panel.open_config()
+        # Connect preset panel signals
+        self.preset_panel.log_message.connect(self.progress_panel.log_message)
+        self.preset_panel.preset_loaded.connect(self.project_panel.load_preset)
+        
+        # Connect save preset functionality
+        self.preset_panel.save_button.clicked.connect(self.save_current_as_preset)
     
-    @Slot()
-    def save_config(self):
-        """Save the current configuration to a file"""
-        self.project_panel.save_config()
+    def setup_menu(self):
+        """Set up application menu"""
+        # Create menu bar
+        menu_bar = self.menuBar()
+        
+        # File menu
+        file_menu = menu_bar.addMenu("&File")
+        
+        # File menu actions
+        new_action = QAction("&New Project", self)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(self.new_project)
+        
+        save_preset_action = QAction("&Save as Preset", self)
+        save_preset_action.setShortcut("Ctrl+S")
+        save_preset_action.triggered.connect(self.save_current_as_preset)
+        
+        exit_action = QAction("E&xit", self)
+        exit_action.setShortcut("Ctrl+Q")
+        exit_action.triggered.connect(self.close)
+        
+        # Add actions to file menu
+        file_menu.addAction(new_action)
+        file_menu.addAction(save_preset_action)
+        file_menu.addSeparator()
+        file_menu.addAction(exit_action)
+        
+        # Theme menu
+        if self.theme_manager:
+            theme_menu = menu_bar.addMenu("&Theme")
+            
+            # Theme menu actions
+            light_theme_action = QAction("&Light", self)
+            light_theme_action.triggered.connect(lambda: self.change_theme("light"))
+            
+            dark_theme_action = QAction("&Dark", self)
+            dark_theme_action.triggered.connect(lambda: self.change_theme("dark"))
+            
+            # Add actions to theme menu
+            theme_menu.addAction(light_theme_action)
+            theme_menu.addAction(dark_theme_action)
+        
+        # Help menu
+        help_menu = menu_bar.addMenu("&Help")
+        
+        # Help menu actions
+        about_action = QAction("&About", self)
+        about_action.triggered.connect(self.show_about)
+        
+        # Add actions to help menu
+        help_menu.addAction(about_action)
     
-    @Slot(str)
+    def setup_toolbar(self):
+        """Set up application toolbar"""
+        # Create toolbar
+        toolbar = QToolBar("Main Toolbar")
+        toolbar.setIconSize(QSize(24, 24))
+        self.addToolBar(toolbar)
+        
+        # Toolbar actions
+        new_action = QAction("New", self)
+        new_action.triggered.connect(self.new_project)
+        
+        save_preset_action = QAction("Save Preset", self)
+        save_preset_action.triggered.connect(self.save_current_as_preset)
+        
+        # Add actions to toolbar
+        toolbar.addAction(new_action)
+        toolbar.addAction(save_preset_action)
+    
+    def setup_statusbar(self):
+        """Set up status bar"""
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.status_bar.showMessage("Ready")
+    
+    def new_project(self):
+        """Reset form for a new project"""
+        # Reset panels
+        self.project_panel.fill_form_from_config(self.project_panel.config_manager.get_default_config())
+        self.progress_panel.clear_log()
+        self.progress_panel.reset_progress()
+        self.status_bar.showMessage("New project started")
+        self.progress_panel.log_message("Started new project")
+    
+    def save_current_as_preset(self):
+        """Save current configuration as a preset"""
+        # Get config from project panel
+        project_config = self.project_panel.get_form_config()
+        
+        # Get options from options panel
+        options_config = self.options_panel.get_options()
+        
+        # Combine configs
+        full_config = {**project_config, **options_config}
+        
+        # Save as preset
+        self.preset_panel.save_config_as_preset(full_config)
+        self.status_bar.showMessage("Preset saved")
+    
     def change_theme(self, theme_name):
-        """Change the application theme"""
-        stylesheet = self.theme_manager.get_stylesheet(theme_name)
-        self.setStyleSheet(stylesheet)
+        """Change application theme"""
+        if self.theme_manager:
+            QApplication.instance().setStyleSheet(self.theme_manager.get_stylesheet(theme_name))
+            self.status_bar.showMessage(f"Theme changed to {theme_name}")
     
-    @Slot()
-    def generate_project(self):
-        """Generate project with options from options panel"""
-        try:
-            # Get project parameters
-            params = self.project_panel.get_project_parameters()
-            
-            # Add options from the options panel
-            params['options'] = self.options_panel.get_options()
-            
-            # Create and run worker
-            self.worker_thread = QThread()
-            self.worker = ProjectWorker(params)
-            self.worker.moveToThread(self.worker_thread)
-            
-            # Connect signals
-            self.worker_thread.started.connect(self.worker.run)
-            self.worker.progress.connect(self.progress_panel.log_message)
-            self.worker.progress_value.connect(self.progress_panel.update_progress)
-            self.worker.finished.connect(self.worker_thread.quit)
-            self.worker.finished.connect(self.worker.deleteLater)
-            self.worker_thread.finished.connect(self.worker_thread.deleteLater)
-            self.worker.error.connect(self.show_error)
-            
-            # Disable generate button during processing
-            self.project_panel.generate_button.setEnabled(False)
-            self.progress_panel.log_message("Starting project generation...")
-            self.progress_panel.update_progress(0)
-            
-            # Start the thread
-            self.worker_thread.start()
-            
-            # Re-enable button when done
-            self.worker_thread.finished.connect(
-                lambda: self.project_panel.generate_button.setEnabled(True)
-            )
-            
-        except ValueError as e:
-            self.show_error(str(e))
-
-    @Slot(str)
-    def show_error(self, message):
-        """Display error message"""
-        QMessageBox.critical(self, "Error", message)
+    def show_about(self):
+        """Show about dialog"""
+        QMessageBox.about(
+            self, 
+            "About Plugin Configurator",
+            "Plugin Configurator\n\n"
+            "A tool for generating audio plugin projects from templates.\n\n"
+            "Developed by DirektDSP\n"
+            "Version 1.0.0"
+        )

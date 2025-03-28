@@ -1,8 +1,17 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import os
+import json
 
 class ConfigManager:
-    """Manages loading and saving of XML configuration files"""
+    """Manages loading and saving of XML configuration files and presets"""
+    
+    def __init__(self):
+        """Initialize the ConfigManager with preset directory"""
+        # Define preset directory in user's home folder
+        self.preset_dir = Path.home() / ".plugin_configurator" / "presets"
+        # Ensure preset directory exists
+        self.preset_dir.mkdir(parents=True, exist_ok=True)
     
     def load_config(self, file_path):
         """Load configuration from an XML file
@@ -86,3 +95,48 @@ class ConfigManager:
             "juce_web_browser": False,
             "juce_vst2": False
         }
+    
+    def get_available_presets(self):
+        """Get a list of available preset names"""
+        presets = []
+        for file in self.preset_dir.glob("*.xml"):
+            presets.append(file.stem)
+        return sorted(presets)
+    
+    def save_preset(self, config, preset_name):
+        """Save configuration as a preset
+        
+        Args:
+            config: Dictionary containing configuration values
+            preset_name: Name of the preset (without extension)
+        """
+        preset_path = self.preset_dir / f"{preset_name}.xml"
+        self.save_config(config, preset_path)
+    
+    def load_preset(self, preset_name):
+        """Load configuration from a preset
+        
+        Args:
+            preset_name: Name of the preset (without extension)
+            
+        Returns:
+            dict: Dictionary containing configuration values
+        """
+        preset_path = self.preset_dir / f"{preset_name}.xml"
+        return self.load_config(preset_path)
+    
+    def delete_preset(self, preset_name):
+        """Delete a preset
+        
+        Args:
+            preset_name: Name of the preset (without extension)
+            
+        Returns:
+            bool: True if preset was deleted, False otherwise
+        """
+        preset_path = self.preset_dir / f"{preset_name}.xml"
+        try:
+            preset_path.unlink()
+            return True
+        except Exception:
+            return False

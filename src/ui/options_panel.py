@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QGroupBox, QCheckBox, 
     QLabel, QScrollArea, QFrame
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 
 class OptionsPanel(QWidget):
     """Panel for configuring plugin options"""
@@ -155,3 +155,44 @@ class OptionsPanel(QWidget):
             "juce_web_browser": self.juce_web_browser_checkbox.isChecked(),
             "juce_vst2": self.juce_vst2_checkbox.isChecked()
         }
+    
+    @Slot(dict)
+    def load_preset(self, config):
+        """Load preset options into checkboxes
+        
+        Args:
+            config: Dictionary containing configuration values
+        """
+        # Format options
+        if "standalone" in config:
+            self.standalone_checkbox.setChecked(config["standalone"])
+        if "vst3" in config:
+            self.vst3_checkbox.setChecked(config["vst3"])
+        if "au" in config:
+            self.au_checkbox.setChecked(config["au"])
+        if "auv3" in config:
+            self.auv3_checkbox.setChecked(config["auv3"])
+        if "clap" in config:
+            self.clap_checkbox.setChecked(config["clap"])
+        
+        # Feature options
+        if "create_git_repo" in config:
+            self.create_git_repo_checkbox.setChecked(config["create_git_repo"])
+        if "melatonin" in config:
+            self.melatonin_checkbox.setChecked(config["melatonin"])
+        if "moonbase" in config:
+            self.moonbase_checkbox.setChecked(config["moonbase"])
+        if "clap_export" in config:
+            self.clap_export_checkbox.setChecked(config["clap_export"])
+        if "juce_develop" in config:
+            self.juce_develop_checkbox.setChecked(config["juce_develop"])
+        if "xcode_prettify" in config:
+            self.xcode_prettify_checkbox.setChecked(config["xcode_prettify"])
+        
+        # JUCE options
+        if "juce_curl" in config:
+            self.juce_curl_checkbox.setChecked(config["juce_curl"])
+        if "juce_web_browser" in config:
+            self.juce_web_browser_checkbox.setChecked(config["juce_web_browser"])
+        if "juce_vst2" in config:
+            self.juce_vst2_checkbox.setChecked(config["juce_vst2"])
