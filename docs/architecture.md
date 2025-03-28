@@ -4,7 +4,7 @@ Take a starting project, apply a set of defined changes to the project and then 
 
 ## Starting Project
 
-https://DirektDSP/PluginTemplate.git
+<https://DirektDSP/PluginTemplate.git>
 
 Based on PampleJuce by sudara.
 
@@ -16,6 +16,7 @@ implement in a xml file, when generating a new project, allow a config file to b
 ### Possible Modifications
 
 #### Implementations
+
 - Implementing Moonbase_Sh Licensing client
 - Implementing Melatonin Inspector
 - Implementing CLAP plugin Builds
@@ -27,6 +28,7 @@ implement in a xml file, when generating a new project, allow a config file to b
 - Implementing Custom GUI Framework
 
 #### Configuration
+
 - Build Settings / Exports (Standalone, VST3, AU) and CLAP if enabled above
 - Plugin Metadata (Name, ID, Vendor, Version)
 - GUI Settings (Width, Height, Resizable)
@@ -41,6 +43,7 @@ implement in a xml file, when generating a new project, allow a config file to b
 - CI/CD Pipeline Configuration
 
 #### User Experience
+
 - Project Creation Wizard UI
 - Real-time Preview of Configuration Choices
 - Template Library Management
@@ -48,6 +51,7 @@ implement in a xml file, when generating a new project, allow a config file to b
 - Batch Project Generation
 
 #### Development Workflow
+
 - Version Control Integration
 - Automated Testing of Generated Projects
 - Post-Generation Code Quality Checks
@@ -55,6 +59,7 @@ implement in a xml file, when generating a new project, allow a config file to b
 - Project Scaffolding (README, License, etc.)
 
 #### Advanced Features
+
 - Custom Code Snippet Injection Points
 - Post-Generation Scripts
 - Multi-Platform Build Configuration
@@ -91,16 +96,19 @@ implement in a xml file, when generating a new project, allow a config file to b
 ## Development Roadmap
 
 ### Phase 1: Core Functionality
+
 - Project template loading
 - Basic modifications system
 - Command-line interface
 
 ### Phase 2: User Experience
+
 - GUI implementation
 - Preset management
 - Real-time preview
 
 ### Phase 3: Advanced Features
+
 - Extended modification capabilities
 - Integration with build systems
 - Plugin validation tools
