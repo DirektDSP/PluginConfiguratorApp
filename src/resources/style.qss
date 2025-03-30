@@ -105,6 +105,11 @@ QScrollArea {
     background-color: transparent;
 }
 
+/* Scroll area content */
+QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+}
+
 /* Vertical Scroll Bar */
 QScrollBar:vertical {
     background-color: {scrollbar-background-color};
@@ -212,13 +217,85 @@ QStatusBar {
 
 /* Splitter */
 QSplitter::handle {
-    background-color: {border-color};
+    background-color: {background-color};
 }
 
 QSplitter::handle:horizontal {
-    width: 2px;
+    width: 5px;
+    /* Simple gradient to create a grip-like center */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0.4 {background-color},
+                                stop:0.5 {border-color},
+                                stop:0.6 {background-color});
 }
 
 QSplitter::handle:vertical {
-    height: 2px;
+    height: 5px;
+    /* Simple gradient to create a grip-like center */
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0.4 {background-color},
+                                stop:0.5 {border-color},
+                                stop:0.6 {background-color});
+}
+
+QSplitter::handle:hover {
+    /* For horizontal handles, make the center line highlight color */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0.4 {background-color},
+                                stop:0.5 {highlight-color},
+                                stop:0.6 {background-color});
+}
+
+QSplitter::handle:pressed {
+    /* For horizontal handles, make the center line primary color */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0.4 {background-color},
+                                stop:0.5 {primary-color},
+                                stop:0.6 {background-color});
+}
+
+/* Tree Widget */
+QTreeWidget {
+    background-color: {input-background-color};
+    border: 1px solid {border-color};
+    border-radius: 4px;
+}
+
+QTreeWidget::item {
+    padding: 4px;
+}
+
+QTreeWidget::item:selected {
+    background-color: {secondary-color};
+}
+
+QTreeWidget::branch {
+    background-color: transparent;
+}
+
+/* Combo Box */
+QComboBox {
+    background-color: {input-background-color};
+    border: 1px solid {border-color};
+    border-radius: 3px;
+    padding: 5px;
+    color: {foreground-color};
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 1px solid {border-color};
+}
+
+QComboBox::down-arrow {
+    width: 10px;
+    height: 10px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: {input-background-color};
+    border: 1px solid {border-color};
+    selection-background-color: {secondary-color};
 }
