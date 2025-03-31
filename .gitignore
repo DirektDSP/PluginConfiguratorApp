@@ -4,6 +4,7 @@ __pycache__/
 ui/__pycache__/
 core/__pycache__/
 resources/__pycache__/
+themes/__pycache__
 
 *.py[cod]
 *$py.class
