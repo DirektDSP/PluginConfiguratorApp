@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QGroupBox
+    QWidget, QVBoxLayout, QGroupBox, QCheckBox, QFormLayout, QLabel
 )
 from PySide6.QtCore import Signal
 
@@ -11,33 +11,52 @@ class DevelopmentWorkflowTab(QWidget):
         self.setup_ui()
         
     def setup_ui(self):
-        """Initialize UI components"""
         self.layout = QVBoxLayout(self)
-        
-        # Placeholder label
-        self.placeholder = QLabel("Development Workflow Tab - Content to be implemented")
-        self.placeholder.setStyleSheet("font-size: 18px; color: gray;")
-        self.layout.addWidget(self.placeholder)
-        
-        # Add stretch to push content to top
+
+        self.group = QGroupBox("Development Workflow Features")
+        form = QFormLayout()
+        self.vcs_cb = QCheckBox("Version Control Integration")
+        self.testing_cb = QCheckBox("Automated Testing of Generated Projects")
+        self.code_quality_cb = QCheckBox("Post-Generation Code Quality Checks")
+        self.validation_tools_cb = QCheckBox("Plugin Validation Tools Integration")
+        self.scaffolding_cb = QCheckBox("Project Scaffolding (README, License, etc.)")
+        form.addRow(self.vcs_cb)
+        form.addRow(self.testing_cb)
+        form.addRow(self.code_quality_cb)
+        form.addRow(self.validation_tools_cb)
+        form.addRow(self.scaffolding_cb)
+        self.group.setLayout(form)
+        self.layout.addWidget(self.group)
         self.layout.addStretch()
-    
+
     def get_configuration(self):
-        """Get current configuration from this tab"""
-        # Will be implemented later
-        return {}
-    
+        return {
+            "vcs": self.vcs_cb.isChecked(),
+            "testing": self.testing_cb.isChecked(),
+            "code_quality": self.code_quality_cb.isChecked(),
+            "validation_tools": self.validation_tools_cb.isChecked(),
+            "scaffolding": self.scaffolding_cb.isChecked(),
+        }
+
     def load_configuration(self, config):
-        """Load configuration into this tab"""
-        # Will be implemented later
-        pass
-    
+        self.vcs_cb.setChecked(config.get("vcs", False))
+        self.testing_cb.setChecked(config.get("testing", False))
+        self.code_quality_cb.setChecked(config.get("code_quality", False))
+        self.validation_tools_cb.setChecked(config.get("validation_tools", False))
+        self.scaffolding_cb.setChecked(config.get("scaffolding", False))
+
     def validate(self):
-        """Validate that all required information is provided"""
-        # For now, just return True as the tab is empty
+        # No required fields for now
         return True
-    
+
     def reset(self):
-        """Reset form to default values"""
-        # Will be implemented later
+        self.vcs_cb.setChecked(False)
+        self.testing_cb.setChecked(False)
+        self.code_quality_cb.setChecked(False)
+        self.validation_tools_cb.setChecked(False)
+        self.scaffolding_cb.setChecked(False)
+
+    def start_generation(self, config):
+        """Start the project generation process (stub for now)"""
+        # You can implement progress UI or logs here in the future
         pass
