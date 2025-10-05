@@ -82,13 +82,15 @@ plugin-configurator
 ## Configuration Options
 
 ### Plugin Formats
+
 - VST3
 - Audio Unit (AU)
 - Audio Unit v3 (AUv3)
 - CLAP
 - Standalone Application
 
-### Features
+### Config Features
+
 - Initialize Git Repository
 - Include Melatonin Inspector (debugging UI)
 - Moonbase Licensing
@@ -97,6 +99,7 @@ plugin-configurator
 - XCode Prettify (for macOS development)
 
 ### JUCE Options
+
 - Enable JUCE_USE_CURL
 - Enable JUCE_WEB_BROWSER
 - Enable JUCE_VST3_CAN_REPLACE_VST2
