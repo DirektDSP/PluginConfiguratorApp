@@ -1,31 +1,41 @@
-from abc import ABC, abstractmethod
-from abc import ABCMeta as ABCTestMeta
+"""Abstract base class for all configuration tabs in the Plugin Configurator application."""
+
+from abc import ABC, ABCMeta, abstractmethod
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QWidget
 
 
 class TabSignals(QObject):
-    """Signals common to all tabs"""
+    """Signals common to all tabs."""
 
     config_changed = Signal(dict)
     validation_changed = Signal(bool)
 
 
-class BaseTabMeta(type(QWidget), ABCTestMeta):
-    """Metaclass that combines QWidget and ABC metaclasses"""
+class BaseTabMeta(type(QWidget), ABCMeta):
+    """Metaclass that combines QWidget and ABC metaclasses."""
 
     pass
 
 
 class BaseTab(QWidget, ABC, metaclass=BaseTabMeta):
-    """Base class for all configuration tabs
+    """Abstract base class for all configuration tabs.
 
     Provides common functionality and structure for all tabs in the application.
     All tabs should inherit from this class and implement the abstract methods.
+
+    Signals:
+        config_changed: Emitted when the tab's configuration changes.
+        validation_changed: Emitted when the tab's validation state changes.
     """
 
     def __init__(self, parent=None):
+        """Initialize the base tab.
+
+        Args:
+            parent: Optional parent widget.
+        """
         super().__init__(parent)
         self._signals = TabSignals(self)
         self._is_valid = False
