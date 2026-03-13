@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Script to add issues to user-level GitHub Project
+Script to add issues to Organizational GitHub Project
 """
 
 import subprocess
 import json
 import time
 
-# Use the user-level project number (not ID)
-PROJECT_NUM = 2
+# Use the organizational project number
+PROJECT_NUM = 1
 
 
 def list_all_issues():
@@ -36,7 +36,7 @@ def add_issue_to_project(issue_number, issue_title):
         "item-add",
         str(PROJECT_NUM),
         "--owner",
-        "@me",
+        "DirektDSP",
         "--url",
         issue_url,
     ]
@@ -52,14 +52,15 @@ def add_issue_to_project(issue_number, issue_title):
 
 
 def main():
-    print("Adding Issues to User-Level GitHub Project...")
-    print(f"Project: https://github.com/users/SeamusMullan/projects/2")
+    print("Adding Issues to Organizational GitHub Project...")
+    print(f"Project: https://github.com/orgs/DirektDSP/projects/1")
     print("=" * 80)
 
     issues = list_all_issues()
     print(f"\nFound {len(issues)} issues in repository")
 
     added = 0
+    already_exists = 0
     for issue in issues:
         print(f"Adding: #{issue['number']} - {issue['title'][:60]}...")
         if add_issue_to_project(issue["number"], issue["title"]):
@@ -67,12 +68,15 @@ def main():
             added += 1
             time.sleep(0.5)  # Rate limiting
         else:
-            print(f"  ✗ Failed to add")
+            print(f"  ⊘ Already exists or failed")
+            already_exists += 1
 
     print("\n" + "=" * 80)
-    print(f"✅ Total issues added to project: {added}/{len(issues)}")
-    print(f"\n📋 Project URL: https://github.com/users/SeamusMullan/projects/2")
-    print(f"📊 Board URL: https://github.com/users/SeamusMullan/projects/2/views/1")
+    print(f"✅ Successfully added: {added}")
+    print(f"⊘ Already existed: {already_exists}")
+    print(f"📊 Total: {len(issues)} issues")
+    print(f"\n📋 Project URL: https://github.com/orgs/DirektDSP/projects/1")
+    print(f"📊 Board URL: https://github.com/orgs/DirektDSP/projects/1/views/1")
 
 
 if __name__ == "__main__":

@@ -10,11 +10,12 @@
 
 ### 1. GitHub Projects ✓
 
-**Created:** User-Level Project "UI Revamp"
-- URL: https://github.com/users/SeamusMullan/projects/2
-- Board View: https://github.com/users/SeamusMullan/projects/2/views/1
+**Created:** Organizational Project "UI Revamp" (DirektDSP org)
+- URL: https://github.com/orgs/DirektDSP/projects/1
+- Board View: https://github.com/orgs/DirektDSP/projects/1/views/1
 - Type: Private (can be made public later)
 - **Populated with all 30 issues** ✓
+- **Accessible to all DirektDSP team members**
 
 ---
 
