@@ -299,15 +299,15 @@ PluginConfiguratorApp/
 ## Resources
 
 ### GitHub Project
-- Project URL: https://github.com/users/SeamusMullan/projects/2
-- Board View: https://github.com/users/SeamusMullan/projects/2/views/1
+- Project URL: https://github.com/orgs/DirektDSP/projects/1
+- Board View: https://github.com/orgs/DirektDSP/projects/1/views/1
 - Issue templates: `.github/ISSUE_TEMPLATE/`
 - Labels: https://github.com/DirektDSP/PluginConfiguratorApp/labels
 
 ### Scripts
 - `create_issues.py` - Create epic issues (run as needed)
 - `create_tasks.py` - Create task issues (extend for Phases 2-6)
-- `populate_project.py` - Populate project board with issues
+- `migrate_to_org.py` - Migrate issues to organizational project
 
 ### Documentation
 - `UI_REVAMP_PLAN.md` - Detailed plan (1029 lines)
