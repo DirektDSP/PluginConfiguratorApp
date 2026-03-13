@@ -10,10 +10,11 @@
 
 ### 1. GitHub Projects ✓
 
-**Created:** Organizational Project "UI Revamp"
-- URL: https://github.com/orgs/DirektDSP/projects/1
-- Project ID: PVT_kwDOB5FKGc4BRppg
+**Created:** User-Level Project "UI Revamp"
+- URL: https://github.com/users/SeamusMullan/projects/2
+- Board View: https://github.com/users/SeamusMullan/projects/2/views/1
 - Type: Private (can be made public later)
+- **Populated with all 30 issues** ✓
 
 ---
 
@@ -297,14 +298,15 @@ PluginConfiguratorApp/
 ## Resources
 
 ### GitHub Project
-- Project URL: https://github.com/orgs/DirektDSP/projects/1
+- Project URL: https://github.com/users/SeamusMullan/projects/2
+- Board View: https://github.com/users/SeamusMullan/projects/2/views/1
 - Issue templates: `.github/ISSUE_TEMPLATE/`
 - Labels: https://github.com/DirektDSP/PluginConfiguratorApp/labels
 
 ### Scripts
 - `create_issues.py` - Create epic issues (run as needed)
 - `create_tasks.py` - Create task issues (extend for Phases 2-6)
-- `add_to_project.py` - Populate project board
+- `populate_project.py` - Populate project board with issues
 
 ### Documentation
 - `UI_REVAMP_PLAN.md` - Detailed plan (1029 lines)
