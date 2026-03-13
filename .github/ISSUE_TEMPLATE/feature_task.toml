@@ -1,0 +1,58 @@
+---
+name: Feature Task
+about: Create a task issue for implementing a specific feature or component
+title: '[TASK] '
+labels: ''
+assignees: ''
+
+---
+
+## Description
+<!-- Detailed description of what this task implements -->
+
+**Parent Epic:** [Epic #](#)
+
+**UI Revamp Plan Reference:** [Section](#)
+
+## Acceptance Criteria
+<!-- Definition of done - what must be working to consider this complete -->
+- [ ]
+- [ ]
+- [ ]
+
+## Implementation Details
+
+### Files to Modify/Create
+<!-- List the files that need changes -->
+- `src/ui/tabs/`
+- `src/core/`
+- `templates/`
+
+### Key Components
+<!-- What specific code/components need to be created or modified? -->
+
+### Testing
+<!-- How will this be tested? -->
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Manual testing
+
+## Dependencies
+<!-- What must be completed before this can start? -->
+- Blocks on: [Issue #]
+- Required by: [Issue #]
+
+## Complexity & Estimation
+- **Complexity:** [Low/Medium/High]
+- **Estimated Time:** [e.g., 2-4 hours, 1-2 days]
+- **Priority:** [0-4]
+
+## Notes
+<!-- Any additional context, edge cases, or technical considerations -->
+
+## Checklist
+- [ ] Code implemented
+- [ ] Tests written
+- [ ] Documentation updated
+- [ ] Code reviewed
+- [ ] Ready for merge

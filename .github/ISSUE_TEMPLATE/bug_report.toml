@@ -1,0 +1,50 @@
+---
+name: Bug Report
+about: Report a bug or issue encountered during development or usage
+title: '[BUG] '
+labels: bug
+assignees: ''
+
+---
+
+## Bug Description
+<!-- Clear and concise description of what the bug is -->
+
+**Phase Affected:** [Phase 1-6 or N/A]
+
+**Parent Task/Epic:** [Issue #](#) if applicable
+
+## Reproduction Steps
+<!-- Steps to reproduce the behavior -->
+1.
+2.
+3.
+
+## Expected Behavior
+<!-- What you expected to happen -->
+
+## Actual Behavior
+<!-- What actually happened -->
+
+## Screenshots / Logs
+<!-- Add any relevant screenshots, error messages, or logs -->
+
+## Environment
+- OS: [e.g., macOS 14, Ubuntu 22.04]
+- Python Version: [e.g., 3.12]
+- PluginConfiguratorApp Version: [e.g., 1.0.0]
+
+## Severity
+- **Severity:** [Critical/High/Medium/Low]
+- **Blocks:** [Does this block other issues?]
+
+## Root Cause Analysis (Investigation Results)
+<!-- If investigated, what caused the bug? -->
+
+## Workaround
+<!-- Is there a temporary workaround? -->
+
+## Notes
+<!-- Any additional context -->
+
+**Related Issues:**

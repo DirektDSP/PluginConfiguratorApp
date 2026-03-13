@@ -1,0 +1,49 @@
+---
+name: Epic
+about: Create an epic issue that encompasses multiple related tasks
+title: '[EPIC] '
+labels: epic
+assignees: ''
+---
+
+## Overview
+<!-- Brief description of this epic and what it aims to achieve -->
+
+**Related UI Revamp Plan Section:** [Link to plan section or N/A]
+
+**Phase:** [Phase 1-6]
+
+## Objectives
+<!-- What are the main goals of this epic? -->
+- [ ]
+- [ ]
+- [ ]
+
+## Impact
+<!-- Why is this important? What value does it deliver? -->
+
+## Linked Tasks
+<!-- Create tasks and link them here using task list format -->
+- [ ] [Task 1 Title](#)
+- [ ] [Task 2 Title](#)
+- [ ] [Task 3 Title](#)
+
+## Dependencies
+<!-- List any epics or external dependencies -->
+- Depends on: [Epic/Issue #]
+- Blocks: [Epic/Issue #]
+
+## Success Criteria
+<!-- How do we know this epic is complete? -->
+- [ ] All tasks completed and verified
+- [ ] Acceptance criteria met
+- [ ] Documentation updated
+
+## Notes & Discussion
+<!-- Any additional context, questions, or discussion points -->
+
+## Gantt Timeline
+<!-- Estimated timeline for this epic -->
+- **Start Date:** [YYYY-MM-DD]
+- **End Date:** [YYYY-MM-DD]
+- **Duration:** [X days/weeks]
