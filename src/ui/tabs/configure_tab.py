@@ -1,16 +1,15 @@
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGroupBox,
-    QFormLayout,
-    QLineEdit,
-    QPushButton,
-    QLabel,
     QCheckBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
     QMessageBox,
+    QPushButton,
+    QVBoxLayout,
 )
-from PySide6.QtCore import Signal, Slot
 
 from core.base_tab import BaseTab
 
@@ -231,10 +230,7 @@ class ConfigureTab(BaseTab):
         if len(self.manufacturer_code.text().strip()) != 4:
             errors.append("Manufacturer Code must be exactly 4 characters")
 
-        if errors:
-            return False
-
-        return True
+        return not errors
 
     def reset(self):
         """Reset the tab to its default state"""

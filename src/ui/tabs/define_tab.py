@@ -1,20 +1,18 @@
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGroupBox,
-    QFormLayout,
-    QLineEdit,
-    QPushButton,
-    QLabel,
-    QFileDialog,
-    QMessageBox,
     QCheckBox,
+    QFileDialog,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
 )
-from PySide6.QtCore import Signal, Slot
 
 from core.base_tab import BaseTab
-from core.utils import generate_plugin_id
 
 
 class DefineTab(BaseTab):
@@ -56,9 +54,7 @@ class DefineTab(BaseTab):
         # Quick select presets dropdown
         preset_layout = QHBoxLayout()
         self.preset_dropdown = QLineEdit()
-        self.preset_dropdown.setPlaceholderText(
-            "Select a preset or leave empty for custom"
-        )
+        self.preset_dropdown.setPlaceholderText("Select a preset or leave empty for custom")
         self.preset_dropdown.setReadOnly(True)
 
         self.browse_preset_button = QPushButton("Browse Presets...")
@@ -75,9 +71,7 @@ class DefineTab(BaseTab):
         # Output directory selection
         output_dir_layout = QHBoxLayout()
         self.output_directory = QLineEdit()
-        self.output_directory.setPlaceholderText(
-            "Select output directory for your plugin project"
-        )
+        self.output_directory.setPlaceholderText("Select output directory for your plugin project")
         self.browse_button = QPushButton("Browse...")
         self.browse_button.setMaximumWidth(80)
         output_dir_layout.addWidget(self.output_directory)
@@ -87,9 +81,7 @@ class DefineTab(BaseTab):
         # Quick start mode checkbox
         self.quick_start_mode = QCheckBox("Quick Start Mode")
         self.quick_start_mode.setChecked(True)
-        self.quick_start_mode.setToolTip(
-            "Enable Quick Start mode with simplified interface"
-        )
+        self.quick_start_mode.setToolTip("Enable Quick Start mode with simplified interface")
         output_layout.addRow(self.quick_start_mode)
 
         output_group.setLayout(output_layout)
@@ -133,9 +125,7 @@ class DefineTab(BaseTab):
     @Slot()
     def _browse_output_dir(self):
         """Open file dialog to select output directory"""
-        directory = QFileDialog.getExistingDirectory(
-            self, "Select Output Directory", ""
-        )
+        directory = QFileDialog.getExistingDirectory(self, "Select Output Directory", "")
         if directory:
             self.output_directory.setText(directory)
 
@@ -163,9 +153,7 @@ class DefineTab(BaseTab):
 
     def _update_validation_state(self):
         """Update validation state based on field values"""
-        is_valid = bool(self.fork_url.text().strip()) and bool(
-            self.output_directory.text().strip()
-        )
+        is_valid = bool(self.fork_url.text().strip()) and bool(self.output_directory.text().strip())
         self._emit_validation_changed(is_valid)
         self.continue_button.setEnabled(is_valid)
 
@@ -198,10 +186,7 @@ class DefineTab(BaseTab):
         if not self.output_directory.text().strip():
             errors.append("Output Directory is required")
 
-        if errors:
-            return False
-
-        return True
+        return not errors
 
     def reset(self):
         """Reset the tab to its default state"""

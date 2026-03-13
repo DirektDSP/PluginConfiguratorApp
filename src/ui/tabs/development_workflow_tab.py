@@ -1,15 +1,13 @@
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QGroupBox, QCheckBox, QFormLayout, QLabel
-)
-from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QVBoxLayout, QWidget
+
 
 class DevelopmentWorkflowTab(QWidget):
     """Tab for configuring development workflow options"""
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
-        
+
     def setup_ui(self):
         self.layout = QVBoxLayout(self)
 

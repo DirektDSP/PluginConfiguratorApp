@@ -1,10 +1,17 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QGroupBox, QFormLayout, QCheckBox, QSpinBox, QLineEdit, QLabel, QComboBox, QHBoxLayout
+    QCheckBox,
+    QFormLayout,
+    QGroupBox,
+    QLineEdit,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt
+
 
 class ConfigurationTab(QWidget):
     """Tab for general plugin configuration (build, GUI, DSP, etc.)"""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
@@ -115,9 +122,7 @@ class ConfigurationTab(QWidget):
 
     def validate(self):
         # At least one plugin format must be selected
-        if not (self.standalone_cb.isChecked() or self.vst3_cb.isChecked() or self.au_cb.isChecked() or self.auv3_cb.isChecked() or self.clap_cb.isChecked()):
-            return False
-        return True
+        return self.standalone_cb.isChecked() or self.vst3_cb.isChecked() or self.au_cb.isChecked() or self.auv3_cb.isChecked() or self.clap_cb.isChecked()
 
     def reset(self):
         self.standalone_cb.setChecked(False)

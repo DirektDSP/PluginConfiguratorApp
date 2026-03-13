@@ -1,16 +1,15 @@
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
+    QFileDialog,
     QGroupBox,
+    QHBoxLayout,
     QLabel,
-    QPushButton,
-    QTextEdit,
     QMessageBox,
     QProgressBar,
-    QFileDialog,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
 )
-from PySide6.QtCore import Signal, Slot, QThread, pyqtSignal
 
 from core.base_tab import BaseTab
 from core.config_manager import ConfigManager
@@ -136,7 +135,7 @@ class GenerateTab(BaseTab):
                     self, "Success", f"Preset saved successfully to {preset_name}"
                 )
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to save preset: {str(e)}")
+                QMessageBox.critical(self, "Error", f"Failed to save preset: {e!s}")
 
     @Slot()
     def _load_preset(self):
@@ -155,7 +154,7 @@ class GenerateTab(BaseTab):
                     self, "Success", f"Preset loaded successfully from {preset_path}"
                 )
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to load preset: {str(e)}")
+                QMessageBox.critical(self, "Error", f"Failed to load preset: {e!s}")
 
     @Slot()
     def _generate_project(self):
@@ -224,11 +223,11 @@ class GenerateTab(BaseTab):
             )
 
         except Exception as e:
-            self.log_text.append(f"\nERROR: {str(e)}")
+            self.log_text.append(f"\nERROR: {e!s}")
             self.status_label.setText("Generation failed!")
             self.progress_bar.setValue(0)
             QMessageBox.critical(
-                self, "Generation Failed", f"Failed to generate project: {str(e)}"
+                self, "Generation Failed", f"Failed to generate project: {e!s}"
             )
 
     def _validate_config(self):

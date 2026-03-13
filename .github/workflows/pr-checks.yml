@@ -1,0 +1,97 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+env:
+  UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+
+jobs:
+  # PR Summary with AI (optional, requires API key)
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Comment PR Summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.pull_request;
+            const repo = context.repo;
+            
+            // Get changed files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: repo.owner,
+              repo: repo.repo,
+              pull_number: issue.number
+            });
+            
+            // Categorize changes
+            const pythonFiles = files.filter(f => f.filename.endsWith('.py')).length;
+            const testFiles = files.filter(f => f.filename.startsWith('tests/')).length;
+            const docFiles = files.filter(f => f.filename.endsWith('.md')).length;
+            const deleted = files.filter(f => f.status === 'removed').length;
+            const added = files.filter(f => f.status === 'added').length;
+            
+            const comment = `## 📊 PR Summary
+            
+            ### Changes Overview
+            - **Files Changed**: ${files.length}
+            - **Python Files**: ${pythonFiles}
+            - **Test Files**: ${testFiles}
+            - **Documentation**: ${docFiles}
+            - **Added**: ${added}
+            - **Deleted**: ${deleted}
+            
+            ### CI Checks
+            This PR will trigger the following checks:
+            ${pythonFiles > 0 ? '- ✅ Linting (ruff, isort, black)' : ''}
+            ${pythonFiles > 0 ? '- ✅ Type Checking (mypy)' : ''}
+            ${pythonFiles > 0 || testFiles > 0 ? '- ✅ Tests (pytest)' : ''}
+            ${docFiles > 0 ? '- ✅ Markdown Linting' : ''}
+            
+            Please ensure all checks pass before merging.`;
+            
+            github.rest.issues.createComment({
+              issue_number: issue.number,
+              owner: repo.owner,
+              repo: repo.repo,
+              body: comment
+            });
+  
+  # Validate PR labels
+  validate-labels:
+    name: Validate PR Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Validate labels
+        uses: yutailang0119/action-label-syncer@v1
+        with:
+          manifest: .github/labels.yml
+          sync: false
+  
+  # Check for merge conflicts
+  check-conflicts:
+    name: Check Merge Conflicts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check for merge conflicts
+        run: |
+          git checkout origin/main
+          git merge ${{ github.ref }} --no-commit --no-ff 2>&1 | grep -i "conflict" && {
+            echo "❌ Merge conflicts detected!"
+            git merge --abort
+            exit 1
+          } || echo "✅ No merge conflicts"
+          git merge --abort || true

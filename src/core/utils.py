@@ -1,29 +1,29 @@
 import os
-import uuid
 import random
 import string
 from pathlib import Path
 
+
 def generate_plugin_id():
     """Generate a unique 4-character plugin ID
-    
+
     JUCE plugin IDs must start with a capital letter.
-    
+
     Returns:
         str: A 4-character ID starting with a capital letter
     """
     # First character must be a capital letter
     first_char = random.choice(string.ascii_uppercase)
-    
+
     # Remaining characters can be any letter or number
     chars = string.ascii_letters + string.digits
     remaining_chars = ''.join(random.choice(chars) for _ in range(3))
-    
+
     return first_char + remaining_chars
 
 def create_cmake_file(output_dir, variables):
     """Create the CMakeLists.txt file with proper variable substitution
-    
+
     Args:
         output_dir: Path to the output directory
         variables: Dictionary of variables for template substitution
@@ -31,20 +31,20 @@ def create_cmake_file(output_dir, variables):
     # Template file path
     templates_dir = os.environ.get("TEMPLATES_DIR", "templates")
     template_path = Path(templates_dir) / "CMakeLists.txt.template"
-    
+
     # Check if template exists
     if not template_path.exists():
         # Fall back to embedded template
         cmake_template = get_cmake_template()
     else:
         # Read template from file
-        with open(template_path, 'r') as f:
+        with open(template_path) as f:
             cmake_template = f.read()
-    
+
     # Perform variable substitution
     for key, value in variables.items():
         cmake_template = cmake_template.replace(f"{{{key}}}", str(value))
-    
+
     # Write the result
     cmake_path = Path(output_dir) / "CMakeLists.txt"
     with open(cmake_path, 'w') as f:
@@ -52,23 +52,23 @@ def create_cmake_file(output_dir, variables):
 
 def create_gitignore_file(output_dir):
     """Create or update .gitignore file
-    
+
     Args:
         output_dir: Path to the output directory
     """
     # Template file path
     templates_dir = os.environ.get("TEMPLATES_DIR", "templates")
     template_path = Path(templates_dir) / "gitignore.template"
-    
+
     # Check if template exists
     if not template_path.exists():
         # Fall back to embedded template
         gitignore_template = get_gitignore_template()
     else:
         # Read template from file
-        with open(template_path, 'r') as f:
+        with open(template_path) as f:
             gitignore_template = f.read()
-    
+
     # Write the result
     gitignore_path = Path(output_dir) / ".gitignore"
     with open(gitignore_path, 'w') as f:
@@ -76,7 +76,7 @@ def create_gitignore_file(output_dir):
 
 def create_readme_from_variables(output_dir, variables):
     """Create README.md file with variable substitution
-    
+
     Args:
         output_dir: Path to the output directory
         variables: Dictionary of variables for template substitution
@@ -84,20 +84,20 @@ def create_readme_from_variables(output_dir, variables):
     # Template file path
     templates_dir = os.environ.get("TEMPLATES_DIR", "templates")
     template_path = Path(templates_dir) / "README.md.template"
-    
+
     # Check if template exists
     if not template_path.exists():
         # Fall back to embedded template
         readme_template = get_readme_template()
     else:
         # Read template from file
-        with open(template_path, 'r') as f:
+        with open(template_path) as f:
             readme_template = f.read()
-    
+
     # Perform variable substitution
     for key, value in variables.items():
         readme_template = readme_template.replace(f"{{{key}}}", str(value))
-    
+
     # Write the result
     readme_path = Path(output_dir) / "README.md"
     with open(readme_path, 'w') as f:
@@ -105,28 +105,28 @@ def create_readme_from_variables(output_dir, variables):
 
 def update_workflow_files(output_dir, variables):
     """Update GitHub workflow files with variable substitution
-    
+
     Args:
         output_dir: Path to the output directory
         variables: Dictionary of variables for template substitution
     """
     # Workflow directory
     workflow_dir = Path(output_dir) / ".github" / "workflows"
-    
+
     # Skip if directory doesn't exist
     if not workflow_dir.exists():
         return
-    
+
     # Update each workflow file
     for workflow_file in workflow_dir.glob("*.yml"):
-        with open(workflow_file, 'r') as f:
+        with open(workflow_file) as f:
             content = f.read()
-        
+
         # Only replace in the first line (name of the workflow)
         lines = content.split("\n")
         if lines and lines[0].startswith("name:"):
             lines[0] = f"name: {variables.get('PROJECT_NAME', 'Plugin')}"
-            
+
             # Write the modified content back
             with open(workflow_file, 'w') as f:
                 f.write("\n".join(lines))
@@ -236,7 +236,7 @@ add_library(SharedCode INTERFACE)
 clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
     CLAP_ID "${BUNDLE_ID}"
     CLAP_FEATURES audio-effect)
-	
+
 # Link the moonbase_JUCEClient target to the Pamplejuce target
 {MOONBASE_LINKING}
 

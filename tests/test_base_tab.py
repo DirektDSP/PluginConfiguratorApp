@@ -1,7 +1,8 @@
-import pytest
-from unittest.mock import Mock, MagicMock
-from PySide6.QtWidgets import QApplication, QWidget
 import sys
+from unittest.mock import Mock
+
+import pytest
+from PySide6.QtWidgets import QApplication, QWidget
 
 from core.base_tab import BaseTab, TabSignals
 

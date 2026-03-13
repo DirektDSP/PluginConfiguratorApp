@@ -1,0 +1,61 @@
+# CI Status Badges for PluginConfiguratorApp
+# This workflow updates status badges automatically
+
+name: Update Status
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches: [main, develop]
+
+permissions:
+  contents: write
+
+jobs:
+  update-status:
+    name: Update Status Badge
+    if: github.event.workflow_run.conclusion != 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Create badges directory if it doesn't exist
+            const badgesDir = 'badges';
+            if (!fs.existsSync(badgesDir)) {
+              fs.mkdirSync(badgesDir, { recursive: true });
+            }
+            
+            // Get the conclusion of the workflow
+            const conclusion = '${{ github.event.workflow_run.conclusion }}';
+            const color = conclusion === 'success' ? 'brightgreen' : 
+                         conclusion === 'failure' ? 'red' : 'yellow';
+            
+            // Create SVG badge
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="20">
+              <rect width="100" height="20" fill="${color}" rx="3"/>
+              <text x="50" y="14" font-family="Arial, sans-serif" font-size="12" 
+                    fill="white" text-anchor="middle" font-weight="bold">
+                CI: ${conclusion.toUpperCase()}
+              </text>
+            </svg>`;
+            
+            fs.writeFileSync(`${badgesDir}/ci.svg`, svg);
+            
+            // Commit the badge
+            const exec = require('@actions/exec');
+            await exec.exec('git', ['config', 'user.name', 'github-actions[bot]']);
+            await exec.exec('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
+            await exec.exec('git', ['add', `${badgesDir}/ci.svg` || true]);
+            
+            // Only commit if there are changes
+            const { exitCode } = await exec.exec('git', ['diff', '--staged', '--quiet']);
+            if (exitCode !== 0) {
+              await exec.exec('git', ['commit', '-m', `Update CI status: ${conclusion}`]);
+              await exec.exec('git', ['push']);
+            }

@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
 
+
 class ThemeManager:
     """Manages application themes and stylesheets"""
-    
+
     def __init__(self):
         self.themes = {
             "dark": {
@@ -37,31 +38,31 @@ class ThemeManager:
                 "textedit-background-color": "#E5E9F0",
                 "progressbar-background-color": "#E5E9F0",
                 "progressbar-chunk-color": "#5E81AC",
-            }
+            },
         }
-    
+
     def get_stylesheet(self, theme_name="dark"):
         """Get the stylesheet for the specified theme"""
         # Ensure the theme exists, default to dark if not
         if theme_name not in self.themes:
             theme_name = "dark"
-            
+
         # Get the theme variables
         theme_vars = self.themes[theme_name]
-        
+
         # Find the stylesheet file
         stylesheet_path = self._find_stylesheet_path()
-        
+
         # Read the stylesheet template
-        with open(stylesheet_path, 'r') as file:
+        with open(stylesheet_path) as file:
             stylesheet = file.read()
-            
+
         # Replace variables with theme values
         for key, value in theme_vars.items():
             stylesheet = stylesheet.replace(f"{{{key}}}", value)
-            
+
         return stylesheet
-    
+
     def _find_stylesheet_path(self):
         """Find the path to the stylesheet file"""
         # Try to use the environment variable first
@@ -69,12 +70,12 @@ class ThemeManager:
             path = Path(os.environ["RESOURCES_DIR"]) / "style.qss"
             if path.exists():
                 return path
-        
+
         # Fall back to relative path from this file
         current_dir = Path(__file__).parent.parent
         path = current_dir / "style.qss"
-        
+
         if not path.exists():
             raise FileNotFoundError(f"Could not find stylesheet file at {path}")
-            
+
         return path

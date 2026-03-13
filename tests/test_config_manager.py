@@ -1,7 +1,8 @@
-import pytest
-from pathlib import Path
 import tempfile
 import xml.etree.ElementTree as ET
+from pathlib import Path
+
+import pytest
 
 from core.config_manager import ConfigManager
 
@@ -145,9 +146,7 @@ class TestConfigManager:
             preset_path = config_manager.preset_dir / f"{name}.xml"
             preset_path.unlink(missing_ok=True)
 
-    def test_save_config_creates_valid_xml(
-        self, config_manager, temp_file, sample_config
-    ):
+    def test_save_config_creates_valid_xml(self, config_manager, temp_file, sample_config):
         """Test that saved XML is valid and well-formed"""
         config_manager.save_config(sample_config, temp_file)
 

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from abc import ABCMeta as ABCTestMeta
+
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Signal, QObject, SignalInstance
 
 
 class TabSignals(QObject):

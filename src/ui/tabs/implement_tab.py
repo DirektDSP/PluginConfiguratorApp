@@ -1,14 +1,13 @@
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QGroupBox,
     QCheckBox,
+    QGroupBox,
+    QHBoxLayout,
     QLabel,
-    QPushButton,
     QMessageBox,
+    QPushButton,
+    QVBoxLayout,
 )
-from PySide6.QtCore import Signal, Slot
 
 from core.base_tab import BaseTab
 
