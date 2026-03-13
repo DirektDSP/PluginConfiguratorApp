@@ -15,8 +15,6 @@ from ui.tabs.advanced_tab import AdvancedTab
 from ui.tabs.configuration_tab import ConfigurationTab
 from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
 from ui.tabs.implementations_tab import ImplementationsTab
-
-# Import the tab classes
 from ui.tabs.project_info_tab import ProjectInfoTab
 from ui.tabs.user_experience_tab import UserExperienceTab
 
@@ -80,7 +78,10 @@ class MainWindow(QMainWindow):
         # Connect tab change signals
         self.tab_widget.currentChanged.connect(self.handle_tab_changed)
 
-        # For now, connect minimal signals as the tabs are empty
+        # Connect config_changed signals from all tabs to update status
+        for tab in self._all_tabs():
+            tab.config_changed.connect(self._on_tab_config_changed)
+            tab.validation_changed.connect(self._on_tab_validation_changed)
 
     def setup_menu(self):
         """Set up application menu"""
@@ -149,16 +150,23 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready")
 
+    def _all_tabs(self):
+        """Return all configuration tabs as a list"""
+        return [
+            self.project_info_tab,
+            self.implementations_tab,
+            self.configuration_tab,
+            self.user_experience_tab,
+            self.development_workflow_tab,
+            self.advanced_tab,
+        ]
+
     @Slot()
     def new_project(self):
         """Reset form for a new project"""
-        # Reset all tabs
-        self.project_info_tab.reset()
-        self.implementations_tab.reset()
-        self.configuration_tab.reset()
-        self.user_experience_tab.reset()
-        self.development_workflow_tab.reset()
-        self.advanced_tab.reset()
+        # Reset all tabs using the BaseTab interface
+        for tab in self._all_tabs():
+            tab.reset()
 
         # Reset progress
         self.global_progress_bar.setValue(0)
@@ -203,23 +211,29 @@ class MainWindow(QMainWindow):
         self.development_workflow_tab.start_generation(config)
 
     def collect_configuration(self):
-        """Collect configuration from all tabs"""
-        config = {}
-
-        # Will be implemented as we add functionality to the tabs
-        # For now, return an empty config
-        return config
+        """Collect configuration from all tabs using the BaseTab interface"""
+        return {
+            "project_info": self.project_info_tab.get_configuration(),
+            "implementations": self.implementations_tab.get_configuration(),
+            "configuration": self.configuration_tab.get_configuration(),
+            "user_experience": self.user_experience_tab.get_configuration(),
+            "development_workflow": self.development_workflow_tab.get_configuration(),
+            "advanced": self.advanced_tab.get_configuration(),
+        }
 
     def validate_all_tabs(self):
-        """Validate all tabs to ensure required information is provided"""
-        # For now, just return True as the tabs are empty
-        return True
+        """Validate all tabs using the BaseTab interface"""
+        return all(tab.validate() for tab in self._all_tabs())
 
     @Slot(dict)
     def load_preset_to_all_tabs(self, config):
-        """Load preset configuration to all tabs"""
-        # Will be implemented as we add functionality to the tabs
-        pass
+        """Load preset configuration to all tabs using the BaseTab interface"""
+        self.project_info_tab.load_configuration(config.get("project_info", {}))
+        self.implementations_tab.load_configuration(config.get("implementations", {}))
+        self.configuration_tab.load_configuration(config.get("configuration", {}))
+        self.user_experience_tab.load_configuration(config.get("user_experience", {}))
+        self.development_workflow_tab.load_configuration(config.get("development_workflow", {}))
+        self.advanced_tab.load_configuration(config.get("advanced", {}))
 
     @Slot(str)
     def update_status(self, message):
@@ -231,6 +245,16 @@ class MainWindow(QMainWindow):
     def handle_tab_changed(self, index):
         """Handle when the user changes tabs"""
         # Will be implemented as we add functionality to the tabs
+        pass
+
+    @Slot(dict)
+    def _on_tab_config_changed(self, config):
+        """Handle configuration change from any tab"""
+        self.status_bar.showMessage("Configuration updated")
+
+    @Slot(bool)
+    def _on_tab_validation_changed(self, is_valid):
+        """Handle validation state change from any tab"""
         pass
 
     def change_theme(self, theme_name):

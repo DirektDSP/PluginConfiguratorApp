@@ -1,12 +1,15 @@
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QVBoxLayout
+
+from core.base_tab import BaseTab
 
 
-class AdvancedTab(QWidget):
+class AdvancedTab(BaseTab):
     """Tab for advanced plugin configuration options"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
+        self.setup_connections()
 
     def setup_ui(self):
         """Initialize UI components"""
@@ -19,6 +22,10 @@ class AdvancedTab(QWidget):
 
         # Add stretch to push content to top
         self.layout.addStretch()
+
+    def setup_connections(self):
+        """Connect signals to slots"""
+        pass
 
     def get_configuration(self):
         """Get current configuration from this tab"""
@@ -38,4 +45,9 @@ class AdvancedTab(QWidget):
     def reset(self):
         """Reset form to default values"""
         # Will be implemented later
+        pass
+
+    def save_config_as_preset(self, config):
+        """Save the given configuration as a preset (to be fully implemented)"""
+        # Will be implemented when preset management is added to this tab
         pass
