@@ -1,3 +1,5 @@
+from functools import partial
+
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
@@ -88,12 +90,9 @@ class MainWindow(QMainWindow):
 
         # Connect config_changed signals from all tabs to update status
         for tab in self._all_tabs():
-            tab.config_changed.connect(
-                lambda config, tab=tab: self._on_tab_config_changed(tab, config)
-            )
-            tab.validation_changed.connect(
-                lambda is_valid, tab=tab: self._on_tab_validation_changed(tab, is_valid)
-            )
+            # Bind tab instance so handlers know which tab emitted the signal.
+            tab.config_changed.connect(partial(self._on_tab_config_changed, tab))
+            tab.validation_changed.connect(partial(self._on_tab_validation_changed, tab))
         self._sync_configuration_from_tabs()
 
     def setup_menu(self):
@@ -165,7 +164,7 @@ class MainWindow(QMainWindow):
 
     def _all_tabs(self):
         """Return all configuration tabs as a list"""
-        return list(self._tab_order)
+        return self._tab_order
 
     def _sync_configuration_from_tabs(self):
         """Initialize configuration manager from current tab states."""
@@ -174,15 +173,21 @@ class MainWindow(QMainWindow):
             tab_name = self._tab_registry.get(tab)
             if tab_name:
                 self.config_manager.update_config(tab_name, config)
-            if tab is self.define_tab and "quick_start_mode" in config:
-                self._sync_quick_start(config["quick_start_mode"])
+            self._update_quick_start_from_config(tab, config)
         self._update_generate_preview()
 
+    def _update_quick_start_from_config(self, tab, config):
+        """Sync quick-start state when the define tab emits updates."""
+        if tab is self.define_tab and "quick_start_mode" in config:
+            self._sync_quick_start(config["quick_start_mode"])
+
     def _sync_quick_start(self, desired_state):
-        """Ensure quick-start flag matches the requested state."""
-        current_state = self.config_manager.get_full_config().get("quick_start", False)
-        if desired_state != current_state:
-            self.config_manager.toggle_quick_start()
+        """Ensure quick-start flag matches the requested state.
+
+        Args:
+            desired_state: Desired value of the quick-start mode flag.
+        """
+        self.config_manager.set_quick_start(desired_state)
 
     def _update_generate_preview(self):
         """Update the Generate tab with the latest full configuration."""
@@ -210,7 +215,7 @@ class MainWindow(QMainWindow):
     def save_current_as_preset(self):
         """Save current configuration as a preset"""
         self._update_generate_preview()
-        self.generate_tab._save_as_preset()
+        self.generate_tab.save_as_preset()
         self.status_bar.showMessage("Preset saved")
 
     @Slot()
@@ -226,30 +231,23 @@ class MainWindow(QMainWindow):
             )
             return
 
-        # Collect configuration from all tabs
+        # Update configuration and switch to generate tab
         self._update_generate_preview()
-
-        # Switch to generate tab
         self.tab_widget.setCurrentWidget(self.generate_tab)
 
         # Start generation process
-        self.generate_tab._generate_project()
-
-    def collect_configuration(self):
-        """Collect configuration from all tabs using the BaseTab interface"""
-        return self.config_manager.get_full_config()
+        self.generate_tab.generate_project()
 
     def validate_all_tabs(self):
-        """Validate all tabs using the BaseTab interface"""
+        """Validate all tabs using the ConfigurationManager"""
         return self.config_manager.validate_all(self._all_tabs())
 
     @Slot(dict)
     def load_preset_to_all_tabs(self, config):
         """Load preset configuration to all tabs using the BaseTab interface"""
-        self.define_tab.load_configuration(config)
-        self.configure_tab.load_configuration(config)
-        self.implement_tab.load_configuration(config)
-        self.generate_tab.update_full_config(config)
+        # Tabs accept the full config dict and extract relevant keys internally.
+        for tab in self._all_tabs():
+            tab.load_configuration(config)
         self._sync_configuration_from_tabs()
 
     @Slot(str)
@@ -264,18 +262,30 @@ class MainWindow(QMainWindow):
         # Will be implemented as we add functionality to the tabs
         pass
 
+    @Slot(object, dict)
     def _on_tab_config_changed(self, tab, config):
-        """Handle configuration change from any tab"""
+        """Handle configuration change from any tab.
+
+        Args:
+            tab: Tab instance that emitted the signal.
+            config: Configuration payload from the emitting tab.
+        """
         tab_name = self._tab_registry.get(tab)
         if tab_name:
             self.config_manager.update_config(tab_name, config)
-        if tab is self.define_tab and "quick_start_mode" in config:
-            self._sync_quick_start(config["quick_start_mode"])
+        self._update_quick_start_from_config(tab, config)
         self._update_generate_preview()
         self.status_bar.showMessage("Configuration updated")
 
+    @Slot(object, bool)
     def _on_tab_validation_changed(self, tab, is_valid):
-        """Handle validation state change from any tab"""
+        """Handle validation state change from any tab.
+
+        Args:
+            tab: Tab instance that emitted the signal.
+            is_valid: Whether the emitting tab is currently valid.
+        """
+        # Will be implemented as validation UI indicators are added.
         pass
 
     def change_theme(self, theme_name):

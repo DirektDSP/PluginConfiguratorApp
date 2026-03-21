@@ -75,6 +75,19 @@ class ConfigurationManager:
             self._quick_start = not self._quick_start
             return self._quick_start
 
+    def set_quick_start(self, value: bool) -> bool:
+        """Set the quick-start mode flag to a specific value.
+
+        Args:
+            value: Desired state of the ``quick_start`` flag.
+
+        Returns:
+            bool: The updated value of the ``quick_start`` flag.
+        """
+        with self._data_lock:
+            self._quick_start = bool(value)
+            return self._quick_start
+
     def validate_all(self, tabs: list | None = None) -> bool:
         """Validate configuration across all tabs.
 

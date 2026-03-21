@@ -14,7 +14,7 @@ def app():
     else:
         app = QApplication.instance()
     yield app
-    app.quit()
+    app.processEvents()
 
 
 @pytest.fixture
@@ -38,8 +38,9 @@ def test_main_window_tab_structure(window):
 
 def test_config_flow_updates_generate_preview(window):
     """Config updates should flow into ConfigurationManager and Generate tab preview."""
-    window.define_tab.output_directory.setText("/tmp/plugin-output")
-    window.define_tab.fork_url.setText("https://example.com/template.git")
+    window.define_tab.load_configuration(
+        {"output_directory": "/tmp/plugin-output", "fork_url": "https://example.com/template.git"}
+    )
 
     full_config = window.config_manager.get_full_config()
     assert full_config["output_directory"] == "/tmp/plugin-output"

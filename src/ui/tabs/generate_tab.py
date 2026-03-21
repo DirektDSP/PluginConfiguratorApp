@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -54,9 +56,7 @@ class GenerateTab(BaseTab):
         self.file_tree_text.setReadOnly(True)
         self.file_tree_text.setMinimumHeight(150)
         self.file_tree_text.setFontFamily("Monospace")
-        self.file_tree_text.setPlaceholderText(
-            "File structure will be displayed here..."
-        )
+        self.file_tree_text.setPlaceholderText("File structure will be displayed here...")
         file_tree_layout.addWidget(self.file_tree_text)
 
         file_tree_group.setLayout(file_tree_layout)
@@ -124,9 +124,7 @@ class GenerateTab(BaseTab):
     @Slot()
     def _save_as_preset(self):
         """Save current configuration as a preset"""
-        preset_name, ok = QFileDialog.getSaveFileName(
-            self, "Save Preset", "", "XML Files (*.xml)"
-        )
+        preset_name, ok = QFileDialog.getSaveFileName(self, "Save Preset", "", "XML Files (*.xml)")
 
         if ok and preset_name:
             try:
@@ -137,12 +135,14 @@ class GenerateTab(BaseTab):
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save preset: {e!s}")
 
+    def save_as_preset(self):
+        """Public wrapper for saving the current configuration as a preset."""
+        self._save_as_preset()
+
     @Slot()
     def _load_preset(self):
         """Load configuration from a preset"""
-        preset_path, ok = QFileDialog.getOpenFileName(
-            self, "Load Preset", "", "XML Files (*.xml)"
-        )
+        preset_path, ok = QFileDialog.getOpenFileName(self, "Load Preset", "", "XML Files (*.xml)")
 
         if ok and preset_path:
             try:
@@ -178,6 +178,10 @@ class GenerateTab(BaseTab):
         if reply == QMessageBox.StandardButton.Yes:
             self._start_generation()
 
+    def generate_project(self):
+        """Public wrapper for generating the plugin project."""
+        self._generate_project()
+
     def _start_generation(self):
         """Start the project generation process"""
         self.status_label.setText("Starting generation...")
@@ -185,12 +189,8 @@ class GenerateTab(BaseTab):
         self.progress_bar.setValue(0)
 
         self.log_text.append("=== Starting Project Generation ===")
-        self.log_text.append(
-            f"Project: {self.full_config.get('project_name', 'Unknown')}"
-        )
-        self.log_text.append(
-            f"Output: {self.full_config.get('output_directory', 'Unknown')}"
-        )
+        self.log_text.append(f"Project: {self.full_config.get('project_name', 'Unknown')}")
+        self.log_text.append(f"Output: {self.full_config.get('output_directory', 'Unknown')}")
         self.log_text.append("")
 
         try:
@@ -226,9 +226,7 @@ class GenerateTab(BaseTab):
             self.log_text.append(f"\nERROR: {e!s}")
             self.status_label.setText("Generation failed!")
             self.progress_bar.setValue(0)
-            QMessageBox.critical(
-                self, "Generation Failed", f"Failed to generate project: {e!s}"
-            )
+            QMessageBox.critical(self, "Generation Failed", f"Failed to generate project: {e!s}")
 
     def _validate_config(self):
         """Validate the configuration"""
@@ -308,7 +306,7 @@ class GenerateTab(BaseTab):
 
     def load_configuration(self, config):
         """Load configuration into the tab"""
-        self.full_config = config.get("full_config", {})
+        self.full_config = deepcopy(config)
         self._update_preview()
         self._emit_config_changed()
 
