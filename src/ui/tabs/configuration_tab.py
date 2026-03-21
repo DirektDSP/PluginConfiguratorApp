@@ -5,16 +5,18 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QSpinBox,
     QVBoxLayout,
-    QWidget,
 )
 
+from core.base_tab import BaseTab
 
-class ConfigurationTab(QWidget):
+
+class ConfigurationTab(BaseTab):
     """Tab for general plugin configuration (build, GUI, DSP, etc.)"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
+        self.setup_connections()
 
     def setup_ui(self):
         self.layout = QVBoxLayout(self)
@@ -81,6 +83,19 @@ class ConfigurationTab(QWidget):
         self.layout.addWidget(self.code_group)
         self.layout.addWidget(self.dsp_group)
         self.layout.addStretch()
+
+    def setup_connections(self):
+        """Connect signals to slots"""
+        checkboxes = [
+            self.standalone_cb, self.vst3_cb, self.au_cb, self.auv3_cb, self.clap_cb,
+            self.resizable_cb, self.code_signing_cb, self.installer_cb,
+            self.default_bypass_cb, self.in_gain_cb, self.out_gain_cb,
+        ]
+        for cb in checkboxes:
+            cb.toggled.connect(lambda _: self._emit_config_changed())
+        self.gui_width.valueChanged.connect(lambda _: self._emit_config_changed())
+        self.gui_height.valueChanged.connect(lambda _: self._emit_config_changed())
+        self.bg_image.textChanged.connect(lambda _: self._emit_config_changed())
 
     def get_configuration(self):
         return {

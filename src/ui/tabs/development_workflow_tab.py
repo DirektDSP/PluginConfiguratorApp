@@ -1,12 +1,15 @@
-from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QVBoxLayout
+
+from core.base_tab import BaseTab
 
 
-class DevelopmentWorkflowTab(QWidget):
+class DevelopmentWorkflowTab(BaseTab):
     """Tab for configuring development workflow options"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
+        self.setup_connections()
 
     def setup_ui(self):
         self.layout = QVBoxLayout(self)
@@ -26,6 +29,15 @@ class DevelopmentWorkflowTab(QWidget):
         self.group.setLayout(form)
         self.layout.addWidget(self.group)
         self.layout.addStretch()
+
+    def setup_connections(self):
+        """Connect signals to slots"""
+        checkboxes = [
+            self.vcs_cb, self.testing_cb, self.code_quality_cb,
+            self.validation_tools_cb, self.scaffolding_cb,
+        ]
+        for cb in checkboxes:
+            cb.toggled.connect(lambda _: self._emit_config_changed())
 
     def get_configuration(self):
         return {
