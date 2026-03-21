@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
@@ -16,17 +16,14 @@ from PySide6.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
-    QWidget,
 )
 
+from core.base_tab import BaseTab
 from core.utils import generate_plugin_id
 
 
-class ProjectInfoTab(QWidget):
+class ProjectInfoTab(BaseTab):
     """Tab for configuring project information and visualizing the project structure"""
-
-    # Signals
-    project_configured = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -42,6 +39,7 @@ class ProjectInfoTab(QWidget):
 
         # Initial file tree population
         self.populate_default_file_tree()
+        self._emit_config_changed()
 
     def setup_ui(self):
         """Initialize UI components"""

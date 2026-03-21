@@ -1,4 +1,4 @@
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -10,14 +10,13 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
-    QWidget,
 )
 
+from core.base_tab import BaseTab
 
-class ImplementationsTab(QWidget):
+
+class ImplementationsTab(BaseTab):
     """Tab for configuring plugin implementations and features"""
-
-    implementations_changed = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -199,8 +198,8 @@ class ImplementationsTab(QWidget):
 
     @Slot()
     def emit_implementations_changed(self):
-        """Emit signal with current implementations configuration"""
-        self.implementations_changed.emit(self.get_configuration())
+        """Emit config changed signal with current implementations configuration"""
+        self._emit_config_changed()
 
     def get_configuration(self):
         """Get current implementation configuration"""

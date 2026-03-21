@@ -1,10 +1,136 @@
 import tempfile
+import threading
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
-from core.config_manager import ConfigManager
+from core.config_manager import ConfigManager, ConfigurationManager
+
+
+class TestConfigurationManager:
+    """Test suite for ConfigurationManager singleton"""
+
+    @pytest.fixture(autouse=True)
+    def reset_singleton(self):
+        """Reset the ConfigurationManager singleton state before each test"""
+        ConfigurationManager._instance = None
+        yield
+        ConfigurationManager._instance = None
+
+    def test_singleton_returns_same_instance(self):
+        """Two calls to the constructor must return the identical object"""
+        mgr1 = ConfigurationManager()
+        mgr2 = ConfigurationManager()
+        assert mgr1 is mgr2
+
+    def test_initial_full_config_has_quick_start(self):
+        """A freshly created manager returns quick_start=False in full config"""
+        mgr = ConfigurationManager()
+        config = mgr.get_full_config()
+        assert "quick_start" in config
+        assert config["quick_start"] is False
+
+    def test_update_config_stores_tab_config(self):
+        """update_config should persist the tab's settings"""
+        mgr = ConfigurationManager()
+        mgr.update_config("project_info", {"project_name": "MyPlugin", "vst3": True})
+        config = mgr.get_full_config()
+        assert config["project_name"] == "MyPlugin"
+        assert config["vst3"] is True
+
+    def test_update_config_overwrites_previous(self):
+        """Calling update_config twice for the same tab replaces the entry"""
+        mgr = ConfigurationManager()
+        mgr.update_config("project_info", {"project_name": "First"})
+        mgr.update_config("project_info", {"project_name": "Second"})
+        config = mgr.get_full_config()
+        assert config["project_name"] == "Second"
+
+    def test_get_full_config_merges_multiple_tabs(self):
+        """get_full_config should merge settings from all registered tabs"""
+        mgr = ConfigurationManager()
+        mgr.update_config("tab_a", {"key_a": "value_a"})
+        mgr.update_config("tab_b", {"key_b": "value_b"})
+        config = mgr.get_full_config()
+        assert config["key_a"] == "value_a"
+        assert config["key_b"] == "value_b"
+
+    def test_get_full_config_returns_copy(self):
+        """Mutating the returned dict must not affect internal state"""
+        mgr = ConfigurationManager()
+        mgr.update_config("tab_a", {"key": "original"})
+        config = mgr.get_full_config()
+        config["key"] = "mutated"
+        assert mgr.get_full_config()["key"] == "original"
+
+    def test_toggle_quick_start_flips_flag(self):
+        """toggle_quick_start should alternate between True and False"""
+        mgr = ConfigurationManager()
+        assert mgr.toggle_quick_start() is True
+        assert mgr.toggle_quick_start() is False
+        assert mgr.toggle_quick_start() is True
+
+    def test_toggle_quick_start_reflected_in_full_config(self):
+        """quick_start value in get_full_config must track the toggled state"""
+        mgr = ConfigurationManager()
+        mgr.toggle_quick_start()
+        assert mgr.get_full_config()["quick_start"] is True
+        mgr.toggle_quick_start()
+        assert mgr.get_full_config()["quick_start"] is False
+
+    def test_validate_all_without_tabs_false_when_empty(self):
+        """validate_all() with no arguments returns False when no tab has contributed config"""
+        mgr = ConfigurationManager()
+        assert mgr.validate_all() is False
+
+    def test_validate_all_without_tabs_true_when_populated(self):
+        """validate_all() with no arguments returns True after at least one update_config"""
+        mgr = ConfigurationManager()
+        mgr.update_config("some_tab", {"key": "value"})
+        assert mgr.validate_all() is True
+
+    def test_validate_all_with_valid_tabs(self):
+        """validate_all(tabs) returns True when all tab.validate() calls return True"""
+        mgr = ConfigurationManager()
+        tab1 = MagicMock()
+        tab1.validate.return_value = True
+        tab2 = MagicMock()
+        tab2.validate.return_value = True
+        assert mgr.validate_all(tabs=[tab1, tab2]) is True
+
+    def test_validate_all_with_invalid_tab(self):
+        """validate_all(tabs) returns False when any tab.validate() returns False"""
+        mgr = ConfigurationManager()
+        tab1 = MagicMock()
+        tab1.validate.return_value = True
+        tab2 = MagicMock()
+        tab2.validate.return_value = False
+        assert mgr.validate_all(tabs=[tab1, tab2]) is False
+
+    def test_thread_safe_update_config(self):
+        """Concurrent update_config calls must not corrupt internal state"""
+        mgr = ConfigurationManager()
+        errors: list[Exception] = []
+
+        def writer(tab: str, val: int) -> None:
+            try:
+                for i in range(50):
+                    mgr.update_config(tab, {"counter": i + val})
+            except Exception as exc:
+                errors.append(exc)
+
+        threads = [threading.Thread(target=writer, args=(f"tab_{t}", t * 100)) for t in range(5)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors
+        # All 5 tabs must still be present.
+        config = mgr.get_full_config()
+        assert "counter" in config
 
 
 class TestConfigManager:
