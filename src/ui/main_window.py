@@ -11,12 +11,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ui.tabs.advanced_tab import AdvancedTab
-from ui.tabs.configuration_tab import ConfigurationTab
-from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
-from ui.tabs.implementations_tab import ImplementationsTab
-from ui.tabs.project_info_tab import ProjectInfoTab
-from ui.tabs.user_experience_tab import UserExperienceTab
+from core.config_manager import ConfigurationManager
+from ui.tabs.configure_tab import ConfigureTab
+from ui.tabs.define_tab import DefineTab
+from ui.tabs.generate_tab import GenerateTab
+from ui.tabs.implement_tab import ImplementTab
 
 
 class MainWindow(QMainWindow):
@@ -25,6 +24,7 @@ class MainWindow(QMainWindow):
     def __init__(self, theme_manager=None, parent=None):
         super().__init__(parent)
         self.theme_manager = theme_manager
+        self.config_manager = ConfigurationManager()
         self.setup_ui()
         self.setup_menu()
         self.setup_statusbar()
@@ -44,20 +44,28 @@ class MainWindow(QMainWindow):
         self.tab_widget = QTabWidget()
 
         # Create tabs with the new structure
-        self.project_info_tab = ProjectInfoTab()
-        self.implementations_tab = ImplementationsTab()
-        self.configuration_tab = ConfigurationTab()
-        self.user_experience_tab = UserExperienceTab()
-        self.development_workflow_tab = DevelopmentWorkflowTab()
-        self.advanced_tab = AdvancedTab()
+        self.define_tab = DefineTab()
+        self.configure_tab = ConfigureTab()
+        self.implement_tab = ImplementTab()
+        self.generate_tab = GenerateTab()
+        self._tab_registry = {
+            self.define_tab: "define",
+            self.configure_tab: "configure",
+            self.implement_tab: "implement",
+            self.generate_tab: "generate",
+        }
+        self._tab_order = [
+            self.define_tab,
+            self.configure_tab,
+            self.implement_tab,
+            self.generate_tab,
+        ]
 
         # Add tabs to tab widget in the specified order
-        self.tab_widget.addTab(self.project_info_tab, "Project Info")
-        self.tab_widget.addTab(self.implementations_tab, "Implementations")
-        self.tab_widget.addTab(self.configuration_tab, "Configuration")
-        self.tab_widget.addTab(self.user_experience_tab, "User Experience")
-        self.tab_widget.addTab(self.development_workflow_tab, "Development Workflow")
-        self.tab_widget.addTab(self.advanced_tab, "Advanced")
+        self.tab_widget.addTab(self.define_tab, "Define")
+        self.tab_widget.addTab(self.configure_tab, "Configure")
+        self.tab_widget.addTab(self.implement_tab, "Implement")
+        self.tab_widget.addTab(self.generate_tab, "Generate")
 
         # Add tab widget to main layout
         self.main_layout.addWidget(self.tab_widget)
@@ -80,8 +88,13 @@ class MainWindow(QMainWindow):
 
         # Connect config_changed signals from all tabs to update status
         for tab in self._all_tabs():
-            tab.config_changed.connect(self._on_tab_config_changed)
-            tab.validation_changed.connect(self._on_tab_validation_changed)
+            tab.config_changed.connect(
+                lambda config, tab=tab: self._on_tab_config_changed(tab, config)
+            )
+            tab.validation_changed.connect(
+                lambda is_valid, tab=tab: self._on_tab_validation_changed(tab, is_valid)
+            )
+        self._sync_configuration_from_tabs()
 
     def setup_menu(self):
         """Set up application menu"""
@@ -152,14 +165,28 @@ class MainWindow(QMainWindow):
 
     def _all_tabs(self):
         """Return all configuration tabs as a list"""
-        return [
-            self.project_info_tab,
-            self.implementations_tab,
-            self.configuration_tab,
-            self.user_experience_tab,
-            self.development_workflow_tab,
-            self.advanced_tab,
-        ]
+        return list(self._tab_order)
+
+    def _sync_configuration_from_tabs(self):
+        """Initialize configuration manager from current tab states."""
+        for tab in self._all_tabs():
+            config = tab.get_configuration()
+            tab_name = self._tab_registry.get(tab)
+            if tab_name:
+                self.config_manager.update_config(tab_name, config)
+            if tab is self.define_tab and "quick_start_mode" in config:
+                self._sync_quick_start(config["quick_start_mode"])
+        self._update_generate_preview()
+
+    def _sync_quick_start(self, desired_state):
+        """Ensure quick-start flag matches the requested state."""
+        current_state = self.config_manager.get_full_config().get("quick_start", False)
+        if desired_state != current_state:
+            self.config_manager.toggle_quick_start()
+
+    def _update_generate_preview(self):
+        """Update the Generate tab with the latest full configuration."""
+        self.generate_tab.update_full_config(self.config_manager.get_full_config())
 
     @Slot()
     def new_project(self):
@@ -167,6 +194,7 @@ class MainWindow(QMainWindow):
         # Reset all tabs using the BaseTab interface
         for tab in self._all_tabs():
             tab.reset()
+        self._sync_configuration_from_tabs()
 
         # Reset progress
         self.global_progress_bar.setValue(0)
@@ -181,11 +209,8 @@ class MainWindow(QMainWindow):
     @Slot()
     def save_current_as_preset(self):
         """Save current configuration as a preset"""
-        # Get configuration from all tabs
-        config = self.collect_configuration()
-
-        # Pass to advanced tab for saving
-        self.advanced_tab.save_config_as_preset(config)
+        self._update_generate_preview()
+        self.generate_tab._save_as_preset()
         self.status_bar.showMessage("Preset saved")
 
     @Slot()
@@ -202,38 +227,30 @@ class MainWindow(QMainWindow):
             return
 
         # Collect configuration from all tabs
-        config = self.collect_configuration()
+        self._update_generate_preview()
 
-        # Switch to development workflow tab
-        self.tab_widget.setCurrentIndex(4)  # Development workflow tab index
+        # Switch to generate tab
+        self.tab_widget.setCurrentWidget(self.generate_tab)
 
         # Start generation process
-        self.development_workflow_tab.start_generation(config)
+        self.generate_tab._generate_project()
 
     def collect_configuration(self):
         """Collect configuration from all tabs using the BaseTab interface"""
-        return {
-            "project_info": self.project_info_tab.get_configuration(),
-            "implementations": self.implementations_tab.get_configuration(),
-            "configuration": self.configuration_tab.get_configuration(),
-            "user_experience": self.user_experience_tab.get_configuration(),
-            "development_workflow": self.development_workflow_tab.get_configuration(),
-            "advanced": self.advanced_tab.get_configuration(),
-        }
+        return self.config_manager.get_full_config()
 
     def validate_all_tabs(self):
         """Validate all tabs using the BaseTab interface"""
-        return all(tab.validate() for tab in self._all_tabs())
+        return self.config_manager.validate_all(self._all_tabs())
 
     @Slot(dict)
     def load_preset_to_all_tabs(self, config):
         """Load preset configuration to all tabs using the BaseTab interface"""
-        self.project_info_tab.load_configuration(config.get("project_info", {}))
-        self.implementations_tab.load_configuration(config.get("implementations", {}))
-        self.configuration_tab.load_configuration(config.get("configuration", {}))
-        self.user_experience_tab.load_configuration(config.get("user_experience", {}))
-        self.development_workflow_tab.load_configuration(config.get("development_workflow", {}))
-        self.advanced_tab.load_configuration(config.get("advanced", {}))
+        self.define_tab.load_configuration(config)
+        self.configure_tab.load_configuration(config)
+        self.implement_tab.load_configuration(config)
+        self.generate_tab.update_full_config(config)
+        self._sync_configuration_from_tabs()
 
     @Slot(str)
     def update_status(self, message):
@@ -247,13 +264,17 @@ class MainWindow(QMainWindow):
         # Will be implemented as we add functionality to the tabs
         pass
 
-    @Slot(dict)
-    def _on_tab_config_changed(self, config):
+    def _on_tab_config_changed(self, tab, config):
         """Handle configuration change from any tab"""
+        tab_name = self._tab_registry.get(tab)
+        if tab_name:
+            self.config_manager.update_config(tab_name, config)
+        if tab is self.define_tab and "quick_start_mode" in config:
+            self._sync_quick_start(config["quick_start_mode"])
+        self._update_generate_preview()
         self.status_bar.showMessage("Configuration updated")
 
-    @Slot(bool)
-    def _on_tab_validation_changed(self, is_valid):
+    def _on_tab_validation_changed(self, tab, is_valid):
         """Handle validation state change from any tab"""
         pass
 
