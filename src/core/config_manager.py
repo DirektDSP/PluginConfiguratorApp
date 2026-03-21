@@ -1,5 +1,102 @@
+import threading
 import xml.etree.ElementTree as ET
+from copy import deepcopy
 from pathlib import Path
+
+
+class ConfigurationManager:
+    """Singleton for centralized, thread-safe configuration management across all tabs.
+
+    Stores configuration contributed by each tab, exposes the merged full config,
+    and provides helpers for quick-start toggling and full validation.
+    """
+
+    _instance: "ConfigurationManager | None" = None
+    _instance_lock: threading.Lock = threading.Lock()
+
+    def __new__(cls) -> "ConfigurationManager":
+        if cls._instance is None:
+            with cls._instance_lock:
+                if cls._instance is None:
+                    instance = super().__new__(cls)
+                    instance._initialized = False
+                    cls._instance = instance
+        return cls._instance
+
+    def __init__(self) -> None:
+        # Guard against re-initialisation when the singleton already exists.
+        if self._initialized:
+            return
+        with self._instance_lock:
+            if self._initialized:
+                return
+            self._config: dict[str, dict] = {}
+            self._quick_start: bool = False
+            self._data_lock: threading.Lock = threading.Lock()
+            self._initialized: bool = True
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def update_config(self, tab_name: str, config: dict) -> None:
+        """Store (or replace) configuration contributed by *tab_name*.
+
+        Args:
+            tab_name: Unique identifier for the tab (e.g. ``"project_info"``).
+            config: Configuration dictionary emitted by the tab.
+        """
+        with self._data_lock:
+            self._config[tab_name] = deepcopy(config)
+
+    def get_full_config(self) -> dict:
+        """Return the merged configuration from all registered tabs.
+
+        Tab configs are merged in insertion order; later tabs override earlier
+        ones for duplicate keys.  The ``quick_start`` flag is always included.
+
+        Returns:
+            dict: Merged configuration plus the ``quick_start`` flag.
+        """
+        with self._data_lock:
+            full_config: dict = {}
+            for tab_config in self._config.values():
+                full_config.update(tab_config)
+            full_config["quick_start"] = self._quick_start
+            return full_config
+
+    def toggle_quick_start(self) -> bool:
+        """Toggle the quick-start mode flag.
+
+        Returns:
+            bool: The new value of the ``quick_start`` flag.
+        """
+        with self._data_lock:
+            self._quick_start = not self._quick_start
+            return self._quick_start
+
+    def validate_all(self, tabs: list | None = None) -> bool:
+        """Validate configuration across all tabs.
+
+        When *tabs* is provided each element must expose a ``validate()``
+        method (i.e. be a :class:`~core.base_tab.BaseTab` instance).  All tabs
+        must pass validation for this method to return ``True``.
+
+        When *tabs* is ``None`` the method returns ``True`` only if at least
+        one tab has already contributed configuration via
+        :meth:`update_config`.
+
+        Args:
+            tabs: Optional sequence of :class:`~core.base_tab.BaseTab`
+                instances to validate.
+
+        Returns:
+            bool: ``True`` if all validations pass, ``False`` otherwise.
+        """
+        if tabs is not None:
+            return all(tab.validate() for tab in tabs)
+        with self._data_lock:
+            return bool(self._config)
 
 
 class ConfigManager:
