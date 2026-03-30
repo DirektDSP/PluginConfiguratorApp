@@ -17,10 +17,9 @@ def generate_plugin_id():
 
     # Remaining characters can be any letter or number
     chars = string.ascii_letters + string.digits
-    remaining_chars = "".join(random.choice(chars) for _ in range(3))
+    remaining_chars = ''.join(random.choice(chars) for _ in range(3))
 
     return first_char + remaining_chars
-
 
 def create_cmake_file(output_dir, variables):
     """Create the CMakeLists.txt file with proper variable substitution
@@ -48,9 +47,8 @@ def create_cmake_file(output_dir, variables):
 
     # Write the result
     cmake_path = Path(output_dir) / "CMakeLists.txt"
-    with open(cmake_path, "w") as f:
+    with open(cmake_path, 'w') as f:
         f.write(cmake_template)
-
 
 def create_gitignore_file(output_dir):
     """Create or update .gitignore file
@@ -73,9 +71,8 @@ def create_gitignore_file(output_dir):
 
     # Write the result
     gitignore_path = Path(output_dir) / ".gitignore"
-    with open(gitignore_path, "w") as f:
+    with open(gitignore_path, 'w') as f:
         f.write(gitignore_template)
-
 
 def create_readme_from_variables(output_dir, variables):
     """Create README.md file with variable substitution
@@ -103,9 +100,8 @@ def create_readme_from_variables(output_dir, variables):
 
     # Write the result
     readme_path = Path(output_dir) / "README.md"
-    with open(readme_path, "w") as f:
+    with open(readme_path, 'w') as f:
         f.write(readme_template)
-
 
 def update_workflow_files(output_dir, variables):
     """Update GitHub workflow files with variable substitution
@@ -132,14 +128,12 @@ def update_workflow_files(output_dir, variables):
             lines[0] = f"name: {variables.get('PROJECT_NAME', 'Plugin')}"
 
             # Write the modified content back
-            with open(workflow_file, "w") as f:
+            with open(workflow_file, 'w') as f:
                 f.write("\n".join(lines))
-
 
 # ------------------------
 # Embedded templates
 # ------------------------
-
 
 def get_cmake_template():
     """Get the embedded CMakeLists.txt template"""
@@ -323,7 +317,6 @@ include(Benchmarks)
 include(GitHubENV)
 """
 
-
 def get_gitignore_template():
     """Get the embedded .gitignore template"""
     return """CMakeLists.txt.user
@@ -376,7 +369,6 @@ debug.log
 /juce_binarydata_Assets
 WebView2
 """
-
 
 def get_readme_template():
     """Get the embedded README.md template"""

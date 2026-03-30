@@ -1,5 +1,3 @@
-"""Template selection tab for repository or local project scaffolds."""
-
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -34,7 +32,7 @@ class TemplateTab(QWidget):
 
     def setup_ui(self):
         """Initialize UI components"""
-        self.main_layout = QVBoxLayout(self)
+        self.layout = QVBoxLayout(self)
 
         # Template type selection
         self.template_type_group = QGroupBox("Template Source")
@@ -119,12 +117,12 @@ class TemplateTab(QWidget):
         self.continue_button.setMinimumHeight(40)
 
         # Add widgets to main layout
-        self.main_layout.addWidget(self.template_type_group)
-        self.main_layout.addWidget(self.repo_group)
-        self.main_layout.addWidget(self.local_group)
-        self.main_layout.addWidget(self.predefined_group)
-        self.main_layout.addWidget(self.info_group)
-        self.main_layout.addWidget(self.continue_button)
+        self.layout.addWidget(self.template_type_group)
+        self.layout.addWidget(self.repo_group)
+        self.layout.addWidget(self.local_group)
+        self.layout.addWidget(self.predefined_group)
+        self.layout.addWidget(self.info_group)
+        self.layout.addWidget(self.continue_button)
 
     def setup_connections(self):
         """Connect signals to slots"""
@@ -144,64 +142,39 @@ class TemplateTab(QWidget):
         """Add default templates to the list"""
         # Basic Audio Plugin template
         basic_item = QListWidgetItem("Internal DirektDSP Template")
-        basic_item.setData(
-            Qt.ItemDataRole.UserRole,
-            {
-                "name": "Internal DirektDSP Template",
-                "url": "https://github.com/SeamusMullan/PluginTemplate.git",
-                "branch": "main",
-                "description": (
-                    "A basic audio plugin template based on Pamplejuce, "
-                    "with JUCE and CMake setup."
-                ),
-                "features": "- Modern C++ with CMake\n- JUCE framework\n- Cross-platform\n- CI/CD ready",
-            },
-        )
+        basic_item.setData(Qt.ItemDataRole.UserRole, {
+            "name": "Internal DirektDSP Template",
+            "url": "https://github.com/SeamusMullan/PluginTemplate.git",
+            "branch": "main",
+            "description": "A basic audio plugin template based on Pamplejuce, with JUCE and CMake setup.",
+            "features": "- Modern C++ with CMake\n- JUCE framework\n- Cross-platform\n- CI/CD ready"
+        })
         self.template_list.addItem(basic_item)
 
         # Audio FX Plugin template
         fx_item = QListWidgetItem("Audio FX Plugin")
-        fx_item.setData(
-            Qt.ItemDataRole.UserRole,
-            {
-                "name": "Audio FX Plugin",
-                "url": "https://github.com/DirektDSP/FXPluginTemplate.git",
-                "branch": "main",
-                "description": (
-                    "A template for creating audio effect plugins "
-                    "with common structures."
-                ),
-                "features": (
-                    "- Effect parameter framework\n"
-                    "- Preset system\n"
-                    "- Modulation routing\n"
-                    "- Visualizers"
-                ),
-            },
-        )
+        fx_item.setData(Qt.ItemDataRole.UserRole, {
+            "name": "Audio FX Plugin",
+            "url": "https://github.com/DirektDSP/FXPluginTemplate.git",
+            "branch": "main",
+            "description": "A template for creating audio effect plugins with common structures.",
+            "features": "- Effect parameter framework\n- Preset system\n- Modulation routing\n- Visualizers"
+        })
         self.template_list.addItem(fx_item)
 
         # Instrument Plugin template
         instrument_item = QListWidgetItem("Instrument Plugin")
-        instrument_item.setData(
-            Qt.ItemDataRole.UserRole,
-            {
-                "name": "Instrument Plugin",
-                "url": "https://github.com/DirektDSP/InstrumentTemplate.git",
-                "branch": "main",
-                "description": "A template for creating virtual instrument plugins.",
-                "features": (
-                    "- MIDI processing\n"
-                    "- Voice management\n"
-                    "- Polyphony control\n"
-                    "- Sample playback"
-                ),
-            },
-        )
+        instrument_item.setData(Qt.ItemDataRole.UserRole, {
+            "name": "Instrument Plugin",
+            "url": "https://github.com/DirektDSP/InstrumentTemplate.git",
+            "branch": "main",
+            "description": "A template for creating virtual instrument plugins.",
+            "features": "- MIDI processing\n- Voice management\n- Polyphony control\n- Sample playback"
+        })
         self.template_list.addItem(instrument_item)
 
     @Slot(bool)
-    def toggle_template_source(self, _checked):
+    def toggle_template_source(self, checked):
         """Toggle between repository and local template sources"""
         if self.repository_radio.isChecked():
             self.repo_group.setEnabled(True)

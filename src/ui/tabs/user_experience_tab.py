@@ -1,12 +1,10 @@
-"""User experience tab for optional UX-focused project features."""
-
 from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QVBoxLayout
 
 from core.base_tab import BaseTab
 
 
 class UserExperienceTab(BaseTab):
-    """Tab for configuring user experience options."""
+    """Tab for configuring user experience options"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -14,7 +12,7 @@ class UserExperienceTab(BaseTab):
         self.setup_connections()
 
     def setup_ui(self):
-        self.main_layout = QVBoxLayout(self)
+        self.layout = QVBoxLayout(self)
 
         self.group = QGroupBox("User Experience Features")
         form = QFormLayout()
@@ -25,14 +23,13 @@ class UserExperienceTab(BaseTab):
         form.addRow(self.preview_cb)
         form.addRow(self.preset_management_cb)
         self.group.setLayout(form)
-        self.main_layout.addWidget(self.group)
-        self.main_layout.addStretch()
+        self.layout.addWidget(self.group)
+        self.layout.addStretch()
 
     def setup_connections(self):
         """Connect signals to slots"""
         checkboxes = [
-            self.wizard_cb,
-            self.preview_cb,
+            self.wizard_cb, self.preview_cb,
             self.preset_management_cb,
         ]
         for cb in checkboxes:

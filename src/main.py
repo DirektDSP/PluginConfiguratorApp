@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""Application entry point for Plugin Configurator."""
-
 import os
 import sys
 from pathlib import Path
@@ -14,7 +12,7 @@ from ui.main_window import MainWindow
 def setup_environment():
     """Configure the application environment and paths"""
     # Determine the application's base directory
-    if getattr(sys, "frozen", False):
+    if getattr(sys, 'frozen', False):
         # Running as compiled executable
         app_dir = Path(sys.executable).parent
     else:
@@ -38,7 +36,6 @@ def setup_environment():
         preset_dir.mkdir(parents=True, exist_ok=True)
         print(f"Created preset directory: {preset_dir}")
 
-
 def main():
     """Main application entry point"""
     # Set up environment variables and paths
@@ -59,7 +56,6 @@ def main():
 
     # Run the application
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
