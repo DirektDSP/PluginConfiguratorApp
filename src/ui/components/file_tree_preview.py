@@ -193,7 +193,7 @@ class FileTreePreview(QWidget):
         # UX features
         ux_entries = [
             TreeEntry(name="Wizard", children=[], enabled=bool(ux.get("wizard")), is_file=True),
-            TreeEntry(name="Preview Mode", children=[], enabled=bool(ux.get("preview")), is_file=True),
+            TreeEntry(name="Preview", children=[], enabled=bool(ux.get("preview")), is_file=True),
             TreeEntry(
                 name="Preset Management",
                 children=[],

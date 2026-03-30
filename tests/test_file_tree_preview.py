@@ -54,4 +54,3 @@ def test_preview_updates_from_configuration(qtbot, app):
     # Metrics should reflect non-zero files and enabled features
     assert "Files:" in preview._file_count_lbl.text()
     assert "Features:" in preview._feature_lbl.text()
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
