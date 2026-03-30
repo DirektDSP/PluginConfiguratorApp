@@ -32,6 +32,7 @@ class ProjectInfoTab(BaseTab):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._config_manager = ConfigurationManager()
         self.setup_ui()
         self.setup_connections()
 
@@ -530,7 +531,7 @@ class ProjectInfoTab(BaseTab):
         # Quick start flag (optional)
         quick_start_enabled = config.get("quick_start", False)
         self.quick_start_checkbox.setChecked(bool(quick_start_enabled))
-        ConfigurationManager().set_quick_start(bool(quick_start_enabled))
+        self._config_manager.set_quick_start(bool(quick_start_enabled))
         self._update_quick_start_button_state()
 
         # Update file tree based on loaded config
@@ -538,27 +539,7 @@ class ProjectInfoTab(BaseTab):
 
     def validate(self):
         """Validate that all required information is provided"""
-        required_fields = [
-            (self.project_name, "Project Name"),
-            (self.product_name, "Product Name"),
-            (self.company_name, "Company Name"),
-            (self.bundle_id, "Bundle ID"),
-            (self.manufacturer_code, "Manufacturer Code"),
-            (self.output_directory, "Output Directory"),
-        ]
-
-        for field, name in required_fields:
-            if not field.text().strip():
-                QMessageBox.warning(self, "Validation Error", f"{name} is required.")
-                return False
-
-        # Validate manufacturer code is exactly 4 characters
-        if len(self.manufacturer_code.text().strip()) != 4:
-            QMessageBox.warning(
-                self,
-                "Validation Error",
-                "Manufacturer Code must be exactly 4 characters.",
-            )
+        if not self._validate_required_fields(show_messages=True):
             return False
 
         # Generate plugin code if empty
@@ -591,7 +572,7 @@ class ProjectInfoTab(BaseTab):
     @Slot(bool)
     def _on_quick_start_toggled(self, checked: bool):
         """Update quick start flag in configuration manager and button state."""
-        ConfigurationManager().set_quick_start(checked)
+        self._config_manager.set_quick_start(checked)
         self._update_quick_start_button_state()
         self._emit_config_changed()
 
@@ -609,19 +590,7 @@ class ProjectInfoTab(BaseTab):
 
     def _has_required_quick_start_data(self) -> bool:
         """Check required fields without showing dialogs for button state."""
-        required_fields = [
-            self.project_name,
-            self.product_name,
-            self.company_name,
-            self.bundle_id,
-            self.manufacturer_code,
-            self.output_directory,
-        ]
-        if any(not field.text().strip() for field in required_fields):
-            return False
-        if len(self.manufacturer_code.text().strip()) != 4:
-            return False
-        return True
+        return self._validate_required_fields(show_messages=False)
 
     def _update_quick_start_button_state(self, *_args):
         """Provide visual feedback on whether quick start can proceed."""
@@ -635,3 +604,30 @@ class ProjectInfoTab(BaseTab):
             self.review_generate_button.setToolTip(
                 "Fill all required fields (including a 4-character manufacturer code) to continue."
             )
+
+    def _validate_required_fields(self, show_messages: bool = True) -> bool:
+        """Shared validation helper for quick-start readiness and formal validation."""
+        required_fields = [
+            (self.project_name, "Project Name"),
+            (self.product_name, "Product Name"),
+            (self.company_name, "Company Name"),
+            (self.bundle_id, "Bundle ID"),
+            (self.manufacturer_code, "Manufacturer Code"),
+            (self.output_directory, "Output Directory"),
+        ]
+
+        for field, name in required_fields:
+            if not field.text().strip():
+                if show_messages:
+                    QMessageBox.warning(self, "Validation Error", f"{name} is required.")
+                return False
+
+        if len(self.manufacturer_code.text().strip()) != 4:
+            if show_messages:
+                QMessageBox.warning(
+                    self,
+                    "Validation Error",
+                    "Manufacturer Code must be exactly 4 characters.",
+                )
+            return False
+        return True

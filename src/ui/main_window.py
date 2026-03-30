@@ -21,6 +21,7 @@ from ui.tabs.project_info_tab import ProjectInfoTab
 from ui.tabs.user_experience_tab import UserExperienceTab
 
 PREVIEW_MIN_WIDTH = 340
+GENERATE_TAB_INDEX = 5
 
 
 class MainWindow(QMainWindow):
@@ -208,7 +209,7 @@ class MainWindow(QMainWindow):
     def generate_project(self):
         """Start the project generation process"""
         # Switch to the Generate tab so the user can review and trigger generation
-        self.tab_widget.setCurrentIndex(5)  # Generate tab index
+        self.tab_widget.setCurrentIndex(GENERATE_TAB_INDEX)  # Generate tab index
 
         # Refresh the generate tab's summary with the latest configuration
         config = self.collect_configuration()
@@ -221,7 +222,7 @@ class MainWindow(QMainWindow):
         config = self.collect_configuration()
         self.generate_tab.update_full_config(config)
         self._update_file_tree_preview(config)
-        self.tab_widget.setCurrentIndex(5)
+        self.tab_widget.setCurrentIndex(GENERATE_TAB_INDEX)
         self.status_bar.showMessage("Quick Start: Review & Generate")
 
     def collect_configuration(self):
@@ -259,7 +260,7 @@ class MainWindow(QMainWindow):
     def handle_tab_changed(self, index):
         """Handle when the user changes tabs"""
         # Refresh the Generate tab summary whenever it becomes active
-        if index == 5:  # Generate tab
+        if index == GENERATE_TAB_INDEX:  # Generate tab
             config = self.collect_configuration()
             self.generate_tab.update_full_config(config)
             self._update_file_tree_preview(config)
