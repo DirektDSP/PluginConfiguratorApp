@@ -327,12 +327,10 @@ class ConfigManager:
                         errors.append(f"Field '{section}.{field}' is required")
                     continue
                 expected_type = meta_info["type"]
-                if expected_type is bool and not isinstance(value, bool):
-                    errors.append(f"Field '{section}.{field}' must be a boolean")
-                elif expected_type is int and not isinstance(value, int):
-                    errors.append(f"Field '{section}.{field}' must be an integer")
-                elif expected_type is str and not isinstance(value, str):
-                    errors.append(f"Field '{section}.{field}' must be a string")
+                if not self._matches_type(value, expected_type):
+                    errors.append(
+                        f"Field '{section}.{field}' must be a {expected_type.__name__}"
+                    )
                 if meta_info.get("required") and isinstance(value, str) and not value.strip():
                     errors.append(f"Field '{section}.{field}' cannot be empty")
         return errors
@@ -391,6 +389,15 @@ class ConfigManager:
             else:
                 config[child.tag] = text_value
         return config
+
+    def _matches_type(self, value: Any, expected_type: type) -> bool:
+        if expected_type is bool:
+            return isinstance(value, bool)
+        if expected_type is int:
+            return isinstance(value, int) and not isinstance(value, bool)
+        if expected_type is str:
+            return isinstance(value, str)
+        return isinstance(value, expected_type)
 
     def _save_structured_config(self, config: Mapping[str, Any], file_path: Path) -> None:
         config_with_defaults = self._apply_defaults(config)

@@ -72,7 +72,7 @@ string, integer, or boolean values.
 - Required fields (project names, company identifiers, and `output_directory`) must not be
   empty.
 - Types:
-  - Booleans: `true`/`false` (case-insensitive)
+  - Booleans: `true`/`false` (case-insensitive; `1/0/yes/on` also accepted)
   - Integers: whole numbers (GUI sizes)
   - Strings: everything else
 

@@ -218,6 +218,11 @@ class TestConfigManager:
         assert config_manager.preset_dir.name == "presets"
         available = set(config_manager.get_available_presets())
         assert set(ConfigManager.BUNDLED_PRESETS) <= available
+        for preset in ConfigManager.BUNDLED_PRESETS:
+            ok, errors = config_manager.validate_preset_file(
+                config_manager.preset_dir / f"{preset}.xml"
+            )
+            assert ok, errors
 
     def test_get_default_config(self, config_manager):
         """Test that default config is correctly structured"""
