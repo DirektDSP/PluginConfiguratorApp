@@ -325,6 +325,7 @@ class ConfigManager:
                     if meta_info.get("required"):
                         errors.append(f"Field '{section}.{field}' is required")
                     elif meta_info.get("default") is None:
+                        # Fields with an explicit None default are allowed to remain None.
                         continue
                     continue
                 expected_type = meta_info["type"]
@@ -343,6 +344,7 @@ class ConfigManager:
             return default
         value = value.strip()
         if expected_type is bool:
+            # Accept common truthy tokens; save operations always emit "true"/"false".
             return value.lower() in {"true", "1", "yes", "on"}
         if expected_type is int:
             try:
