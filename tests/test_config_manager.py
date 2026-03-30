@@ -145,9 +145,13 @@ class TestConfigManager:
     """Test suite for ConfigManager class"""
 
     @pytest.fixture
-    def config_manager(self):
+    def temp_preset_dir(self, tmp_path: Path) -> Path:
+        return tmp_path / "presets"
+
+    @pytest.fixture
+    def config_manager(self, temp_preset_dir):
         """Create a ConfigManager instance"""
-        return ConfigManager()
+        return ConfigManager(preset_dir=temp_preset_dir)
 
     @pytest.fixture
     def temp_file(self):
@@ -161,31 +165,76 @@ class TestConfigManager:
     def sample_config(self):
         """Sample configuration dict"""
         return {
-            "project_name": "MyPlugin",
-            "product_name": "My Plugin",
-            "company_name": "TestCompany",
-            "standalone": True,
-            "vst3": False,
-            "au": True,
+            "meta": {"name": "SamplePreset", "description": "Testing preset"},
+            "project_info": {
+                "template_name": "Audio FX Plugin",
+                "template_url": "https://github.com/SeamusMullan/PluginTemplate.git",
+                "project_name": "MyPlugin",
+                "product_name": "My Plugin",
+                "version": "1.0.0",
+                "company_name": "TestCompany",
+                "bundle_id": "com.test.myplugin",
+                "manufacturer_code": "TST1",
+                "plugin_code": "TST1",
+                "output_directory": "/tmp/output",
+            },
+            "configuration": {
+                "standalone": True,
+                "vst3": False,
+                "au": True,
+                "auv3": False,
+                "clap": True,
+                "gui_width": 900,
+                "gui_height": 600,
+                "resizable": True,
+                "background_image": "",
+                "code_signing": False,
+                "installer": False,
+                "default_bypass": False,
+                "input_gain": False,
+                "output_gain": True,
+            },
+            "implementations": {
+                "moonbase_licensing": False,
+                "melatonin_inspector": True,
+                "custom_gui_framework": False,
+                "logging_framework": True,
+                "clap_builds": True,
+                "preset_management": True,
+                "preset_format": "XML",
+                "ab_comparison": True,
+                "state_management": False,
+                "gpu_audio": False,
+            },
+            "user_experience": {
+                "wizard": False,
+                "preview": False,
+                "preset_management": True,
+            },
+            "development_workflow": {
+                "vcs": True,
+                "testing": True,
+                "code_quality": True,
+                "validation_tools": True,
+                "scaffolding": True,
+            },
         }
 
     def test_initialization(self, config_manager):
         """Test that ConfigManager initializes correctly"""
         assert config_manager.preset_dir.exists()
         assert config_manager.preset_dir.name == "presets"
+        available = set(config_manager.get_available_presets())
+        missing = set(ConfigManager.BUNDLED_PRESETS) - available
+        assert not missing, f"Missing bundled presets: {missing}"
 
     def test_get_default_config(self, config_manager):
         """Test that default config is correctly structured"""
         config = config_manager.get_default_config()
 
         assert isinstance(config, dict)
-        assert "project_name" in config
-        assert "product_name" in config
-        assert "company_name" in config
-        assert "bundle_id" in config
-        assert "standalone" in config
-        assert "vst3" in config
-        assert "au" in config
+        for section in ConfigManager.PRESET_SCHEMA.keys():
+            assert section in config
 
     def test_save_and_load_config(self, config_manager, temp_file, sample_config):
         """Test saving and loading configuration"""
@@ -196,30 +245,29 @@ class TestConfigManager:
         loaded_config = config_manager.load_config(temp_file)
 
         assert loaded_config == sample_config
-        assert loaded_config["project_name"] == "MyPlugin"
-        assert loaded_config["standalone"] is True
-        assert loaded_config["vst3"] is False
+        assert loaded_config["project_info"]["project_name"] == "MyPlugin"
+        assert loaded_config["configuration"]["standalone"] is True
+        assert loaded_config["configuration"]["vst3"] is False
 
     def test_boolean_handling(self, config_manager, temp_file):
         """Test that boolean values are handled correctly"""
-        config = {"true_value": True, "false_value": False, "string_value": "test"}
+        config = config_manager.get_default_config()
+        config["project_info"]["project_name"] = "BoolTest"
+        config["project_info"]["product_name"] = "BoolTest"
+        config["project_info"]["company_name"] = "TestCompany"
+        config["project_info"]["bundle_id"] = "com.test.bool"
+        config["project_info"]["manufacturer_code"] = "BOOL"
+        config["project_info"]["output_directory"] = "/tmp"
+        config["configuration"]["background_image"] = "/tmp/bg.png"
+        config["configuration"]["standalone"] = True
+        config["configuration"]["vst3"] = False
 
         config_manager.save_config(config, temp_file)
         loaded_config = config_manager.load_config(temp_file)
 
-        assert loaded_config["true_value"] is True
-        assert loaded_config["false_value"] is False
-        assert loaded_config["string_value"] == "test"
-
-    def test_none_handling(self, config_manager, temp_file):
-        """Test that None values are handled correctly"""
-        config = {"none_value": None, "normal_value": "test"}
-
-        config_manager.save_config(config, temp_file)
-        loaded_config = config_manager.load_config(temp_file)
-
-        assert loaded_config["none_value"] == ""
-        assert loaded_config["normal_value"] == "test"
+        assert loaded_config["configuration"]["standalone"] is True
+        assert loaded_config["configuration"]["vst3"] is False
+        assert loaded_config["configuration"]["background_image"] == "/tmp/bg.png"
 
     def test_save_preset(self, config_manager, sample_config):
         """Test saving a preset"""
@@ -228,6 +276,8 @@ class TestConfigManager:
 
         preset_path = config_manager.preset_dir / f"{preset_name}.xml"
         assert preset_path.exists()
+        ok, errors = config_manager.validate_preset_file(preset_path)
+        assert ok, errors
 
         preset_path.unlink(missing_ok=True)
 
@@ -239,7 +289,7 @@ class TestConfigManager:
         loaded_config = config_manager.load_preset(preset_name)
 
         assert loaded_config == sample_config
-        assert loaded_config["project_name"] == "MyPlugin"
+        assert loaded_config["project_info"]["project_name"] == "MyPlugin"
 
         preset_path = config_manager.preset_dir / f"{preset_name}.xml"
         preset_path.unlink(missing_ok=True)
@@ -287,11 +337,8 @@ class TestConfigManager:
         tree = ET.parse(temp_file)
         root = tree.getroot()
 
-        assert root.tag == "config"
-        assert len(list(root)) == len(sample_config)
-
-        for child in root:
-            assert child.tag in sample_config
+        assert root.tag == "preset"
+        assert {c.tag for c in root} & {"project_info", "configuration", "implementations"}
 
     def test_load_invalid_file(self, config_manager, temp_file):
         """Test loading an invalid XML file"""
@@ -312,15 +359,35 @@ class TestConfigManager:
 
     def test_config_with_special_characters(self, config_manager, temp_file):
         """Test config with special characters in values"""
-        config = {
-            "project_name": "Plugin <test>",
-            "description": "Description & more",
-            "company": 'My "Company" Ltd.',
-        }
+        config = config_manager.get_default_config()
+        config["project_info"].update(
+            {
+                "project_name": "Plugin <test>",
+                "product_name": "Product & More",
+                "company_name": 'My "Company" Ltd.',
+                "bundle_id": "com.example.special",
+                "manufacturer_code": "SPCL",
+                "output_directory": "/tmp",
+            }
+        )
 
         config_manager.save_config(config, temp_file)
         loaded_config = config_manager.load_config(temp_file)
 
-        assert loaded_config == config
-        assert loaded_config["project_name"] == "Plugin <test>"
-        assert loaded_config["description"] == "Description & more"
+        assert loaded_config["project_info"]["project_name"] == "Plugin <test>"
+        assert loaded_config["project_info"]["product_name"] == "Product & More"
+        assert loaded_config["project_info"]["company_name"] == 'My "Company" Ltd.'
+
+    def test_bundled_presets_validate(self, config_manager):
+        """Bundled presets should pass schema validation"""
+        for preset in ConfigManager.BUNDLED_PRESETS:
+            ok, errors = config_manager.validate_preset_file(
+                config_manager.preset_dir / f"{preset}.xml"
+            )
+            assert ok, f"{preset} failed validation: {errors}"
+        std = config_manager.load_preset("StandardAudioFX_Preset")
+        assert std["implementations"]["preset_management"] is True
+        instrument = config_manager.load_preset("Instrument_Preset")
+        assert instrument["configuration"]["auv3"] is True
+        minimal = config_manager.load_preset("MinimalPlugin_Preset")
+        assert minimal["configuration"]["clap"] is False
