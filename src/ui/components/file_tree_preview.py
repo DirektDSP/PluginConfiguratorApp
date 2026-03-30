@@ -33,6 +33,9 @@ class FileTreePreview(QWidget):
     """Reusable preview panel that renders a generated file tree with metrics."""
 
     _DEBOUNCE_MS = 150
+    DEFAULT_PRESET_FORMAT = "XML"
+    AVG_FILE_SIZE_KB = 8
+    FEATURE_METADATA_SIZE_KB = 2
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -232,7 +235,7 @@ class FileTreePreview(QWidget):
             for key, label in module_labels.items()
         ]
         if implementations.get("preset_management"):
-            fmt = implementations.get("preset_format") or "XML"
+            fmt = implementations.get("preset_format") or self.DEFAULT_PRESET_FORMAT
             module_entries.append(
                 TreeEntry(
                     name=f"Preset Management ({fmt})",
@@ -341,9 +344,9 @@ class FileTreePreview(QWidget):
     def _compute_metrics(self) -> Tuple[int, int]:
         file_items = [i for i in self._iter_items() if i.childCount() == 0]
         file_count = len(file_items)
-        # Rough heuristic: 8 KB per file, +2 KB for enabled feature metadata
+        # Rough heuristic: average size per file plus small enabled-feature metadata
         enabled_features = len([i for i in file_items if i.data(0, Qt.ItemDataRole.UserRole)])
-        est_size = file_count * 8 + enabled_features * 2
+        est_size = file_count * self.AVG_FILE_SIZE_KB + enabled_features * self.FEATURE_METADATA_SIZE_KB
         return file_count, est_size
 
     # ------------------------------------------------------------------ #

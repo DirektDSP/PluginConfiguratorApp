@@ -39,7 +39,10 @@ def test_preview_updates_from_configuration(qtbot, app, sample_config):
     qtbot.addWidget(preview)
 
     preview.set_configuration(sample_config)
-    qtbot.wait(200)  # allow debounce to fire
+    qtbot.waitUntil(
+        lambda: (not preview._debounce.isActive()) and preview._tree.topLevelItemCount() == 1,
+        timeout=1000,
+    )
 
     assert preview._tree.topLevelItemCount() == 1
     root = preview._tree.topLevelItem(0)
