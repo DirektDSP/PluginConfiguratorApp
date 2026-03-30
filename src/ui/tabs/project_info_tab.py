@@ -553,5 +553,5 @@ class ProjectInfoTab(BaseTab):
 
     @Slot()
     def _on_form_field_changed(self, _value=None):
-        """Emit configuration changes when text fields change."""
+        """Emit configuration changes when text fields change (BaseTab helper)."""
         self._emit_config_changed()

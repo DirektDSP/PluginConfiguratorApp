@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QIcon, QPixmap
@@ -338,7 +338,7 @@ class FileTreePreview(QWidget):
             items.extend(self._collect_children(item.child(i)))
         return items
 
-    def _compute_metrics(self) -> tuple[int, int]:
+    def _compute_metrics(self) -> Tuple[int, int]:
         file_items = [i for i in self._iter_items() if i.childCount() == 0]
         file_count = len(file_items)
         # Rough heuristic: 8 KB per file, +2 KB for enabled feature metadata

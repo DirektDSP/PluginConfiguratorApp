@@ -17,7 +17,6 @@ def app():
     else:
         app = QApplication.instance()
     yield app
-    app.quit()
 
 
 def test_preview_updates_from_configuration(qtbot, app):
