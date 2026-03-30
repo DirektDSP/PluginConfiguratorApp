@@ -1,5 +1,3 @@
-"""Main window for the Plugin Configurator application."""
-
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
@@ -15,6 +13,7 @@ from PySide6.QtWidgets import (
 
 from ui.tabs.configuration_tab import ConfigurationTab
 from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
+from ui.tabs.generate_tab import GenerateTab
 from ui.tabs.implementations_tab import ImplementationsTab
 from ui.tabs.project_info_tab import ProjectInfoTab
 from ui.tabs.user_experience_tab import UserExperienceTab
@@ -50,6 +49,7 @@ class MainWindow(QMainWindow):
         self.configuration_tab = ConfigurationTab()
         self.user_experience_tab = UserExperienceTab()
         self.development_workflow_tab = DevelopmentWorkflowTab()
+        self.generate_tab = GenerateTab()
 
         # Add tabs to tab widget in the specified order
         self.tab_widget.addTab(self.project_info_tab, "Project Info")
@@ -57,6 +57,7 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.configuration_tab, "Configuration")
         self.tab_widget.addTab(self.user_experience_tab, "User Experience")
         self.tab_widget.addTab(self.development_workflow_tab, "Development Workflow")
+        self.tab_widget.addTab(self.generate_tab, "Generate")
 
         # Add tab widget to main layout
         self.main_layout.addWidget(self.tab_widget)
@@ -157,6 +158,7 @@ class MainWindow(QMainWindow):
             self.configuration_tab,
             self.user_experience_tab,
             self.development_workflow_tab,
+            self.generate_tab,
         ]
 
     @Slot()
@@ -179,31 +181,18 @@ class MainWindow(QMainWindow):
     @Slot()
     def save_current_as_preset(self):
         """Save current configuration as a preset"""
-        # Get configuration from all tabs
-        _ = self.collect_configuration()
+        self.collect_configuration()
         self.status_bar.showMessage("Preset saved")
 
     @Slot()
     def generate_project(self):
         """Start the project generation process"""
-        # Validate all required information
-        # If any tab reports it's not ready, we can't proceed
-        if not self.validate_all_tabs():
-            QMessageBox.warning(
-                self,
-                "Validation Error",
-                "Please complete all required information before generating the project.",
-            )
-            return
+        # Switch to the Generate tab so the user can review and trigger generation
+        self.tab_widget.setCurrentIndex(5)  # Generate tab index
 
-        # Collect configuration from all tabs
+        # Refresh the generate tab's summary with the latest configuration
         config = self.collect_configuration()
-
-        # Switch to development workflow tab
-        self.tab_widget.setCurrentIndex(4)  # Development workflow tab index
-
-        # Start generation process
-        self.development_workflow_tab.start_generation(config)
+        self.generate_tab.update_full_config(config)
 
     def collect_configuration(self):
         """Collect configuration from all tabs using the BaseTab interface"""
@@ -226,9 +215,8 @@ class MainWindow(QMainWindow):
         self.implementations_tab.load_configuration(config.get("implementations", {}))
         self.configuration_tab.load_configuration(config.get("configuration", {}))
         self.user_experience_tab.load_configuration(config.get("user_experience", {}))
-        self.development_workflow_tab.load_configuration(
-            config.get("development_workflow", {})
-        )
+        self.development_workflow_tab.load_configuration(config.get("development_workflow", {}))
+        self.generate_tab.load_configuration(config.get("generate", {}))
 
     @Slot(str)
     def update_status(self, message):
@@ -239,28 +227,25 @@ class MainWindow(QMainWindow):
     @Slot(int)
     def handle_tab_changed(self, index):
         """Handle when the user changes tabs"""
-        tab_title = self.tab_widget.tabText(index)
-        self.status_bar.showMessage(f"Viewing: {tab_title}")
+        # Refresh the Generate tab summary whenever it becomes active
+        if index == 5:  # Generate tab
+            config = self.collect_configuration()
+            self.generate_tab.update_full_config(config)
 
     @Slot(dict)
-    def _on_tab_config_changed(self, _config):
+    def _on_tab_config_changed(self, config):
         """Handle configuration change from any tab"""
         self.status_bar.showMessage("Configuration updated")
 
     @Slot(bool)
     def _on_tab_validation_changed(self, is_valid):
         """Handle validation state change from any tab"""
-        if is_valid:
-            self.status_bar.showMessage("Validation passed")
-        else:
-            self.status_bar.showMessage("Validation pending")
+        pass
 
     def change_theme(self, theme_name):
         """Change application theme"""
         if self.theme_manager:
-            app = QApplication.instance()
-            if isinstance(app, QApplication):
-                app.setStyleSheet(self.theme_manager.get_stylesheet(theme_name))
+            QApplication.instance().setStyleSheet(self.theme_manager.get_stylesheet(theme_name))
             self.status_bar.showMessage(f"Theme changed to {theme_name}")
 
     def show_documentation(self):
