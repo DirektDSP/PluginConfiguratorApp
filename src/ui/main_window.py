@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ui.tabs.advanced_tab import AdvancedTab
 from ui.tabs.configuration_tab import ConfigurationTab
 from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
 from ui.tabs.implementations_tab import ImplementationsTab
@@ -49,7 +48,6 @@ class MainWindow(QMainWindow):
         self.configuration_tab = ConfigurationTab()
         self.user_experience_tab = UserExperienceTab()
         self.development_workflow_tab = DevelopmentWorkflowTab()
-        self.advanced_tab = AdvancedTab()
 
         # Add tabs to tab widget in the specified order
         self.tab_widget.addTab(self.project_info_tab, "Project Info")
@@ -57,7 +55,6 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.configuration_tab, "Configuration")
         self.tab_widget.addTab(self.user_experience_tab, "User Experience")
         self.tab_widget.addTab(self.development_workflow_tab, "Development Workflow")
-        self.tab_widget.addTab(self.advanced_tab, "Advanced")
 
         # Add tab widget to main layout
         self.main_layout.addWidget(self.tab_widget)
@@ -158,7 +155,6 @@ class MainWindow(QMainWindow):
             self.configuration_tab,
             self.user_experience_tab,
             self.development_workflow_tab,
-            self.advanced_tab,
         ]
 
     @Slot()
@@ -183,9 +179,6 @@ class MainWindow(QMainWindow):
         """Save current configuration as a preset"""
         # Get configuration from all tabs
         config = self.collect_configuration()
-
-        # Pass to advanced tab for saving
-        self.advanced_tab.save_config_as_preset(config)
         self.status_bar.showMessage("Preset saved")
 
     @Slot()
@@ -218,7 +211,6 @@ class MainWindow(QMainWindow):
             "configuration": self.configuration_tab.get_configuration(),
             "user_experience": self.user_experience_tab.get_configuration(),
             "development_workflow": self.development_workflow_tab.get_configuration(),
-            "advanced": self.advanced_tab.get_configuration(),
         }
 
     def validate_all_tabs(self):
@@ -233,7 +225,6 @@ class MainWindow(QMainWindow):
         self.configuration_tab.load_configuration(config.get("configuration", {}))
         self.user_experience_tab.load_configuration(config.get("user_experience", {}))
         self.development_workflow_tab.load_configuration(config.get("development_workflow", {}))
-        self.advanced_tab.load_configuration(config.get("advanced", {}))
 
     @Slot(str)
     def update_status(self, message):
