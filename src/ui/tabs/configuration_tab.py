@@ -1,3 +1,5 @@
+"""Configuration tab for build, GUI, and DSP options."""
+
 from PySide6.QtWidgets import (
     QCheckBox,
     QFormLayout,
@@ -19,7 +21,7 @@ class ConfigurationTab(BaseTab):
         self.setup_connections()
 
     def setup_ui(self):
-        self.layout = QVBoxLayout(self)
+        self.main_layout = QVBoxLayout(self)
 
         # --- Build Settings ---
         self.build_group = QGroupBox("Build Settings / Plugin Formats")
@@ -78,18 +80,26 @@ class ConfigurationTab(BaseTab):
         self.dsp_group.setLayout(dsp_layout)
 
         # --- Add all groups to main layout ---
-        self.layout.addWidget(self.build_group)
-        self.layout.addWidget(self.gui_group)
-        self.layout.addWidget(self.code_group)
-        self.layout.addWidget(self.dsp_group)
-        self.layout.addStretch()
+        self.main_layout.addWidget(self.build_group)
+        self.main_layout.addWidget(self.gui_group)
+        self.main_layout.addWidget(self.code_group)
+        self.main_layout.addWidget(self.dsp_group)
+        self.main_layout.addStretch()
 
     def setup_connections(self):
         """Connect signals to slots"""
         checkboxes = [
-            self.standalone_cb, self.vst3_cb, self.au_cb, self.auv3_cb, self.clap_cb,
-            self.resizable_cb, self.code_signing_cb, self.installer_cb,
-            self.default_bypass_cb, self.in_gain_cb, self.out_gain_cb,
+            self.standalone_cb,
+            self.vst3_cb,
+            self.au_cb,
+            self.auv3_cb,
+            self.clap_cb,
+            self.resizable_cb,
+            self.code_signing_cb,
+            self.installer_cb,
+            self.default_bypass_cb,
+            self.in_gain_cb,
+            self.out_gain_cb,
         ]
         for cb in checkboxes:
             cb.toggled.connect(lambda _: self._emit_config_changed())
@@ -137,7 +147,13 @@ class ConfigurationTab(BaseTab):
 
     def validate(self):
         # At least one plugin format must be selected
-        return self.standalone_cb.isChecked() or self.vst3_cb.isChecked() or self.au_cb.isChecked() or self.auv3_cb.isChecked() or self.clap_cb.isChecked()
+        return (
+            self.standalone_cb.isChecked()
+            or self.vst3_cb.isChecked()
+            or self.au_cb.isChecked()
+            or self.auv3_cb.isChecked()
+            or self.clap_cb.isChecked()
+        )
 
     def reset(self):
         self.standalone_cb.setChecked(False)

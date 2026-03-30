@@ -1,0 +1,10 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/.venv/lib/python3.12/site-packages"
+    ],
+    "pylint.args": [
+        "--extension-pkg-whitelist=PySide6",
+        "--ignored-modules=PySide6.QtCore,PySide6.QtWidgets,PySide6.QtGui"
+    ]
+}
