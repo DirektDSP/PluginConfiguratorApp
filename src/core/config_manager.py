@@ -105,6 +105,11 @@ class ConfigurationManager:
 class ConfigManager:
     """Manages loading and saving of XML configuration files and presets"""
 
+    BUNDLED_PRESETS: ClassVar[tuple[str, ...]] = (
+        "StandardAudioFX_Preset",
+        "Instrument_Preset",
+        "MinimalPlugin_Preset",
+    )
     PRESET_SCHEMA: ClassVar[dict[str, dict[str, dict[str, Any]]]] = {
         "project_info": {
             "template_name": {"type": str, "default": "Internal DirektDSP Template"},
@@ -144,7 +149,7 @@ class ConfigManager:
             "logging_framework": {"type": bool, "default": False},
             "clap_builds": {"type": bool, "default": False},
             "preset_management": {"type": bool, "default": False},
-            "preset_format": {"type": str, "default": None},
+            "preset_format": {"type": str, "default": ""},
             "ab_comparison": {"type": bool, "default": False},
             "state_management": {"type": bool, "default": False},
             "gpu_audio": {"type": bool, "default": False},
@@ -279,7 +284,10 @@ class ConfigManager:
     def _install_bundled_presets(self) -> None:
         if not self.example_presets_dir.exists():
             return
-        for preset_file in self.example_presets_dir.glob("*.xml"):
+        for preset_name in self.BUNDLED_PRESETS:
+            preset_file = self.example_presets_dir / f"{preset_name}.xml"
+            if not preset_file.exists():
+                continue
             target = self.preset_dir / preset_file.name
             if not target.exists():
                 target.write_text(preset_file.read_text(encoding="utf-8"), encoding="utf-8")

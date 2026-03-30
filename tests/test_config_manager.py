@@ -216,8 +216,7 @@ class TestConfigManager:
         """Test that ConfigManager initializes correctly"""
         assert config_manager.preset_dir.exists()
         assert config_manager.preset_dir.name == "presets"
-        bundled = {"StandardAudioFX_Preset", "Instrument_Preset", "MinimalPlugin_Preset"}
-        assert bundled.issubset(set(config_manager.get_available_presets()))
+        assert set(ConfigManager.BUNDLED_PRESETS).issubset(set(config_manager.get_available_presets()))
 
     def test_get_default_config(self, config_manager):
         """Test that default config is correctly structured"""
@@ -367,7 +366,7 @@ class TestConfigManager:
 
     def test_bundled_presets_validate(self, config_manager):
         """Bundled presets should pass schema validation"""
-        for preset in ("StandardAudioFX_Preset", "Instrument_Preset", "MinimalPlugin_Preset"):
+        for preset in ConfigManager.BUNDLED_PRESETS:
             ok, errors = config_manager.validate_preset_file(
                 config_manager.preset_dir / f"{preset}.xml"
             )
