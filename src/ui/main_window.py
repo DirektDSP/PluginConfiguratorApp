@@ -5,18 +5,22 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QProgressBar,
+    QSplitter,
     QStatusBar,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from ui.components import FileTreePreview
 from ui.tabs.configuration_tab import ConfigurationTab
 from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
 from ui.tabs.generate_tab import GenerateTab
 from ui.tabs.implementations_tab import ImplementationsTab
 from ui.tabs.project_info_tab import ProjectInfoTab
 from ui.tabs.user_experience_tab import UserExperienceTab
+
+PREVIEW_MIN_WIDTH = 340
 
 
 class MainWindow(QMainWindow):
@@ -43,6 +47,10 @@ class MainWindow(QMainWindow):
         # Create tab widget
         self.tab_widget = QTabWidget()
 
+        # File tree preview (persistent across tabs)
+        self.file_tree_preview = FileTreePreview()
+        self.file_tree_preview.setMinimumWidth(PREVIEW_MIN_WIDTH)
+
         # Create tabs with the new structure
         self.project_info_tab = ProjectInfoTab()
         self.implementations_tab = ImplementationsTab()
@@ -59,8 +67,16 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.development_workflow_tab, "Development Workflow")
         self.tab_widget.addTab(self.generate_tab, "Generate")
 
-        # Add tab widget to main layout
-        self.main_layout.addWidget(self.tab_widget)
+        # Splitter keeps preview visible alongside tabs
+        self.content_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.content_splitter.setChildrenCollapsible(False)
+        self.content_splitter.addWidget(self.tab_widget)
+        self.content_splitter.addWidget(self.file_tree_preview)
+        self.content_splitter.setStretchFactor(0, 3)
+        self.content_splitter.setStretchFactor(1, 2)
+
+        # Add splitter to main layout
+        self.main_layout.addWidget(self.content_splitter)
 
         # Progress bar at the bottom of main window
         self.global_progress_bar = QProgressBar()
@@ -82,6 +98,9 @@ class MainWindow(QMainWindow):
         for tab in self._all_tabs():
             tab.config_changed.connect(self._on_tab_config_changed)
             tab.validation_changed.connect(self._on_tab_validation_changed)
+
+        # Initialize persistent preview with defaults
+        self._update_file_tree_preview()
 
     def setup_menu(self):
         """Set up application menu"""
@@ -174,6 +193,7 @@ class MainWindow(QMainWindow):
         # Update status
         self.status_bar.showMessage("New project started")
         self.update_status("Started new project")
+        self._update_file_tree_preview()
 
         # Switch to project info tab
         self.tab_widget.setCurrentIndex(0)
@@ -193,6 +213,7 @@ class MainWindow(QMainWindow):
         # Refresh the generate tab's summary with the latest configuration
         config = self.collect_configuration()
         self.generate_tab.update_full_config(config)
+        self._update_file_tree_preview(config)
 
     def collect_configuration(self):
         """Collect configuration from all tabs using the BaseTab interface"""
@@ -217,6 +238,7 @@ class MainWindow(QMainWindow):
         self.user_experience_tab.load_configuration(config.get("user_experience", {}))
         self.development_workflow_tab.load_configuration(config.get("development_workflow", {}))
         self.generate_tab.load_configuration(config.get("generate", {}))
+        self._update_file_tree_preview(config)
 
     @Slot(str)
     def update_status(self, message):
@@ -231,11 +253,13 @@ class MainWindow(QMainWindow):
         if index == 5:  # Generate tab
             config = self.collect_configuration()
             self.generate_tab.update_full_config(config)
+            self._update_file_tree_preview(config)
 
     @Slot(dict)
     def _on_tab_config_changed(self, config):
         """Handle configuration change from any tab"""
         self.status_bar.showMessage("Configuration updated")
+        self._update_file_tree_preview()
 
     @Slot(bool)
     def _on_tab_validation_changed(self, is_valid):
@@ -267,3 +291,9 @@ class MainWindow(QMainWindow):
             "Developed by DirektDSP\n"
             "Version 1.0.0",
         )
+
+    def _update_file_tree_preview(self, config=None):
+        """Refresh the persistent file tree preview with current configuration."""
+        if config is None:
+            config = self.collect_configuration()
+        self.file_tree_preview.set_configuration(config)
