@@ -12,6 +12,7 @@ dependencies = [
     "pyside6-addons==6.8.3",
     "pyside6-essentials==6.8.3",
     "requests==2.32.3",
+    "setuptools>=82.0.1",
     "shiboken6==6.8.3",
     "urllib3==2.3.0",
     "uuid==1.30",

@@ -1,3 +1,5 @@
+"""Implement tab for selecting optional development dependencies."""
+
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QCheckBox,

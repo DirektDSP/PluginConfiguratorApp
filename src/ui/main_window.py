@@ -1,3 +1,5 @@
+"""Main window for the Plugin Configurator application."""
+
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
@@ -178,7 +180,7 @@ class MainWindow(QMainWindow):
     def save_current_as_preset(self):
         """Save current configuration as a preset"""
         # Get configuration from all tabs
-        config = self.collect_configuration()
+        _ = self.collect_configuration()
         self.status_bar.showMessage("Preset saved")
 
     @Slot()
@@ -224,7 +226,9 @@ class MainWindow(QMainWindow):
         self.implementations_tab.load_configuration(config.get("implementations", {}))
         self.configuration_tab.load_configuration(config.get("configuration", {}))
         self.user_experience_tab.load_configuration(config.get("user_experience", {}))
-        self.development_workflow_tab.load_configuration(config.get("development_workflow", {}))
+        self.development_workflow_tab.load_configuration(
+            config.get("development_workflow", {})
+        )
 
     @Slot(str)
     def update_status(self, message):
@@ -235,23 +239,28 @@ class MainWindow(QMainWindow):
     @Slot(int)
     def handle_tab_changed(self, index):
         """Handle when the user changes tabs"""
-        # Will be implemented as we add functionality to the tabs
-        pass
+        tab_title = self.tab_widget.tabText(index)
+        self.status_bar.showMessage(f"Viewing: {tab_title}")
 
     @Slot(dict)
-    def _on_tab_config_changed(self, config):
+    def _on_tab_config_changed(self, _config):
         """Handle configuration change from any tab"""
         self.status_bar.showMessage("Configuration updated")
 
     @Slot(bool)
     def _on_tab_validation_changed(self, is_valid):
         """Handle validation state change from any tab"""
-        pass
+        if is_valid:
+            self.status_bar.showMessage("Validation passed")
+        else:
+            self.status_bar.showMessage("Validation pending")
 
     def change_theme(self, theme_name):
         """Change application theme"""
         if self.theme_manager:
-            QApplication.instance().setStyleSheet(self.theme_manager.get_stylesheet(theme_name))
+            app = QApplication.instance()
+            if isinstance(app, QApplication):
+                app.setStyleSheet(self.theme_manager.get_stylesheet(theme_name))
             self.status_bar.showMessage(f"Theme changed to {theme_name}")
 
     def show_documentation(self):
