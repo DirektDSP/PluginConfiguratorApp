@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSplitter,
     QStyle,
+    QCheckBox,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -22,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.base_tab import BaseTab
+from core.config_manager import ConfigurationManager
 from core.utils import generate_plugin_id
 
 
@@ -196,11 +198,28 @@ class ProjectInfoTab(BaseTab):
 
         self.output_group.setLayout(self.output_layout)
 
+        # Quick start group
+        self.quick_start_group = QGroupBox("Quick Start")
+        quick_start_layout = QVBoxLayout()
+        self.quick_start_checkbox = QCheckBox("Enable Quick Start")
+        self.quick_start_checkbox.setToolTip(
+            "Skip the detailed steps and jump straight to Review & Generate with sensible defaults."
+        )
+        quick_actions_layout = QHBoxLayout()
+        self.review_generate_button = QPushButton("Review & Generate")
+        self.review_generate_button.setEnabled(False)
+        quick_actions_layout.addWidget(self.review_generate_button)
+        quick_actions_layout.addStretch()
+        quick_start_layout.addWidget(self.quick_start_checkbox)
+        quick_start_layout.addLayout(quick_actions_layout)
+        self.quick_start_group.setLayout(quick_start_layout)
+
         # Add all groups to the form layout
         self.form_layout.addWidget(self.template_group)
         self.form_layout.addWidget(self.project_group)
         self.form_layout.addWidget(self.company_group)
         self.form_layout.addWidget(self.output_group)
+        self.form_layout.addWidget(self.quick_start_group)
         self.form_layout.addStretch()  # Add stretch to push all groups to the top
 
         # Set the form widget as the widget for the scroll area
@@ -264,6 +283,8 @@ class ProjectInfoTab(BaseTab):
         self.template_combo.currentIndexChanged.connect(self.update_template_selection)
         self.repo_url.textChanged.connect(self.update_repo_url)
         self.project_name.textChanged.connect(self.update_file_tree)
+        self.quick_start_checkbox.toggled.connect(self._on_quick_start_toggled)
+        self.review_generate_button.clicked.connect(self._on_review_generate_clicked)
         # Emit configuration changes for live preview updates
         text_widgets = [
             self.project_name,
@@ -277,6 +298,8 @@ class ProjectInfoTab(BaseTab):
         ]
         for widget in text_widgets:
             widget.textChanged.connect(self._on_form_field_changed)
+            widget.textChanged.connect(self._update_quick_start_button_state)
+        self._update_quick_start_button_state()
 
     @Slot(str)
     def update_from_project_name(self, text):
@@ -475,6 +498,7 @@ class ProjectInfoTab(BaseTab):
             "manufacturer_code": self.manufacturer_code.text().strip(),
             "plugin_code": self.plugin_code.text().strip() or generate_plugin_id(),
             "output_directory": self.output_directory.text().strip(),
+            "quick_start": self.quick_start_checkbox.isChecked(),
         }
 
     def load_configuration(self, config):
@@ -502,6 +526,12 @@ class ProjectInfoTab(BaseTab):
 
         # Set output directory
         self.output_directory.setText(config.get("output_directory", ""))
+
+        # Quick start flag (optional)
+        quick_start_enabled = config.get("quick_start", False)
+        self.quick_start_checkbox.setChecked(bool(quick_start_enabled))
+        ConfigurationManager().set_quick_start(bool(quick_start_enabled))
+        self._update_quick_start_button_state()
 
         # Update file tree based on loaded config
         self.update_file_tree()
@@ -549,9 +579,59 @@ class ProjectInfoTab(BaseTab):
         self.manufacturer_code.setText("Ddsp")
         self.plugin_code.clear()
         self.output_directory.clear()
+        self.quick_start_checkbox.setChecked(False)
+        self.review_generate_button.setEnabled(False)
         self.update_file_tree()
 
     @Slot()
     def _on_form_field_changed(self, _value=None):
         """Emit configuration changes when text fields change (BaseTab helper)."""
         self._emit_config_changed()
+
+    @Slot(bool)
+    def _on_quick_start_toggled(self, checked: bool):
+        """Update quick start flag in configuration manager and button state."""
+        ConfigurationManager().set_quick_start(checked)
+        self._update_quick_start_button_state()
+        self._emit_config_changed()
+
+    @Slot()
+    def _on_review_generate_clicked(self):
+        """Validate and jump to the Review & Generate tab with defaults."""
+        if not self.validate():
+            self._update_quick_start_button_state()
+            return
+
+        main_window = self.window()
+        if hasattr(main_window, "quick_start_review_generate"):
+            main_window.quick_start_review_generate()
+        self._update_quick_start_button_state()
+
+    def _has_required_quick_start_data(self) -> bool:
+        """Check required fields without showing dialogs for button state."""
+        required_fields = [
+            self.project_name,
+            self.product_name,
+            self.company_name,
+            self.bundle_id,
+            self.manufacturer_code,
+            self.output_directory,
+        ]
+        if any(not field.text().strip() for field in required_fields):
+            return False
+        if len(self.manufacturer_code.text().strip()) != 4:
+            return False
+        return True
+
+    def _update_quick_start_button_state(self, *_args):
+        """Provide visual feedback on whether quick start can proceed."""
+        ready = self.quick_start_checkbox.isChecked() and self._has_required_quick_start_data()
+        self.review_generate_button.setEnabled(ready)
+        if ready:
+            self.review_generate_button.setToolTip("All required fields look good. Jump to Review & Generate.")
+        elif not self.quick_start_checkbox.isChecked():
+            self.review_generate_button.setToolTip("Enable Quick Start to jump ahead.")
+        else:
+            self.review_generate_button.setToolTip(
+                "Fill all required fields (including a 4-character manufacturer code) to continue."
+            )
