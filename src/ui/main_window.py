@@ -21,6 +21,7 @@ from ui.tabs.project_info_tab import ProjectInfoTab
 from ui.tabs.user_experience_tab import UserExperienceTab
 
 PREVIEW_MIN_WIDTH = 340
+GENERATE_TAB_INDEX = 5
 
 
 class MainWindow(QMainWindow):
@@ -208,12 +209,21 @@ class MainWindow(QMainWindow):
     def generate_project(self):
         """Start the project generation process"""
         # Switch to the Generate tab so the user can review and trigger generation
-        self.tab_widget.setCurrentIndex(5)  # Generate tab index
+        self.tab_widget.setCurrentIndex(GENERATE_TAB_INDEX)  # Generate tab index
 
         # Refresh the generate tab's summary with the latest configuration
         config = self.collect_configuration()
         self.generate_tab.update_full_config(config)
         self._update_file_tree_preview(config)
+
+    def quick_start_review_generate(self):
+        """Apply quick-start defaults and navigate to the Generate tab."""
+        self._apply_quick_start_defaults()
+        config = self.collect_configuration()
+        self.generate_tab.update_full_config(config)
+        self._update_file_tree_preview(config)
+        self.tab_widget.setCurrentIndex(GENERATE_TAB_INDEX)
+        self.status_bar.showMessage("Quick Start: Review & Generate")
 
     def collect_configuration(self):
         """Collect configuration from all tabs using the BaseTab interface"""
@@ -250,7 +260,7 @@ class MainWindow(QMainWindow):
     def handle_tab_changed(self, index):
         """Handle when the user changes tabs"""
         # Refresh the Generate tab summary whenever it becomes active
-        if index == 5:  # Generate tab
+        if index == GENERATE_TAB_INDEX:  # Generate tab
             config = self.collect_configuration()
             self.generate_tab.update_full_config(config)
             self._update_file_tree_preview(config)
@@ -297,3 +307,51 @@ class MainWindow(QMainWindow):
         if config is None:
             config = self.collect_configuration()
         self.file_tree_preview.set_configuration(config)
+
+    def _apply_quick_start_defaults(self):
+        """Auto-populate downstream tabs with intelligent defaults for quick start."""
+        configuration_defaults = {
+            "standalone": False,
+            "vst3": True,
+            "au": True,
+            "auv3": False,
+            "clap": True,
+            "gui_width": 800,
+            "gui_height": 600,
+            "resizable": False,
+            "background_image": "",
+            "code_signing": False,
+            "installer": False,
+            "default_bypass": True,
+            "input_gain": True,
+            "output_gain": True,
+        }
+        implementations_defaults = {
+            "moonbase_licensing": False,
+            "melatonin_inspector": True,
+            "custom_gui_framework": True,
+            "logging_framework": True,
+            "clap_builds": True,
+            "preset_management": True,
+            "preset_format": "XML",
+            "ab_comparison": True,
+            "state_management": True,
+            "gpu_audio": False,
+        }
+        user_experience_defaults = {
+            "wizard": True,
+            "preview": True,
+            "preset_management": True,
+        }
+        development_workflow_defaults = {
+            "vcs": True,
+            "testing": False,
+            "code_quality": True,
+            "validation_tools": True,
+            "scaffolding": True,
+        }
+
+        self.configuration_tab.load_configuration(configuration_defaults)
+        self.implementations_tab.load_configuration(implementations_defaults)
+        self.user_experience_tab.load_configuration(user_experience_defaults)
+        self.development_workflow_tab.load_configuration(development_workflow_defaults)

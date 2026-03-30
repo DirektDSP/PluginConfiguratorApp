@@ -80,6 +80,14 @@ class TestConfigurationManager:
         mgr.toggle_quick_start()
         assert mgr.get_full_config()["quick_start"] is False
 
+    def test_set_quick_start_sets_explicit_state(self):
+        """set_quick_start should set the flag deterministically."""
+        mgr = ConfigurationManager()
+        mgr.set_quick_start(True)
+        assert mgr.get_full_config()["quick_start"] is True
+        mgr.set_quick_start(False)
+        assert mgr.get_full_config()["quick_start"] is False
+
     def test_validate_all_without_tabs_false_when_empty(self):
         """validate_all() with no arguments returns False when no tab has contributed config"""
         mgr = ConfigurationManager()
