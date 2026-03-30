@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<preset name="ModernInstrument">
+<preset name="Instrument">
   <meta>
     <description>Instrument-focused configuration with CLAP/AUv3 targets and GPU-friendly options.</description>
   </meta>

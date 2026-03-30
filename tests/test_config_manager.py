@@ -217,7 +217,7 @@ class TestConfigManager:
         assert config_manager.preset_dir.exists()
         assert config_manager.preset_dir.name == "presets"
         available = set(config_manager.get_available_presets())
-        assert set(ConfigManager.BUNDLED_PRESETS).issubset(available)
+        assert set(ConfigManager.BUNDLED_PRESETS) <= available
 
     def test_get_default_config(self, config_manager):
         """Test that default config is correctly structured"""
