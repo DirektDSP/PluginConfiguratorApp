@@ -394,6 +394,7 @@ class ConfigManager:
         if expected_type is bool:
             return isinstance(value, bool)
         if expected_type is int:
+            # bool is a subclass of int, so explicitly exclude booleans.
             return isinstance(value, int) and not isinstance(value, bool)
         if expected_type is str:
             return isinstance(value, str)
