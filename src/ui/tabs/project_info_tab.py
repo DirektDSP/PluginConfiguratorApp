@@ -274,11 +274,9 @@ class ProjectInfoTab(BaseTab):
             self.manufacturer_code,
             self.plugin_code,
             self.output_directory,
-            self.repo_url,
         ]
         for widget in text_widgets:
-            widget.textChanged.connect(lambda _: self._emit_config_changed())
-        self.template_combo.currentIndexChanged.connect(lambda _: self._emit_config_changed())
+            widget.textChanged.connect(self._on_form_field_changed)
 
     @Slot(str)
     def update_from_project_name(self, text):
@@ -340,6 +338,7 @@ class ProjectInfoTab(BaseTab):
 
         # Update file tree visualization
         self.update_file_tree()
+        self._emit_config_changed()
 
     @Slot(str)
     def update_repo_url(self, url):
@@ -350,6 +349,7 @@ class ProjectInfoTab(BaseTab):
                 "url": url,
                 "description": "Custom repository URL provided by user.",
             }
+        self._emit_config_changed()
 
     @Slot(str)
     def update_file_tree(self, _text=None):
@@ -550,3 +550,8 @@ class ProjectInfoTab(BaseTab):
         self.plugin_code.clear()
         self.output_directory.clear()
         self.update_file_tree()
+
+    @Slot()
+    def _on_form_field_changed(self, _value=None):
+        """Emit configuration changes when text fields change."""
+        self._emit_config_changed()
