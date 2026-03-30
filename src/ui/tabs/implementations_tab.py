@@ -1,3 +1,5 @@
+"""Implementations tab for selecting optional plugin feature sets."""
+
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -10,6 +12,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
+    QWidget,
 )
 
 from core.base_tab import BaseTab
@@ -26,7 +29,7 @@ class ImplementationsTab(BaseTab):
     def setup_ui(self):
         """Initialize UI components"""
         # Main layout
-        self.layout = QVBoxLayout(self)
+        self.main_layout = QVBoxLayout(self)
 
         # Create a scroll area for implementation options
         self.scroll_area = QScrollArea()
@@ -62,11 +65,15 @@ class ImplementationsTab(BaseTab):
         implementations_layout.addWidget(self.moonbase_licensing)
 
         self.melatonin_inspector = QCheckBox("Melatonin Inspector")
-        self.melatonin_inspector.setToolTip("GUI inspection and debugging tool for JUCE")
+        self.melatonin_inspector.setToolTip(
+            "GUI inspection and debugging tool for JUCE"
+        )
         implementations_layout.addWidget(self.melatonin_inspector)
 
         self.custom_gui = QCheckBox("Custom GUI Framework")
-        self.custom_gui.setToolTip("Implements a custom GUI framework with additional components")
+        self.custom_gui.setToolTip(
+            "Implements a custom GUI framework with additional components"
+        )
         implementations_layout.addWidget(self.custom_gui)
 
         self.logging_framework = QCheckBox("Logging Framework")
@@ -92,7 +99,9 @@ class ImplementationsTab(BaseTab):
         self.add_section_header(implementations_layout, "User Experience Features")
 
         self.preset_management = QCheckBox("Preset Management System")
-        self.preset_management.setToolTip("System for saving, loading, and managing user presets")
+        self.preset_management.setToolTip(
+            "System for saving, loading, and managing user presets"
+        )
         implementations_layout.addWidget(self.preset_management)
 
         # Preset system options
@@ -103,18 +112,24 @@ class ImplementationsTab(BaseTab):
         self.preset_options_layout.setContentsMargins(20, 0, 0, 0)  # Add left indent
 
         self.preset_format = QComboBox()
-        self.preset_format.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.preset_format.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
         self.preset_format.addItems(["XML", "JSON", "Binary"])
 
         self.preset_options_layout.addRow("Preset Format:", self.preset_format)
         implementations_layout.addLayout(self.preset_options_layout)
 
         self.ab_comparison = QCheckBox("A/B Comparison Feature")
-        self.ab_comparison.setToolTip("Allows users to compare settings with A/B switching")
+        self.ab_comparison.setToolTip(
+            "Allows users to compare settings with A/B switching"
+        )
         implementations_layout.addWidget(self.ab_comparison)
 
         self.state_management = QCheckBox("State Management/Undo History")
-        self.state_management.setToolTip("Implements undo/redo functionality for user actions")
+        self.state_management.setToolTip(
+            "Implements undo/redo functionality for user actions"
+        )
         implementations_layout.addWidget(self.state_management)
 
         # Add spacing after section
@@ -135,7 +150,7 @@ class ImplementationsTab(BaseTab):
 
         # Set the content widget to the scroll area
         self.scroll_area.setWidget(self.content_widget)
-        self.layout.addWidget(self.scroll_area)
+        self.main_layout.addWidget(self.scroll_area)
 
         # Initialize UI states
         self.update_dependent_widgets()
@@ -190,8 +205,12 @@ class ImplementationsTab(BaseTab):
         """Enable/disable dependent widgets based on checkbox states"""
         # Preset options
         for i in range(self.preset_options_layout.rowCount()):
-            label_item = self.preset_options_layout.itemAt(i, QFormLayout.ItemRole.LabelRole)
-            field_item = self.preset_options_layout.itemAt(i, QFormLayout.ItemRole.FieldRole)
+            label_item = self.preset_options_layout.itemAt(
+                i, QFormLayout.ItemRole.LabelRole
+            )
+            field_item = self.preset_options_layout.itemAt(
+                i, QFormLayout.ItemRole.FieldRole
+            )
             if label_item and field_item:
                 label_item.widget().setEnabled(self.preset_management.isChecked())
                 field_item.widget().setEnabled(self.preset_management.isChecked())
@@ -211,9 +230,11 @@ class ImplementationsTab(BaseTab):
             "logging_framework": self.logging_framework.isChecked(),
             "clap_builds": self.clap_builds.isChecked(),
             "preset_management": self.preset_management.isChecked(),
-            "preset_format": self.preset_format.currentText()
-            if self.preset_management.isChecked()
-            else None,
+            "preset_format": (
+                self.preset_format.currentText()
+                if self.preset_management.isChecked()
+                else None
+            ),
             "ab_comparison": self.ab_comparison.isChecked(),
             "state_management": self.state_management.isChecked(),
             "gpu_audio": self.gpu_audio.isChecked(),
