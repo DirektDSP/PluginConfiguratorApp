@@ -14,6 +14,7 @@ Plugin Configurator is a tool designed for audio developers to quickly set up ne
 - Set up GitHub Actions for CI/CD
 - Include testing frameworks and optional modules
 - Generate consistent, well-structured plugin projects
+- Ship with ready-to-use configuration presets (see `docs/presets.md`)
 
 ## Template Compatibility
 

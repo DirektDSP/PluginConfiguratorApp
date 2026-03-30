@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preset name="MinimalPlugin">
+  <meta>
+    <description>The lightest configuration: VST3-only with no optional modules, ideal for quick scaffolding.</description>
+  </meta>
+  <project_info>
+    <template_name>Internal DirektDSP Template</template_name>
+    <template_url>https://github.com/SeamusMullan/PluginTemplate.git</template_url>
+    <project_name>MinimalPlugin</project_name>
+    <product_name>Minimal Plugin</product_name>
+    <version>0.9.0</version>
+    <company_name>DirektDSP</company_name>
+    <bundle_id>com.direkt.minimal</bundle_id>
+    <manufacturer_code>DKMN</manufacturer_code>
+    <plugin_code>MNML</plugin_code>
+    <output_directory>~/AudioPlugins/MinimalPlugin</output_directory>
+  </project_info>
+  <configuration>
+    <standalone>false</standalone>
+    <vst3>true</vst3>
+    <au>false</au>
+    <auv3>false</auv3>
+    <clap>false</clap>
+    <gui_width>800</gui_width>
+    <gui_height>500</gui_height>
+    <resizable>false</resizable>
+    <background_image></background_image>
+    <code_signing>false</code_signing>
+    <installer>false</installer>
+    <default_bypass>false</default_bypass>
+    <input_gain>false</input_gain>
+    <output_gain>false</output_gain>
+  </configuration>
+  <implementations>
+    <moonbase_licensing>false</moonbase_licensing>
+    <melatonin_inspector>false</melatonin_inspector>
+    <custom_gui_framework>false</custom_gui_framework>
+    <logging_framework>false</logging_framework>
+    <clap_builds>false</clap_builds>
+    <preset_management>false</preset_management>
+    <preset_format></preset_format>
+    <ab_comparison>false</ab_comparison>
+    <state_management>false</state_management>
+    <gpu_audio>false</gpu_audio>
+  </implementations>
+  <user_experience>
+    <wizard>false</wizard>
+    <preview>false</preview>
+    <preset_management>false</preset_management>
+  </user_experience>
+  <development_workflow>
+    <vcs>false</vcs>
+    <testing>false</testing>
+    <code_quality>false</code_quality>
+    <validation_tools>false</validation_tools>
+    <scaffolding>false</scaffolding>
+  </development_workflow>
+</preset>
