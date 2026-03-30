@@ -212,6 +212,17 @@ class FileTreePreview(QWidget):
             )
         )
 
+        format_detail_entries = self._format_detail_entries(build)
+        if format_detail_entries:
+            tree.append(
+                TreeEntry(
+                    name="Format Details",
+                    children=format_detail_entries,
+                    enabled=any(entry.enabled for entry in format_detail_entries),
+                    hint="Format-specific assets and metadata",
+                )
+            )
+
         # UX features
         ux_entries = [
             TreeEntry(name="Wizard", children=[], enabled=bool(ux.get("wizard")), is_file=True),
@@ -429,6 +440,92 @@ class FileTreePreview(QWidget):
     def _resolve_preset_format(implementations: dict) -> str:
         """Return the configured preset format or the default fallback."""
         return implementations.get("preset_format") or FileTreePreview.DEFAULT_PRESET_FORMAT
+
+    @staticmethod
+    def _format_detail_entries(build: dict) -> List[TreeEntry]:
+        """Return per-format detail entries when formats are selected."""
+        entries: List[TreeEntry] = []
+
+        if build.get("au"):
+            comp = "/".join(
+                filter(
+                    None,
+                    [
+                        build.get("au_component_type", ""),
+                        build.get("au_component_subtype", ""),
+                        build.get("au_component_manufacturer", ""),
+                    ],
+                )
+            )
+            au_children = [
+                TreeEntry(
+                    name="AudioComponentDescription",
+                    children=[],
+                    enabled=True,
+                    is_file=True,
+                    hint=comp or "Component type/subtype/manufacturer",
+                ),
+                TreeEntry(
+                    name=f"AU Version {build.get('au_version', '1.0.0')}",
+                    children=[],
+                    enabled=True,
+                    is_file=True,
+                ),
+            ]
+            entries.append(
+                TreeEntry(
+                    name="Audio Unit Resources",
+                    children=au_children,
+                    enabled=True,
+                    hint="macOS Audio Unit metadata",
+                )
+            )
+
+        if build.get("clap"):
+            extensions = build.get("clap_extensions", "note-ports,state")
+            features = build.get("clap_features", "audio-effect")
+            clap_children = [
+                TreeEntry(
+                    name=f"Extensions: {extensions}",
+                    children=[],
+                    enabled=True,
+                    is_file=True,
+                ),
+                TreeEntry(
+                    name=f"Features: {features}",
+                    children=[],
+                    enabled=True,
+                    is_file=True,
+                ),
+            ]
+            entries.append(
+                TreeEntry(
+                    name="CLAP Manifest",
+                    children=clap_children,
+                    enabled=True,
+                    hint="CLAP extensions and feature declarations",
+                )
+            )
+
+        if build.get("auv3"):
+            platform = build.get("auv3_platform", "iOS")
+            entries.append(
+                TreeEntry(
+                    name="AUv3 Platform",
+                    children=[
+                        TreeEntry(
+                            name=f"Target: {platform}",
+                            children=[],
+                            enabled=True,
+                            is_file=True,
+                        )
+                    ],
+                    enabled=True,
+                    hint="AUv3 app-extension target",
+                )
+            )
+
+        return entries
 
     # ------------------------------------------------------------------ #
     # Helpers                                                            #

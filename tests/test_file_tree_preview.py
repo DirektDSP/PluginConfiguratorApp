@@ -102,3 +102,46 @@ def test_preview_reflects_plugin_type(qtbot, app):
     ]
     assert any("Instrument" in text for text in instrument_entries)
     assert any("Polyphony" in text for text in instrument_entries)
+
+
+def test_preview_shows_format_details(qtbot, app):
+    preview = FileTreePreview()
+    qtbot.addWidget(preview)
+
+    config = {
+        "project_info": {"project_name": "FormatPlugin"},
+        "configuration": {
+            "vst3": True,
+            "au": True,
+            "clap": True,
+            "auv3": True,
+            "au_component_type": "aufx",
+            "au_component_subtype": "synth",
+            "au_component_manufacturer": "Acme",
+            "au_version": "1.2.3",
+            "clap_extensions": "note-ports",
+            "clap_features": "instrument",
+            "auv3_platform": "macOS",
+        },
+    }
+
+    preview.set_configuration(config)
+    qtbot.waitUntil(
+        lambda: (not preview.is_updating()) and preview._tree.topLevelItemCount() == 1,
+        timeout=1000,
+    )
+
+    root = preview._tree.topLevelItem(0)
+    format_details = next(
+        (
+            root.child(i)
+            for i in range(root.childCount())
+            if root.child(i).text(0).startswith("Format Details")
+        ),
+        None,
+    )
+    assert format_details is not None
+    child_names = [format_details.child(i).text(0) for i in range(format_details.childCount())]
+    assert any("Audio Unit Resources" in name for name in child_names)
+    assert any("CLAP Manifest" in name for name in child_names)
+    assert any("AUv3 Platform" in name for name in child_names)

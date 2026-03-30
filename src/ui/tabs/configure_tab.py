@@ -2,6 +2,7 @@
 from PySide6.QtCore import QDir, Slot
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QFileDialog,
     QFormLayout,
     QGroupBox,
@@ -132,6 +133,55 @@ class ConfigureTab(BaseTab):
         self.format_disclosure_label.setStyleSheet("color: #888; font-size: 11px;")
         formats_layout.addWidget(self.format_disclosure_label)
 
+        # Format-specific option groups (shown only when the format is selected)
+        self.au_options_group = QGroupBox("Audio Unit Options")
+        au_layout = QFormLayout()
+        self.au_component_type = QLineEdit()
+        self.au_component_type.setPlaceholderText("e.g. aufx (4 chars)")
+        self.au_component_type.setText("aufx")
+        self.au_component_type.setMaxLength(4)
+        self.au_component_subtype = QLineEdit()
+        self.au_component_subtype.setPlaceholderText("Subtype (4 chars)")
+        self.au_component_subtype.setMaxLength(4)
+        self.au_component_subtype.setText("plug")
+        self.au_component_manufacturer = QLineEdit()
+        self.au_component_manufacturer.setPlaceholderText("Manufacturer (4 chars)")
+        self.au_component_manufacturer.setMaxLength(4)
+        self.au_component_manufacturer.setText("Ddsp")
+        self.au_version = QLineEdit()
+        self.au_version.setPlaceholderText("Version e.g. 1.0.0")
+        self.au_version.setText("1.0.0")
+        au_layout.addRow("Component Type:", self.au_component_type)
+        au_layout.addRow("Component Subtype:", self.au_component_subtype)
+        au_layout.addRow("Manufacturer:", self.au_component_manufacturer)
+        au_layout.addRow("AU Version:", self.au_version)
+        self.au_options_group.setLayout(au_layout)
+        self.au_options_group.setVisible(False)
+        formats_layout.addWidget(self.au_options_group)
+
+        self.clap_options_group = QGroupBox("CLAP Options")
+        clap_layout = QFormLayout()
+        self.clap_extensions = QLineEdit()
+        self.clap_extensions.setPlaceholderText("Comma-separated extension ids")
+        self.clap_extensions.setText("note-ports,state")
+        self.clap_features = QLineEdit()
+        self.clap_features.setPlaceholderText("Comma-separated features")
+        self.clap_features.setText("audio-effect")
+        clap_layout.addRow("Extensions:", self.clap_extensions)
+        clap_layout.addRow("Features:", self.clap_features)
+        self.clap_options_group.setLayout(clap_layout)
+        self.clap_options_group.setVisible(False)
+        formats_layout.addWidget(self.clap_options_group)
+
+        self.auv3_options_group = QGroupBox("AUv3 Options")
+        auv3_layout = QFormLayout()
+        self.auv3_platform = QComboBox()
+        self.auv3_platform.addItems(["iOS", "macOS", "Universal (iOS + macOS)"])
+        auv3_layout.addRow("Target Platform:", self.auv3_platform)
+        self.auv3_options_group.setLayout(auv3_layout)
+        self.auv3_options_group.setVisible(False)
+        formats_layout.addWidget(self.auv3_options_group)
+
         # Validation hint for "at least one format" rule
         self.format_error_label = QLabel("⚠ At least one plugin format must be selected.")
         self.format_error_label.setStyleSheet("color: #cc3333; font-size: 11px;")
@@ -248,6 +298,7 @@ class ConfigureTab(BaseTab):
         # Connect format checkboxes
         for checkbox in [self.standalone, self.vst3, self.au, self.auv3, self.clap]:
             checkbox.stateChanged.connect(self._on_format_changed)
+        self._update_format_sections()
 
     # ------------------------------------------------------------------
     # Signal connections
@@ -303,6 +354,7 @@ class ConfigureTab(BaseTab):
     def _on_format_changed(self):
         """Handle format checkbox changes and update disclosure label"""
         self._update_format_disclosure()
+        self._update_format_sections()
         self._emit_config_changed()
         self._update_validation_state()
 
@@ -366,13 +418,42 @@ class ConfigureTab(BaseTab):
         }
         for key, checkbox in format_map.items():
             if checkbox.isChecked():
-                notes.append(_FORMAT_NOTES[key])
+                if key == "au":
+                    comp = "/".join(
+                        filter(
+                            None,
+                            [
+                                self.au_component_type.text().strip(),
+                                self.au_component_subtype.text().strip(),
+                                self.au_component_manufacturer.text().strip(),
+                            ],
+                        )
+                    )
+                    notes.append(
+                        f"{_FORMAT_NOTES[key]} • Component: {comp or 'n/a'} • Version: {self.au_version.text().strip() or '1.0.0'}"
+                    )
+                elif key == "clap":
+                    notes.append(
+                        f"{_FORMAT_NOTES[key]} • Extensions: {self.clap_extensions.text().strip() or 'none'} • Features: {self.clap_features.text().strip() or 'none'}"
+                    )
+                elif key == "auv3":
+                    notes.append(
+                        f"{_FORMAT_NOTES[key]} • Target: {self.auv3_platform.currentText()}"
+                    )
+                else:
+                    notes.append(_FORMAT_NOTES[key])
 
         self.format_disclosure_label.setText("\n".join(notes))
         self.format_disclosure_label.setVisible(bool(notes))
 
         has_formats = bool(notes)
         self.format_error_label.setVisible(not has_formats)
+
+    def _update_format_sections(self):
+        """Show or hide format-specific option groups."""
+        self.au_options_group.setVisible(self.au.isChecked())
+        self.clap_options_group.setVisible(self.clap.isChecked())
+        self.auv3_options_group.setVisible(self.auv3.isChecked())
 
     def _update_validation_state(self):
         """Update validation state based on field values"""
@@ -405,6 +486,14 @@ class ConfigureTab(BaseTab):
             "au": self.au.isChecked(),
             "auv3": self.auv3.isChecked(),
             "clap": self.clap.isChecked(),
+            # Format-specific options
+            "au_component_type": self.au_component_type.text().strip(),
+            "au_component_subtype": self.au_component_subtype.text().strip(),
+            "au_component_manufacturer": self.au_component_manufacturer.text().strip(),
+            "au_version": self.au_version.text().strip(),
+            "clap_extensions": self.clap_extensions.text().strip(),
+            "clap_features": self.clap_features.text().strip(),
+            "auv3_platform": self.auv3_platform.currentText(),
             # Build options
             "output_directory": self.output_directory.text().strip(),
             # CI/CD
@@ -431,6 +520,19 @@ class ConfigureTab(BaseTab):
         self.au.setChecked(config.get("au", True))
         self.auv3.setChecked(config.get("auv3", False))
         self.clap.setChecked(config.get("clap", True))
+        # Format-specific options
+        self.au_component_type.setText(config.get("au_component_type", "aufx"))
+        self.au_component_subtype.setText(config.get("au_component_subtype", "plug"))
+        self.au_component_manufacturer.setText(config.get("au_component_manufacturer", "Ddsp"))
+        self.au_version.setText(config.get("au_version", "1.0.0"))
+        self.clap_extensions.setText(config.get("clap_extensions", "note-ports,state"))
+        self.clap_features.setText(config.get("clap_features", "audio-effect"))
+        platform = config.get("auv3_platform", "iOS")
+        idx = self.auv3_platform.findText(platform)
+        if idx != -1:
+            self.auv3_platform.setCurrentIndex(idx)
+        else:
+            self.auv3_platform.setCurrentIndex(0)
         # Build options
         self.output_directory.setText(config.get("output_directory", ""))
         # CI/CD
@@ -443,6 +545,7 @@ class ConfigureTab(BaseTab):
         self.signing_certificate.setText(config.get("signing_certificate", ""))
 
         self._update_format_disclosure()
+        self._update_format_sections()
         self._update_validation_state()
         self._emit_config_changed()
 
@@ -483,6 +586,14 @@ class ConfigureTab(BaseTab):
         self.au.setChecked(True)
         self.auv3.setChecked(False)
         self.clap.setChecked(True)
+        # Format-specific options
+        self.au_component_type.setText("aufx")
+        self.au_component_subtype.setText("plug")
+        self.au_component_manufacturer.setText("Ddsp")
+        self.au_version.setText("1.0.0")
+        self.clap_extensions.setText("note-ports,state")
+        self.clap_features.setText("audio-effect")
+        self.auv3_platform.setCurrentIndex(0)
         # Build options
         self.output_directory.clear()
         # CI/CD
@@ -495,5 +606,6 @@ class ConfigureTab(BaseTab):
         self.signing_certificate.clear()
 
         self._update_format_disclosure()
+        self._update_format_sections()
         self._update_validation_state()
         self._emit_config_changed()
