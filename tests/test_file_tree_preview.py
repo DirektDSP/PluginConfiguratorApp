@@ -19,19 +19,26 @@ def app():
     yield app
 
 
-def test_preview_updates_from_configuration(qtbot, app):
-    preview = FileTreePreview()
-    qtbot.addWidget(preview)
-
-    config = {
-        "project_info": {"project_name": "TestPlugin", "template_name": "My Template", "template_url": "repo.git"},
+@pytest.fixture
+def sample_config():
+    return {
+        "project_info": {
+            "project_name": "TestPlugin",
+            "template_name": "My Template",
+            "template_url": "repo.git",
+        },
         "implementations": {"melatonin_inspector": True, "preset_management": True, "preset_format": "JSON"},
         "configuration": {"standalone": True, "vst3": False},
         "user_experience": {"wizard": True},
         "development_workflow": {"vcs": True},
     }
 
-    preview.set_configuration(config)
+
+def test_preview_updates_from_configuration(qtbot, app, sample_config):
+    preview = FileTreePreview()
+    qtbot.addWidget(preview)
+
+    preview.set_configuration(sample_config)
     qtbot.wait(200)  # allow debounce to fire
 
     assert preview._tree.topLevelItemCount() == 1

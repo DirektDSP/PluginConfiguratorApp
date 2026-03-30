@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QIcon, QPixmap
@@ -26,7 +26,7 @@ class TreeEntry:
     children: List["TreeEntry"]
     enabled: bool = True
     is_file: bool = False
-    hint: str | None = None
+    hint: Optional[str] = None
 
 
 class FileTreePreview(QWidget):
@@ -34,7 +34,7 @@ class FileTreePreview(QWidget):
 
     _DEBOUNCE_MS = 150
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._pending_config: dict = {}
         self._debounce = QTimer(self)
