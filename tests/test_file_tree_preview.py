@@ -40,7 +40,7 @@ def test_preview_updates_from_configuration(qtbot, app, sample_config):
 
     preview.set_configuration(sample_config)
     qtbot.waitUntil(
-        lambda: (not preview._debounce.isActive()) and preview._tree.topLevelItemCount() == 1,
+        lambda: (not preview.is_updating()) and preview._tree.topLevelItemCount() == 1,
         timeout=1000,
     )
 

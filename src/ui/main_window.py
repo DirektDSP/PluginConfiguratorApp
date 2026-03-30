@@ -20,6 +20,8 @@ from ui.tabs.implementations_tab import ImplementationsTab
 from ui.tabs.project_info_tab import ProjectInfoTab
 from ui.tabs.user_experience_tab import UserExperienceTab
 
+PREVIEW_MIN_WIDTH = 340
+
 
 class MainWindow(QMainWindow):
     """Main application window with tabbed interface"""
@@ -47,7 +49,7 @@ class MainWindow(QMainWindow):
 
         # File tree preview (persistent across tabs)
         self.file_tree_preview = FileTreePreview()
-        self.file_tree_preview.setMinimumWidth(340)
+        self.file_tree_preview.setMinimumWidth(PREVIEW_MIN_WIDTH)
 
         # Create tabs with the new structure
         self.project_info_tab = ProjectInfoTab()
