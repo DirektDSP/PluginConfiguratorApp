@@ -1,3 +1,5 @@
+"""Project setup tab for core metadata and output location."""
+
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -27,7 +29,7 @@ class ProjectTab(QWidget):
 
     def setup_ui(self):
         """Initialize UI components"""
-        self.layout = QVBoxLayout(self)
+        self.main_layout = QVBoxLayout(self)
 
         # Project information group
         self.project_group = QGroupBox("Project Information")
@@ -99,11 +101,11 @@ class ProjectTab(QWidget):
         self.continue_button.setMinimumHeight(40)
 
         # Add groups to main layout
-        self.layout.addWidget(self.project_group)
-        self.layout.addWidget(self.company_group)
-        self.layout.addWidget(self.output_group)
-        self.layout.addWidget(self.continue_button)
-        self.layout.addStretch()
+        self.main_layout.addWidget(self.project_group)
+        self.main_layout.addWidget(self.company_group)
+        self.main_layout.addWidget(self.output_group)
+        self.main_layout.addWidget(self.continue_button)
+        self.main_layout.addStretch()
 
     def setup_connections(self):
         """Connect signals to slots"""
@@ -130,7 +132,9 @@ class ProjectTab(QWidget):
     @Slot()
     def browse_output_dir(self):
         """Open file dialog to select output directory"""
-        directory = QFileDialog.getExistingDirectory(self, "Select Output Directory", "")
+        directory = QFileDialog.getExistingDirectory(
+            self, "Select Output Directory", ""
+        )
         if directory:
             self.output_directory.setText(directory)
 
@@ -148,7 +152,9 @@ class ProjectTab(QWidget):
             self.project_configured.emit(config)
         else:
             QMessageBox.warning(
-                self, "Validation Error", "Please complete all required fields before continuing."
+                self,
+                "Validation Error",
+                "Please complete all required fields before continuing.",
             )
 
     def get_configuration(self):
@@ -200,7 +206,9 @@ class ProjectTab(QWidget):
         # Validate manufacturer code is exactly 4 characters
         if len(self.manufacturer_code.text().strip()) != 4:
             QMessageBox.warning(
-                self, "Validation Error", "Manufacturer Code must be exactly 4 characters."
+                self,
+                "Validation Error",
+                "Manufacturer Code must be exactly 4 characters.",
             )
             return False
 

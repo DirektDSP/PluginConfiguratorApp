@@ -1,3 +1,5 @@
+"""Define tab for plugin type, metadata, and file tree preview."""
+
 import re
 from typing import ClassVar
 

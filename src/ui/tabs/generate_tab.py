@@ -1,3 +1,5 @@
+"""Generate tab for previewing configuration and project generation flow."""
+
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -134,7 +136,7 @@ class GenerateTab(BaseTab):
                 QMessageBox.information(
                     self, "Success", f"Preset saved successfully to {preset_name}"
                 )
-            except Exception as e:
+            except (OSError, ValueError, RuntimeError) as e:
                 QMessageBox.critical(self, "Error", f"Failed to save preset: {e!s}")
 
     @Slot()
@@ -153,7 +155,7 @@ class GenerateTab(BaseTab):
                 QMessageBox.information(
                     self, "Success", f"Preset loaded successfully from {preset_path}"
                 )
-            except Exception as e:
+            except (OSError, ValueError, RuntimeError) as e:
                 QMessageBox.critical(self, "Error", f"Failed to load preset: {e!s}")
 
     @Slot()
@@ -222,7 +224,7 @@ class GenerateTab(BaseTab):
                 f"Location: {self.full_config.get('output_directory', 'Unknown')}",
             )
 
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             self.log_text.append(f"\nERROR: {e!s}")
             self.status_label.setText("Generation failed!")
             self.progress_bar.setValue(0)

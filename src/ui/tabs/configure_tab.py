@@ -1,3 +1,5 @@
+"""Configure tab for project metadata and plugin format options."""
+
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QCheckBox,

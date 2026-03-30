@@ -1,3 +1,5 @@
+"""Project info tab with metadata form and live file tree preview."""
+
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
@@ -16,6 +18,7 @@ from PySide6.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
 from core.base_tab import BaseTab
@@ -34,7 +37,10 @@ class ProjectInfoTab(BaseTab):
         self.current_template = {
             "name": "Default Template",
             "url": "https://github.com/SeamusMullan/PluginTemplate.git",
-            "description": "A basic audio plugin template based on Pamplejuce, with JUCE and CMake setup."
+            "description": (
+                "A basic audio plugin template based on Pamplejuce, "
+                "with JUCE and CMake setup."
+            ),
         }
 
         # Initial file tree population
@@ -43,28 +49,42 @@ class ProjectInfoTab(BaseTab):
 
     def setup_ui(self):
         """Initialize UI components"""
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)  # Remove margins to maximize space
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove margins to maximize space
 
         # Create a splitter for the left (form) and right (file tree) sides
-        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setHandleWidth(5)  # Make the splitter handle thinner
-        self.splitter.setChildrenCollapsible(False)  # Prevent sections from being collapsed
+        self.splitter.setChildrenCollapsible(
+            False
+        )  # Prevent sections from being collapsed
 
         # ---- LEFT SIDE - FORM FIELDS ----
 
         # Create a container widget for the form to add margins
         self.form_container = QWidget()
-        self.form_container.setContentsMargins(10, 10, 10, 10)  # Add margins inside the container
-        self.form_container.setMinimumWidth(400)  # Set minimum width to prevent over-collapsing
+        self.form_container.setContentsMargins(
+            10, 10, 10, 10
+        )  # Add margins inside the container
+        self.form_container.setMinimumWidth(
+            400
+        )  # Set minimum width to prevent over-collapsing
         form_container_layout = QVBoxLayout(self.form_container)
-        form_container_layout.setContentsMargins(0, 0, 0, 0)  # No margins for the layout itself
+        form_container_layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # No margins for the layout itself
 
         # Create a scroll area for the form fields
         self.form_scroll = QScrollArea()
         self.form_scroll.setWidgetResizable(True)
-        self.form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.form_scroll.setFrameShape(QScrollArea.Shape.NoFrame)  # Remove border around scroll area
+        self.form_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.form_scroll.setFrameShape(
+            QScrollArea.Shape.NoFrame
+        )  # Remove border around scroll area
 
         # Create the form widget that will be inside the scroll area
         self.form_widget = QWidget()
@@ -74,10 +94,15 @@ class ProjectInfoTab(BaseTab):
         # Template selection section
         self.template_group = QGroupBox("Template Selection")
         self.template_layout = QFormLayout()
-        self.template_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.template_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
 
         self.template_combo = QComboBox()
-        self.template_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.template_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed
+        )
         self.template_combo.addItem("Internal DirektDSP Template")
         self.template_combo.addItem("Audio FX Plugin")
         self.template_combo.addItem("Instrument Plugin")
@@ -94,7 +119,9 @@ class ProjectInfoTab(BaseTab):
         # Project information group
         self.project_group = QGroupBox("Project Information")
         self.project_layout = QFormLayout()
-        self.project_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.project_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
 
         # Project name field
         self.project_name = QLineEdit()
@@ -117,7 +144,9 @@ class ProjectInfoTab(BaseTab):
         # Company information group
         self.company_group = QGroupBox("Company Information")
         self.company_layout = QFormLayout()
-        self.company_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.company_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
 
         # Company name field
         self.company_name = QLineEdit()
@@ -152,7 +181,9 @@ class ProjectInfoTab(BaseTab):
         # Output directory group
         self.output_group = QGroupBox("Output Settings")
         self.output_layout = QFormLayout()
-        self.output_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.output_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
 
         # Output directory selection
         self.output_dir_layout = QHBoxLayout()
@@ -180,10 +211,16 @@ class ProjectInfoTab(BaseTab):
 
         # Create a container widget for the file tree to add margins
         self.filetree_container = QWidget()
-        self.filetree_container.setContentsMargins(10, 10, 10, 10)  # Add margins inside the container
-        self.filetree_container.setMinimumWidth(300)  # Set minimum width to prevent over-collapsing
+        self.filetree_container.setContentsMargins(
+            10, 10, 10, 10
+        )  # Add margins inside the container
+        self.filetree_container.setMinimumWidth(
+            300
+        )  # Set minimum width to prevent over-collapsing
         filetree_container_layout = QVBoxLayout(self.filetree_container)
-        filetree_container_layout.setContentsMargins(0, 0, 0, 0)  # No margins for the layout itself
+        filetree_container_layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # No margins for the layout itself
 
         self.filetree_widget = QWidget()
         self.filetree_layout = QVBoxLayout(self.filetree_widget)
@@ -198,7 +235,9 @@ class ProjectInfoTab(BaseTab):
         self.file_tree.setHeaderLabel("Project Files")
         self.file_tree.setMinimumWidth(250)  # Ensure a minimum width
         self.file_tree.setAlternatingRowColors(True)
-        self.file_tree.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.file_tree.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
 
         # Add tree to layout
         self.structure_layout.addWidget(self.file_tree)
@@ -215,7 +254,7 @@ class ProjectInfoTab(BaseTab):
         self.splitter.setSizes([int(self.width() * 0.6), int(self.width() * 0.4)])
 
         # Add splitter to main layout
-        self.layout.addWidget(self.splitter)
+        self.main_layout.addWidget(self.splitter)
 
     def setup_connections(self):
         """Connect signals to slots"""
@@ -232,12 +271,12 @@ class ProjectInfoTab(BaseTab):
         # Update product name if empty
         if not self.product_name.text():
             # Replace underscores with spaces and capitalize words
-            product_name = text.replace('_', ' ').title()
+            product_name = text.replace("_", " ").title()
             self.product_name.setText(product_name)
 
         # Update bundle ID
-        company = self.company_name.text().lower().replace(' ', '')
-        plugin = text.lower().replace(' ', '')
+        company = self.company_name.text().lower().replace(" ", "")
+        plugin = text.lower().replace(" ", "")
         if company and plugin:
             self.bundle_id.setText(f"com.{company}.{plugin}")
 
@@ -263,19 +302,22 @@ class ProjectInfoTab(BaseTab):
             self.current_template = {
                 "name": "Internal DirektDSP Template",
                 "url": "https://github.com/SeamusMullan/PluginTemplate.git",
-                "description": "A basic audio plugin template based on Pamplejuce, with JUCE and CMake setup."
+                "description": (
+                    "A basic audio plugin template based on Pamplejuce, "
+                    "with JUCE and CMake setup."
+                ),
             }
         elif index == 1:  # Audio FX Plugin
             self.current_template = {
                 "name": "Audio FX Plugin",
                 "url": "https://github.com/DirektDSP/FXPluginTemplate.git",
-                "description": "A template for creating audio effect plugins with common structures."
+                "description": "A template for creating audio effect plugins with common structures.",
             }
         elif index == 2:  # Instrument Plugin
             self.current_template = {
                 "name": "Instrument Plugin",
                 "url": "https://github.com/DirektDSP/InstrumentTemplate.git",
-                "description": "A template for creating virtual instrument plugins."
+                "description": "A template for creating virtual instrument plugins.",
             }
 
         # Update repo URL field
@@ -291,11 +333,11 @@ class ProjectInfoTab(BaseTab):
             self.current_template = {
                 "name": "Custom Template",
                 "url": url,
-                "description": "Custom repository URL provided by user."
+                "description": "Custom repository URL provided by user.",
             }
 
     @Slot(str)
-    def update_file_tree(self, text=None):
+    def update_file_tree(self, _text=None):
         """Update the file tree visualization based on current settings"""
         # Clear existing tree
         self.file_tree.clear()
@@ -327,7 +369,12 @@ class ProjectInfoTab(BaseTab):
         """
         # Common directories for all templates
         common_dirs = {
-            "source": ["PluginProcessor.cpp", "PluginProcessor.h", "PluginEditor.cpp", "PluginEditor.h"],
+            "source": [
+                "PluginProcessor.cpp",
+                "PluginProcessor.h",
+                "PluginEditor.cpp",
+                "PluginEditor.h",
+            ],
             "assets": ["logo.png", "background.png"],
             "cmake": ["CPM.cmake", "PamplejuceVersion.cmake", "JUCEDefaults.cmake"],
             "JUCE": ["[JUCE framework]"],
@@ -356,7 +403,7 @@ class ProjectInfoTab(BaseTab):
             "README.md",
             f"{project_name}.jucer",
             ".gitignore",
-            "LICENSE"
+            "LICENSE",
         ]
 
         for file_name in top_files:
@@ -370,7 +417,8 @@ class ProjectInfoTab(BaseTab):
         try:
             # Try to get standard folder icon from the style
             return self.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon)
-        except:
+        except RuntimeError as e:
+            print(f"Error occurred while fetching folder icon: {e}")
             # Create a simple folder icon as fallback
             pixmap = QPixmap(16, 16)
             pixmap.fill(Qt.GlobalColor.transparent)
@@ -380,11 +428,20 @@ class ProjectInfoTab(BaseTab):
         """Return an appropriate file icon based on extension"""
         try:
             # Get icon based on file extension
-            if filename.endswith('.cpp') or filename.endswith('.h') or filename.endswith('.txt') or filename.endswith('.md') or filename.endswith('.png') or filename.endswith('.jpg') or filename.endswith('.jucer'):
+            if (
+                filename.endswith(".cpp")
+                or filename.endswith(".h")
+                or filename.endswith(".txt")
+                or filename.endswith(".md")
+                or filename.endswith(".png")
+                or filename.endswith(".jpg")
+                or filename.endswith(".jucer")
+            ):
                 return self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon)
             else:
                 return self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon)
-        except:
+        except RuntimeError as e:
+            print(f"Error occurred while fetching file icon: {e}")
             # Create a simple file icon as fallback
             pixmap = QPixmap(16, 16)
             pixmap.fill(Qt.GlobalColor.transparent)
@@ -442,19 +499,21 @@ class ProjectInfoTab(BaseTab):
             (self.company_name, "Company Name"),
             (self.bundle_id, "Bundle ID"),
             (self.manufacturer_code, "Manufacturer Code"),
-            (self.output_directory, "Output Directory")
+            (self.output_directory, "Output Directory"),
         ]
 
         for field, name in required_fields:
             if not field.text().strip():
-                QMessageBox.warning(self, "Validation Error",
-                                   f"{name} is required.")
+                QMessageBox.warning(self, "Validation Error", f"{name} is required.")
                 return False
 
         # Validate manufacturer code is exactly 4 characters
         if len(self.manufacturer_code.text().strip()) != 4:
-            QMessageBox.warning(self, "Validation Error",
-                               "Manufacturer Code must be exactly 4 characters.")
+            QMessageBox.warning(
+                self,
+                "Validation Error",
+                "Manufacturer Code must be exactly 4 characters.",
+            )
             return False
 
         # Generate plugin code if empty
