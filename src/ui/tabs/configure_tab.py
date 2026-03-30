@@ -139,6 +139,7 @@ class ConfigureTab(BaseTab):
         self.au_component_type = QLineEdit()
         self.au_component_type.setPlaceholderText("e.g. aufx (4 chars)")
         self.au_component_type.setText("aufx")
+        self.au_component_type.setMaxLength(4)
         self.au_component_subtype = QLineEdit()
         self.au_component_subtype.setPlaceholderText("Subtype (4 chars)")
         self.au_component_subtype.setMaxLength(4)
@@ -527,8 +528,9 @@ class ConfigureTab(BaseTab):
         self.clap_extensions.setText(config.get("clap_extensions", "note-ports,state"))
         self.clap_features.setText(config.get("clap_features", "audio-effect"))
         platform = config.get("auv3_platform", "iOS")
-        if platform in [self.auv3_platform.itemText(i) for i in range(self.auv3_platform.count())]:
-            self.auv3_platform.setCurrentText(platform)
+        idx = self.auv3_platform.findText(platform)
+        if idx != -1:
+            self.auv3_platform.setCurrentIndex(idx)
         else:
             self.auv3_platform.setCurrentIndex(0)
         # Build options

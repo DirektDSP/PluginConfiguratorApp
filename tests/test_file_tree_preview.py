@@ -94,10 +94,14 @@ def test_preview_shows_format_details(qtbot, app):
 
     root = preview._tree.topLevelItem(0)
     format_details = next(
-        root.child(i)
-        for i in range(root.childCount())
-        if root.child(i).text(0).startswith("Format Details")
+        (
+            root.child(i)
+            for i in range(root.childCount())
+            if root.child(i).text(0).startswith("Format Details")
+        ),
+        None,
     )
+    assert format_details is not None
     child_names = [format_details.child(i).text(0) for i in range(format_details.childCount())]
     assert any("Audio Unit Resources" in name for name in child_names)
     assert any("CLAP Manifest" in name for name in child_names)
