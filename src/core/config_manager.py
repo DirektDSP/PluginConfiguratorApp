@@ -294,14 +294,14 @@ class ConfigManager:
                 target.write_text(preset_file.read_text(encoding="utf-8"), encoding="utf-8")
 
     def _apply_defaults(self, config: Mapping[str, Any]) -> dict:
-        meta_source = config.get("meta", {}) if isinstance(config, Mapping) else {}
+        meta_source = config.get("meta", {})
         meta: dict[str, Any] = {}
         for key, meta_def in self.META_FIELDS.items():
             meta[key] = meta_source.get(key, meta_def["default"])
 
         result: dict[str, Any] = {"meta": meta}
         for section, fields in self.PRESET_SCHEMA.items():
-            section_data = config.get(section, {}) if isinstance(config, Mapping) else {}
+            section_data = config.get(section, {})
             result[section] = {}
             for field, meta_info in fields.items():
                 result[section][field] = section_data.get(field, meta_info["default"])
