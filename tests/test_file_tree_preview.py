@@ -11,7 +11,7 @@ from ui.components import FileTreePreview
 
 @pytest.fixture
 def app():
-    """Create QApplication instance for Qt tests"""
+    """Create or reuse QApplication instance for Qt tests"""
     if not QApplication.instance():
         app = QApplication(sys.argv)
     else:

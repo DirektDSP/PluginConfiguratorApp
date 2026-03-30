@@ -235,7 +235,7 @@ class FileTreePreview(QWidget):
             for key, label in module_labels.items()
         ]
         if implementations.get("preset_management"):
-            fmt = implementations.get("preset_format") or self.DEFAULT_PRESET_FORMAT
+            fmt = self._resolve_preset_format(implementations)
             module_entries.append(
                 TreeEntry(
                     name=f"Preset Management ({fmt})",
@@ -306,10 +306,10 @@ class FileTreePreview(QWidget):
         self._populate_items(root_item, root.children)
         self._tree.resizeColumnToContents(0)
 
-        file_count, est_size, enabled_features = self._compute_metrics()
+        file_count, est_size, enabled_file_count = self._compute_metrics()
         self._file_count_lbl.setText(f"Files: {file_count}")
         self._file_size_lbl.setText(f"Size: {est_size} KB (est.)")
-        self._feature_lbl.setText(f"Features: {enabled_features} enabled")
+        self._feature_lbl.setText(f"Features: {enabled_file_count} enabled")
 
     def _populate_items(self, parent_item: QTreeWidgetItem, entries: List[TreeEntry]) -> None:
         for entry in entries:
@@ -344,13 +344,18 @@ class FileTreePreview(QWidget):
         file_items = [i for i in self._iter_items() if i.childCount() == 0]
         file_count = len(file_items)
         # Rough heuristic: average size per file plus small enabled-feature metadata
-        enabled_features = len([i for i in file_items if i.data(0, Qt.ItemDataRole.UserRole)])
-        est_size = file_count * self.AVG_FILE_SIZE_KB + enabled_features * self.FEATURE_METADATA_SIZE_KB
-        return file_count, est_size, enabled_features
+        enabled_file_count = len([i for i in file_items if i.data(0, Qt.ItemDataRole.UserRole)])
+        est_size = file_count * self.AVG_FILE_SIZE_KB + enabled_file_count * self.FEATURE_METADATA_SIZE_KB
+        return file_count, est_size, enabled_file_count
 
     def is_updating(self) -> bool:
         """Return whether a preview refresh is currently scheduled."""
         return self._debounce.isActive()
+
+    @staticmethod
+    def _resolve_preset_format(implementations: dict) -> str:
+        """Return the configured preset format or the default fallback."""
+        return implementations.get("preset_format") or FileTreePreview.DEFAULT_PRESET_FORMAT
 
     # ------------------------------------------------------------------ #
     # Helpers                                                            #
