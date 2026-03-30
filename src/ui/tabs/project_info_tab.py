@@ -264,6 +264,21 @@ class ProjectInfoTab(BaseTab):
         self.template_combo.currentIndexChanged.connect(self.update_template_selection)
         self.repo_url.textChanged.connect(self.update_repo_url)
         self.project_name.textChanged.connect(self.update_file_tree)
+        # Emit configuration changes for live preview updates
+        text_widgets = [
+            self.project_name,
+            self.product_name,
+            self.version,
+            self.company_name,
+            self.bundle_id,
+            self.manufacturer_code,
+            self.plugin_code,
+            self.output_directory,
+            self.repo_url,
+        ]
+        for widget in text_widgets:
+            widget.textChanged.connect(lambda _: self._emit_config_changed())
+        self.template_combo.currentIndexChanged.connect(lambda _: self._emit_config_changed())
 
     @Slot(str)
     def update_from_project_name(self, text):
