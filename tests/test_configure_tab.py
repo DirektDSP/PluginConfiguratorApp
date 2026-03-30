@@ -205,6 +205,69 @@ class TestCodeSigningOptions:
 
 
 # ---------------------------------------------------------------------------
+# Format-specific option disclosure
+# ---------------------------------------------------------------------------
+
+
+class TestFormatSpecificOptions:
+    def test_format_option_groups_match_defaults(self, tab):
+        # AU and CLAP are checked by default, AUv3 is not.
+        assert tab.au_options_group.isHidden() is False
+        assert tab.clap_options_group.isHidden() is False
+        assert tab.auv3_options_group.isHidden() is True
+
+    def test_enabling_format_reveals_option_group(self, tab):
+        tab.au.setChecked(True)
+        tab.clap.setChecked(True)
+        tab.auv3.setChecked(True)
+        assert tab.au_options_group.isHidden() is False
+        assert tab.clap_options_group.isHidden() is False
+        assert tab.auv3_options_group.isHidden() is False
+
+    def test_format_specific_fields_in_configuration(self, tab):
+        tab.au.setChecked(True)
+        tab.clap.setChecked(True)
+        tab.auv3.setChecked(True)
+        tab.au_component_type.setText("aufx")
+        tab.au_component_subtype.setText("abcd")
+        tab.au_component_manufacturer.setText("Ddsp")
+        tab.au_version.setText("1.2.3")
+        tab.clap_extensions.setText("note-ports")
+        tab.clap_features.setText("instrument,audio-effect")
+        tab.auv3_platform.setCurrentText("Universal (iOS + macOS)")
+        cfg = tab.get_configuration()
+        assert cfg["au_component_type"] == "aufx"
+        assert cfg["au_component_subtype"] == "abcd"
+        assert cfg["au_component_manufacturer"] == "Ddsp"
+        assert cfg["au_version"] == "1.2.3"
+        assert cfg["clap_extensions"] == "note-ports"
+        assert cfg["clap_features"] == "instrument,audio-effect"
+        assert cfg["auv3_platform"] == "Universal (iOS + macOS)"
+
+    def test_format_specific_settings_round_trip(self, tab):
+        config = {
+            "au_component_type": "aumi",
+            "au_component_subtype": "syn1",
+            "au_component_manufacturer": "Acme",
+            "au_version": "2.0.0",
+            "clap_extensions": "state",
+            "clap_features": "instrument",
+            "auv3_platform": "macOS",
+            "au": True,
+            "clap": True,
+            "auv3": True,
+        }
+        tab.load_configuration(config)
+        assert tab.au_component_type.text() == "aumi"
+        assert tab.au_component_subtype.text() == "syn1"
+        assert tab.au_component_manufacturer.text() == "Acme"
+        assert tab.au_version.text() == "2.0.0"
+        assert tab.clap_extensions.text() == "state"
+        assert tab.clap_features.text() == "instrument"
+        assert tab.auv3_platform.currentText() == "macOS"
+
+
+# ---------------------------------------------------------------------------
 # At least one format required validation
 # ---------------------------------------------------------------------------
 
