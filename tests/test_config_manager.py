@@ -249,6 +249,7 @@ class TestConfigManager:
         config["project_info"]["bundle_id"] = "com.test.bool"
         config["project_info"]["manufacturer_code"] = "BOOL"
         config["project_info"]["output_directory"] = "/tmp"
+        config["configuration"]["background_image"] = "/tmp/bg.png"
         config["configuration"]["standalone"] = True
         config["configuration"]["vst3"] = False
 
@@ -257,6 +258,7 @@ class TestConfigManager:
 
         assert loaded_config["configuration"]["standalone"] is True
         assert loaded_config["configuration"]["vst3"] is False
+        assert loaded_config["configuration"]["background_image"] == "/tmp/bg.png"
 
     def test_save_preset(self, config_manager, sample_config):
         """Test saving a preset"""

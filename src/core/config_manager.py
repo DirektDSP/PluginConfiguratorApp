@@ -341,7 +341,8 @@ class ConfigManager:
             return default
         value = value.strip()
         if expected_type is bool:
-            # Accept common truthy tokens; save operations always emit "true"/"false".
+            # Accept common truthy tokens to stay resilient to hand-edited presets; saves emit
+            # canonical "true"/"false".
             return value.lower() in {"true", "1", "yes", "on"}
         if expected_type is int:
             try:
@@ -398,6 +399,7 @@ class ConfigManager:
             return isinstance(value, int) and not isinstance(value, bool)
         if expected_type is str:
             return isinstance(value, str)
+        # Future-proofing for potential new field types.
         return isinstance(value, expected_type)
 
     def _save_structured_config(self, config: Mapping[str, Any], file_path: Path) -> None:
