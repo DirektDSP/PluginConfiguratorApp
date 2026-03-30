@@ -282,6 +282,7 @@ class ConfigManager:
     # ------------------------------------------------------------------
 
     def _install_bundled_presets(self) -> None:
+        """Copy shipped presets into the user preset directory if they are missing."""
         if not self.example_presets_dir.exists():
             return
         for preset_name in self.BUNDLED_PRESETS:
@@ -337,6 +338,7 @@ class ConfigManager:
         return errors
 
     def _coerce_value(self, value: str | None, expected_type: type, default: Any) -> Any:
+        """Convert a string value from XML into the expected Python type."""
         if value is None:
             return default
         value = value.strip()

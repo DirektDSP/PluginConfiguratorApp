@@ -265,6 +265,8 @@ class TestConfigManager:
 
         preset_path = config_manager.preset_dir / f"{preset_name}.xml"
         assert preset_path.exists()
+        ok, errors = config_manager.validate_preset_file(preset_path)
+        assert ok, errors
 
         preset_path.unlink(missing_ok=True)
 
