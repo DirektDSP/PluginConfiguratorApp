@@ -36,6 +36,7 @@ class FileTreePreview(QWidget):
     DEFAULT_PRESET_FORMAT = "XML"
     AVG_FILE_SIZE_KB = 8
     FEATURE_METADATA_SIZE_KB = 2
+    DISPLAY_SEPARATOR = " • "
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -124,11 +125,16 @@ class FileTreePreview(QWidget):
         build = config.get("configuration", {})
         ux = config.get("user_experience", {})
         workflow = config.get("development_workflow", {})
+        plugin_type = (
+            project_info.get("plugin_type") or ""
+        ).strip().lower()  # Normalize for comparison (instrument, audio fx, internal)
 
         root_name = project_info.get("project_name", "").strip() or "YourPlugin"
         root = TreeEntry(
             name=root_name,
-            children=self._build_structure(project_info, implementations, build, ux, workflow),
+            children=self._build_structure(
+                project_info, implementations, build, ux, workflow, plugin_type
+            ),
             enabled=True,
         )
         self._render_tree(root)
@@ -140,6 +146,7 @@ class FileTreePreview(QWidget):
         build: dict,
         ux: dict,
         workflow: dict,
+        plugin_type: str,
     ) -> List[TreeEntry]:
         template_name = project_info.get("template_name", "Default Template")
 
@@ -159,18 +166,30 @@ class FileTreePreview(QWidget):
 
         tree: List[TreeEntry] = [
             TreeEntry(
-                name=f"Template • {template_name}",
+                name=f"Template{self.DISPLAY_SEPARATOR}{template_name}",
                 children=[TreeEntry(name=project_info.get("template_url", ""), children=[], is_file=True)],
                 enabled=True,
                 hint="Selected template source",
             ),
+        ]
+        plugin_type_entries = self._build_plugin_type_entries(plugin_type, project_info)
+        if plugin_type_entries:
+            tree.append(
+                TreeEntry(
+                    name="Plugin Type",
+                    children=plugin_type_entries,
+                    enabled=True,
+                    hint="Instrument or Audio FX specific scaffolding",
+                )
+            )
+        tree.append(
             TreeEntry(
                 name="Project Files",
                 children=self._make_dir_entries(base_dirs),
                 enabled=True,
                 hint="Core project scaffold",
             ),
-        ]
+        )
 
         # Build targets / formats
         formats = {
@@ -286,6 +305,60 @@ class FileTreePreview(QWidget):
         )
 
         return tree
+
+    def _build_plugin_type_entries(self, plugin_type: str, project_info: dict) -> List[TreeEntry]:
+        entries: List[TreeEntry] = []
+        if plugin_type == "instrument":
+            polyphony = project_info.get("instrument_polyphony", 64)
+            midi_input = bool(project_info.get("instrument_midi_input", True))
+            entries.append(TreeEntry(name="Instrument", children=[], enabled=True, is_file=True))
+            entries.append(
+                TreeEntry(
+                    name=f"Polyphony{self.DISPLAY_SEPARATOR}{polyphony} voices",
+                    children=[],
+                    enabled=polyphony > 0,
+                    is_file=True,
+                )
+            )
+            entries.append(
+                TreeEntry(
+                    name="MIDI Input",
+                    children=[],
+                    enabled=midi_input,
+                    is_file=True,
+                    hint="Handles incoming MIDI",
+                )
+            )
+        elif plugin_type == "audio fx":
+            wet_dry = project_info.get("fx_wet_dry", 50)
+            sidechain = bool(project_info.get("fx_sidechain"))
+            latency = project_info.get("fx_latency", 0)
+            entries.append(TreeEntry(name="Audio FX", children=[], enabled=True, is_file=True))
+            entries.append(
+                TreeEntry(
+                    name=f"Wet/Dry Mix{self.DISPLAY_SEPARATOR}{wet_dry}%",
+                    children=[],
+                    enabled=True,
+                    is_file=True,
+                )
+            )
+            entries.append(
+                TreeEntry(
+                    name="Sidechain Input",
+                    children=[],
+                    enabled=sidechain,
+                    is_file=True,
+                )
+            )
+            entries.append(
+                TreeEntry(
+                    name=f"Latency{self.DISPLAY_SEPARATOR}{latency} ms",
+                    children=[],
+                    enabled=latency > 0,
+                    is_file=True,
+                )
+            )
+        return entries
 
     def _make_dir_entries(self, base_dirs: Dict[str, List[str]]) -> List[TreeEntry]:
         entries: List[TreeEntry] = []
