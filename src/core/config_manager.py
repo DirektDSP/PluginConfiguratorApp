@@ -105,6 +105,7 @@ class ConfigurationManager:
 class ConfigManager:
     """Manages loading and saving of XML configuration files and presets"""
 
+    # Stored with file stems to mirror the shipped preset filenames.
     BUNDLED_PRESETS: ClassVar[tuple[str, ...]] = (
         "StandardAudioFX_Preset",
         "Instrument_Preset",
@@ -341,7 +342,7 @@ class ConfigManager:
             return default
         value = value.strip()
         if expected_type is bool:
-            # Accept common truthy tokens to stay resilient to hand-edited presets; saves emit
+            # Accept common truthy tokens to stay resilient to hand-edited presets; save operations emit
             # canonical "true"/"false".
             return value.lower() in {"true", "1", "yes", "on"}
         if expected_type is int:
@@ -395,7 +396,7 @@ class ConfigManager:
         if expected_type is bool:
             return isinstance(value, bool)
         if expected_type is int:
-            # bool is a subclass of int, so explicitly exclude booleans.
+            # bool is a subclass of int in Python, so explicitly exclude booleans.
             return isinstance(value, int) and not isinstance(value, bool)
         if expected_type is str:
             return isinstance(value, str)

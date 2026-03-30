@@ -217,7 +217,8 @@ class TestConfigManager:
         assert config_manager.preset_dir.exists()
         assert config_manager.preset_dir.name == "presets"
         available = set(config_manager.get_available_presets())
-        assert set(ConfigManager.BUNDLED_PRESETS) <= available
+        missing = set(ConfigManager.BUNDLED_PRESETS) - available
+        assert not missing, f"Missing bundled presets: {missing}"
 
     def test_get_default_config(self, config_manager):
         """Test that default config is correctly structured"""
@@ -376,3 +377,9 @@ class TestConfigManager:
                 config_manager.preset_dir / f"{preset}.xml"
             )
             assert ok, f"{preset} failed validation: {errors}"
+        std = config_manager.load_preset("StandardAudioFX_Preset")
+        assert std["implementations"]["preset_management"] is True
+        instrument = config_manager.load_preset("Instrument_Preset")
+        assert instrument["configuration"]["auv3"] is True
+        minimal = config_manager.load_preset("MinimalPlugin_Preset")
+        assert minimal["configuration"]["clap"] is False
