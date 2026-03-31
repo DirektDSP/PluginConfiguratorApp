@@ -1,6 +1,6 @@
 """Project info tab with metadata form and live file tree preview."""
 
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import QEasingCurve, QParallelAnimationGroup, QPropertyAnimation, Qt, Slot
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
@@ -11,11 +11,13 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QGraphicsOpacityEffect,
     QScrollArea,
     QSizePolicy,
     QSplitter,
     QStyle,
     QCheckBox,
+    QSpinBox,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -30,9 +32,17 @@ from core.utils import generate_plugin_id
 class ProjectInfoTab(BaseTab):
     """Tab for configuring project information and visualizing the project structure"""
 
+    PLUGIN_TYPE_FX = "audio fx"
+    PLUGIN_TYPE_INSTRUMENT = "instrument"
+    PLUGIN_TYPE_INTERNAL = "internal"
+    _ANIMATION_MS = 180
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._config_manager = ConfigurationManager()
+        self._current_plugin_type = self.PLUGIN_TYPE_INTERNAL
+        self._animations: dict[QWidget, QParallelAnimationGroup] = {}
+        self._opacity_effects: dict[QWidget, QGraphicsOpacityEffect] = {}
         self.setup_ui()
         self.setup_connections()
 
@@ -118,6 +128,46 @@ class ProjectInfoTab(BaseTab):
         self.template_layout.addRow("Repository URL:", self.repo_url)
 
         self.template_group.setLayout(self.template_layout)
+
+        # Plugin type specific options (progressive disclosure)
+        self.plugin_type_group = QGroupBox("Plugin Type Options")
+        plugin_type_layout = QVBoxLayout()
+
+        # Audio FX options
+        self.fx_options_group = QGroupBox("Audio FX")
+        fx_layout = QFormLayout()
+        self.fx_wet_dry = QSpinBox()
+        self.fx_wet_dry.setRange(0, 100)
+        self.fx_wet_dry.setValue(50)
+        fx_layout.addRow("Wet/Dry Mix (%):", self.fx_wet_dry)
+
+        self.fx_sidechain = QCheckBox("Enable sidechain input")
+        fx_layout.addRow("Sidechain:", self.fx_sidechain)
+
+        self.fx_latency = QSpinBox()
+        self.fx_latency.setRange(0, 200)
+        self.fx_latency.setValue(0)
+        fx_layout.addRow("Latency (ms):", self.fx_latency)
+        self.fx_options_group.setLayout(fx_layout)
+
+        # Instrument options
+        self.instrument_options_group = QGroupBox("Instrument")
+        instrument_layout = QFormLayout()
+        self.instrument_polyphony = QSpinBox()
+        self.instrument_polyphony.setRange(1, 256)
+        self.instrument_polyphony.setValue(64)
+        instrument_layout.addRow("Polyphony (voices):", self.instrument_polyphony)
+
+        self.instrument_midi_input = QCheckBox("Enable MIDI input")
+        self.instrument_midi_input.setChecked(True)
+        instrument_layout.addRow("MIDI Input:", self.instrument_midi_input)
+        self.instrument_options_group.setLayout(instrument_layout)
+
+        plugin_type_layout.addWidget(self.fx_options_group)
+        plugin_type_layout.addWidget(self.instrument_options_group)
+        self.plugin_type_group.setLayout(plugin_type_layout)
+        self._prepare_disclosure_section(self.fx_options_group)
+        self._prepare_disclosure_section(self.instrument_options_group)
 
         # Project information group
         self.project_group = QGroupBox("Project Information")
@@ -217,6 +267,7 @@ class ProjectInfoTab(BaseTab):
 
         # Add all groups to the form layout
         self.form_layout.addWidget(self.template_group)
+        self.form_layout.addWidget(self.plugin_type_group)
         self.form_layout.addWidget(self.project_group)
         self.form_layout.addWidget(self.company_group)
         self.form_layout.addWidget(self.output_group)
@@ -286,6 +337,10 @@ class ProjectInfoTab(BaseTab):
         self.project_name.textChanged.connect(self.update_file_tree)
         self.quick_start_checkbox.toggled.connect(self._on_quick_start_toggled)
         self.review_generate_button.clicked.connect(self._on_review_generate_clicked)
+        for spin in [self.fx_wet_dry, self.fx_latency, self.instrument_polyphony]:
+            spin.valueChanged.connect(self._on_plugin_type_option_changed)
+        for checkbox in [self.fx_sidechain, self.instrument_midi_input]:
+            checkbox.toggled.connect(self._on_plugin_type_option_changed)
         # Emit configuration changes for live preview updates
         text_widgets = [
             self.project_name,
@@ -301,6 +356,7 @@ class ProjectInfoTab(BaseTab):
             widget.textChanged.connect(self._on_form_field_changed)
             widget.textChanged.connect(self._update_quick_start_button_state)
         self._update_quick_start_button_state()
+        self._update_plugin_type_sections()
 
     @Slot(str)
     def update_from_project_name(self, text):
@@ -344,22 +400,28 @@ class ProjectInfoTab(BaseTab):
                     "with JUCE and CMake setup."
                 ),
             }
+            self._current_plugin_type = self.PLUGIN_TYPE_INTERNAL
         elif index == 1:  # Audio FX Plugin
             self.current_template = {
                 "name": "Audio FX Plugin",
                 "url": "https://github.com/DirektDSP/FXPluginTemplate.git",
                 "description": "A template for creating audio effect plugins with common structures.",
             }
+            self._current_plugin_type = self.PLUGIN_TYPE_FX
         elif index == 2:  # Instrument Plugin
             self.current_template = {
                 "name": "Instrument Plugin",
                 "url": "https://github.com/DirektDSP/InstrumentTemplate.git",
                 "description": "A template for creating virtual instrument plugins.",
             }
+            self._current_plugin_type = self.PLUGIN_TYPE_INSTRUMENT
+        else:
+            self._current_plugin_type = self.PLUGIN_TYPE_INTERNAL
 
         # Update repo URL field
         self.repo_url.setText(self.current_template["url"])
 
+        self._update_plugin_type_sections()
         # Update file tree visualization
         self.update_file_tree()
         self._emit_config_changed()
@@ -451,6 +513,47 @@ class ProjectInfoTab(BaseTab):
             if file_icon:  # Only set icon if we have one
                 file_item.setIcon(0, file_icon)
 
+        plugin_type = self._current_plugin_type
+        if plugin_type == self.PLUGIN_TYPE_FX:
+            fx_item = QTreeWidgetItem(parent_item, ["fx"])
+            folder_icon = self.get_folder_icon()
+            if folder_icon:
+                fx_item.setIcon(0, folder_icon)
+
+            wetdry_item = QTreeWidgetItem(
+                fx_item, [f"WetDryMix_{self.fx_wet_dry.value()}pct.cpp"]
+            )
+            file_icon = self.get_file_icon("wetdry.cpp")
+            if file_icon:
+                wetdry_item.setIcon(0, file_icon)
+
+            sidechain_item = QTreeWidgetItem(fx_item, ["SidechainInput.cpp"])
+            sidechain_item.setDisabled(not self.fx_sidechain.isChecked())
+            if file_icon:
+                sidechain_item.setIcon(0, file_icon)
+
+            latency_item = QTreeWidgetItem(fx_item, [f"Latency_{self.fx_latency.value()}ms.cpp"])
+            latency_item.setDisabled(self.fx_latency.value() == 0)
+            if file_icon:
+                latency_item.setIcon(0, file_icon)
+        elif plugin_type == self.PLUGIN_TYPE_INSTRUMENT:
+            instrument_item = QTreeWidgetItem(parent_item, ["instrument"])
+            folder_icon = self.get_folder_icon()
+            if folder_icon:
+                instrument_item.setIcon(0, folder_icon)
+
+            polyphony_item = QTreeWidgetItem(
+                instrument_item, [f"VoiceManager_{self.instrument_polyphony.value()}voices.cpp"]
+            )
+            file_icon = self.get_file_icon("voice.cpp")
+            if file_icon:
+                polyphony_item.setIcon(0, file_icon)
+
+            midi_item = QTreeWidgetItem(instrument_item, ["MidiInput.cpp"])
+            midi_item.setDisabled(not self.instrument_midi_input.isChecked())
+            if file_icon:
+                midi_item.setIcon(0, file_icon)
+
     def get_folder_icon(self):
         """Return a folder icon from the system"""
         try:
@@ -500,6 +603,12 @@ class ProjectInfoTab(BaseTab):
             "plugin_code": self.plugin_code.text().strip() or generate_plugin_id(),
             "output_directory": self.output_directory.text().strip(),
             "quick_start": self.quick_start_checkbox.isChecked(),
+            "plugin_type": self._current_plugin_type,
+            "instrument_polyphony": self.instrument_polyphony.value(),
+            "instrument_midi_input": self.instrument_midi_input.isChecked(),
+            "fx_wet_dry": self.fx_wet_dry.value(),
+            "fx_sidechain": self.fx_sidechain.isChecked(),
+            "fx_latency": self.fx_latency.value(),
         }
 
     def load_configuration(self, config):
@@ -527,6 +636,21 @@ class ProjectInfoTab(BaseTab):
 
         # Set output directory
         self.output_directory.setText(config.get("output_directory", ""))
+
+        # Plugin type specific settings
+        self._current_plugin_type = self._normalize_plugin_type(
+            config.get("plugin_type", self._current_plugin_type)
+        )
+        self.fx_wet_dry.setValue(config.get("fx_wet_dry", self.fx_wet_dry.value()))
+        self.fx_sidechain.setChecked(config.get("fx_sidechain", self.fx_sidechain.isChecked()))
+        self.fx_latency.setValue(config.get("fx_latency", self.fx_latency.value()))
+        self.instrument_polyphony.setValue(
+            config.get("instrument_polyphony", self.instrument_polyphony.value())
+        )
+        self.instrument_midi_input.setChecked(
+            config.get("instrument_midi_input", self.instrument_midi_input.isChecked())
+        )
+        self._update_plugin_type_sections()
 
         # Quick start flag (optional)
         quick_start_enabled = config.get("quick_start", False)
@@ -562,7 +686,20 @@ class ProjectInfoTab(BaseTab):
         self.output_directory.clear()
         self.quick_start_checkbox.setChecked(False)
         self.review_generate_button.setEnabled(False)
+        self.fx_wet_dry.setValue(50)
+        self.fx_sidechain.setChecked(False)
+        self.fx_latency.setValue(0)
+        self.instrument_polyphony.setValue(64)
+        self.instrument_midi_input.setChecked(True)
+        self._current_plugin_type = self.PLUGIN_TYPE_INTERNAL
+        self._update_plugin_type_sections()
         self.update_file_tree()
+
+    @Slot()
+    def _on_plugin_type_option_changed(self, _value=None):
+        """Refresh previews when plugin-type-specific controls change."""
+        self.update_file_tree()
+        self._emit_config_changed()
 
     @Slot()
     def _on_form_field_changed(self, _value=None):
@@ -631,3 +768,74 @@ class ProjectInfoTab(BaseTab):
                 )
             return False
         return True
+
+    # ------------------------------------------------------------------ #
+    # Progressive disclosure helpers                                     #
+    # ------------------------------------------------------------------ #
+    def _prepare_disclosure_section(self, widget: QWidget):
+        """Initialize collapsible section with hidden state and opacity."""
+        effect = QGraphicsOpacityEffect(widget)
+        effect.setOpacity(0.0)
+        widget.setGraphicsEffect(effect)
+        widget.setMaximumHeight(0)
+        widget.setVisible(False)
+        self._opacity_effects[widget] = effect
+
+    def _normalize_plugin_type(self, value: str) -> str:
+        normalized = (value or "").strip().lower()
+        if normalized in (self.PLUGIN_TYPE_FX, self.PLUGIN_TYPE_INSTRUMENT):
+            return normalized
+        return self.PLUGIN_TYPE_INTERNAL
+
+    def _update_plugin_type_sections(self):
+        """Show/hide plugin-type-specific groups with animations."""
+        show_fx = self._current_plugin_type == self.PLUGIN_TYPE_FX
+        show_instrument = self._current_plugin_type == self.PLUGIN_TYPE_INSTRUMENT
+        self._animate_section(self.fx_options_group, show_fx)
+        self._animate_section(self.instrument_options_group, show_instrument)
+
+    def _animate_section(self, widget: QWidget, should_show: bool):
+        """Animate section visibility for smooth disclosure."""
+        if widget not in self._opacity_effects:
+            return
+
+        effect = self._opacity_effects[widget]
+        target_height = widget.sizeHint().height()
+        current_height = widget.maximumHeight()
+
+        if should_show and widget.isVisible() and current_height == target_height:
+            return
+        if not should_show and (not widget.isVisible() or current_height == 0):
+            widget.setVisible(False)
+            widget.setMaximumHeight(0)
+            effect.setOpacity(0.0)
+            return
+
+        widget.setVisible(True)
+        start_height = current_height if current_height > 0 else 0
+        end_height = target_height if should_show else 0
+
+        height_anim = QPropertyAnimation(widget, b"maximumHeight", self)
+        height_anim.setDuration(self._ANIMATION_MS)
+        height_anim.setStartValue(start_height)
+        height_anim.setEndValue(end_height)
+        height_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+        opacity_anim = QPropertyAnimation(effect, b"opacity", self)
+        opacity_anim.setDuration(self._ANIMATION_MS)
+        opacity_anim.setStartValue(effect.opacity())
+        opacity_anim.setEndValue(1.0 if should_show else 0.0)
+        opacity_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+
+        group = QParallelAnimationGroup(self)
+        group.addAnimation(height_anim)
+        group.addAnimation(opacity_anim)
+
+        def finalize():
+            widget.setVisible(should_show)
+            widget.setMaximumHeight(target_height if should_show else 0)
+            effect.setOpacity(1.0 if should_show else 0.0)
+
+        group.finished.connect(finalize)
+        self._animations[widget] = group
+        group.start()

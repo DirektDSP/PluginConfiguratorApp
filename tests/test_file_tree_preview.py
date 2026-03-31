@@ -62,6 +62,46 @@ def test_preview_updates_from_configuration(qtbot, app, sample_config):
     assert "Features:" in preview._feature_lbl.text()
 
 
+def test_preview_reflects_plugin_type(qtbot, app):
+    preview = FileTreePreview()
+    qtbot.addWidget(preview)
+
+    preview.set_configuration(
+        {
+            "project_info": {
+                "project_name": "Synthy",
+                "template_name": "Instrument Plugin",
+                "template_url": "repo.git",
+                "plugin_type": "Instrument",
+                "instrument_polyphony": 16,
+                "instrument_midi_input": True,
+            },
+            "implementations": {},
+            "configuration": {},
+            "user_experience": {},
+            "development_workflow": {},
+        }
+    )
+    qtbot.waitUntil(
+        lambda: (not preview.is_updating()) and preview._tree.topLevelItemCount() == 1,
+        timeout=1000,
+    )
+
+    root = preview._tree.topLevelItem(0)
+    plugin_type_nodes = []
+    for i in range(root.childCount()):
+        child = root.child(i)
+        if child.text(0) == "Plugin Type":
+            plugin_type_nodes.append(child)
+    assert plugin_type_nodes
+    instrument_entries = [
+        plugin_type_nodes[0].child(i).text(0) for i in range(plugin_type_nodes[0].childCount())
+    ]
+    assert any("Instrument" in text for text in instrument_entries)
+    assert any("Polyphony" in text for text in instrument_entries)
+
+
+
 def test_preview_shows_format_details(qtbot, app):
     preview = FileTreePreview()
     qtbot.addWidget(preview)
