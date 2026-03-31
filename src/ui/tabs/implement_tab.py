@@ -3,7 +3,6 @@ from typing import Any
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QIcon, QPixmap
-
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -22,7 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.base_tab import BaseTab
-from ui.components import AccordionExpander, SUBTEXT_COLOR
+from ui.components import SUBTEXT_COLOR, AccordionExpander
 
 # ---------------------------------------------------------------------------
 # Template & module definitions
@@ -43,7 +42,11 @@ _DSP_TEMPLATES: dict[str, dict] = {
             "EqProcessor.h",
             "BandConfig.h",
         ],
-        "features": ["Multi-band EQ processor", "Per-band configuration", "Basic processor scaffold"],
+        "features": [
+            "Multi-band EQ processor",
+            "Per-band configuration",
+            "Basic processor scaffold",
+        ],
     },
     "Reverb": {
         "description": "Algorithmic reverb with room simulation",
@@ -53,7 +56,11 @@ _DSP_TEMPLATES: dict[str, dict] = {
             "ReverbProcessor.cpp",
             "ReverbProcessor.h",
         ],
-        "features": ["Algorithmic reverb engine", "Room simulation parameters", "Basic processor scaffold"],
+        "features": [
+            "Algorithmic reverb engine",
+            "Room simulation parameters",
+            "Basic processor scaffold",
+        ],
     },
     "Full": {
         "description": "Complete DSP chain with all common components",
@@ -620,9 +627,7 @@ class ImplementTab(BaseTab):
         self._module_expanders["Inspector"].set_expanded(
             config.get("module_inspector_expanded", False)
         )
-        self._module_expanders["Presets"].set_expanded(
-            config.get("module_presets_expanded", False)
-        )
+        self._module_expanders["Presets"].set_expanded(config.get("module_presets_expanded", False))
         self._preset_storage_expander.set_expanded(
             config.get("module_presets_storage_expanded", False)
         )

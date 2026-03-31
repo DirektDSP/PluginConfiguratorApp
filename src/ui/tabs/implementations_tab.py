@@ -65,15 +65,11 @@ class ImplementationsTab(BaseTab):
         implementations_layout.addWidget(self.moonbase_licensing)
 
         self.melatonin_inspector = QCheckBox("Melatonin Inspector")
-        self.melatonin_inspector.setToolTip(
-            "GUI inspection and debugging tool for JUCE"
-        )
+        self.melatonin_inspector.setToolTip("GUI inspection and debugging tool for JUCE")
         implementations_layout.addWidget(self.melatonin_inspector)
 
         self.custom_gui = QCheckBox("Custom GUI Framework")
-        self.custom_gui.setToolTip(
-            "Implements a custom GUI framework with additional components"
-        )
+        self.custom_gui.setToolTip("Implements a custom GUI framework with additional components")
         implementations_layout.addWidget(self.custom_gui)
 
         self.logging_framework = QCheckBox("Logging Framework")
@@ -99,9 +95,7 @@ class ImplementationsTab(BaseTab):
         self.add_section_header(implementations_layout, "User Experience Features")
 
         self.preset_management = QCheckBox("Preset Management System")
-        self.preset_management.setToolTip(
-            "System for saving, loading, and managing user presets"
-        )
+        self.preset_management.setToolTip("System for saving, loading, and managing user presets")
         implementations_layout.addWidget(self.preset_management)
 
         # Preset system options
@@ -112,24 +106,18 @@ class ImplementationsTab(BaseTab):
         self.preset_options_layout.setContentsMargins(20, 0, 0, 0)  # Add left indent
 
         self.preset_format = QComboBox()
-        self.preset_format.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
+        self.preset_format.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.preset_format.addItems(["XML", "JSON", "Binary"])
 
         self.preset_options_layout.addRow("Preset Format:", self.preset_format)
         implementations_layout.addLayout(self.preset_options_layout)
 
         self.ab_comparison = QCheckBox("A/B Comparison Feature")
-        self.ab_comparison.setToolTip(
-            "Allows users to compare settings with A/B switching"
-        )
+        self.ab_comparison.setToolTip("Allows users to compare settings with A/B switching")
         implementations_layout.addWidget(self.ab_comparison)
 
         self.state_management = QCheckBox("State Management/Undo History")
-        self.state_management.setToolTip(
-            "Implements undo/redo functionality for user actions"
-        )
+        self.state_management.setToolTip("Implements undo/redo functionality for user actions")
         implementations_layout.addWidget(self.state_management)
 
         # Add spacing after section
@@ -205,12 +193,8 @@ class ImplementationsTab(BaseTab):
         """Enable/disable dependent widgets based on checkbox states"""
         # Preset options
         for i in range(self.preset_options_layout.rowCount()):
-            label_item = self.preset_options_layout.itemAt(
-                i, QFormLayout.ItemRole.LabelRole
-            )
-            field_item = self.preset_options_layout.itemAt(
-                i, QFormLayout.ItemRole.FieldRole
-            )
+            label_item = self.preset_options_layout.itemAt(i, QFormLayout.ItemRole.LabelRole)
+            field_item = self.preset_options_layout.itemAt(i, QFormLayout.ItemRole.FieldRole)
             if label_item and field_item:
                 label_item.widget().setEnabled(self.preset_management.isChecked())
                 field_item.widget().setEnabled(self.preset_management.isChecked())
@@ -231,9 +215,7 @@ class ImplementationsTab(BaseTab):
             "clap_builds": self.clap_builds.isChecked(),
             "preset_management": self.preset_management.isChecked(),
             "preset_format": (
-                self.preset_format.currentText()
-                if self.preset_management.isChecked()
-                else None
+                self.preset_format.currentText() if self.preset_management.isChecked() else None
             ),
             "ab_comparison": self.ab_comparison.isChecked(),
             "state_management": self.state_management.isChecked(),

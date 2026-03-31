@@ -24,7 +24,11 @@ def sample_config():
             "template_name": "My Template",
             "template_url": "repo.git",
         },
-        "implementations": {"melatonin_inspector": True, "preset_management": True, "preset_format": "JSON"},
+        "implementations": {
+            "melatonin_inspector": True,
+            "preset_management": True,
+            "preset_format": "JSON",
+        },
         "configuration": {"standalone": True, "vst3": False},
         "user_experience": {"wizard": True},
         "development_workflow": {"vcs": True},
@@ -99,7 +103,6 @@ def test_preview_reflects_plugin_type(qtbot, app):
     ]
     assert any("Instrument" in text for text in instrument_entries)
     assert any("Polyphony" in text for text in instrument_entries)
-
 
 
 def test_preview_shows_format_details(qtbot, app):

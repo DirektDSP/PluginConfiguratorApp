@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import threading
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, ClassVar, Mapping
+from typing import Any, ClassVar
 
 
 class ConfigurationManager:
@@ -14,10 +15,10 @@ class ConfigurationManager:
     and provides helpers for quick-start toggling and full validation.
     """
 
-    _instance: "ConfigurationManager | None" = None
+    _instance: ConfigurationManager | None = None
     _instance_lock: threading.Lock = threading.Lock()
 
-    def __new__(cls) -> "ConfigurationManager":
+    def __new__(cls) -> ConfigurationManager:
         if cls._instance is None:
             with cls._instance_lock:
                 if cls._instance is None:
@@ -349,9 +350,7 @@ class ConfigManager:
                     continue
                 expected_type = meta_info["type"]
                 if not self._matches_type(value, expected_type):
-                    errors.append(
-                        f"Field '{section}.{field}' must be a {expected_type.__name__}"
-                    )
+                    errors.append(f"Field '{section}.{field}' must be a {expected_type.__name__}")
                 if meta_info.get("required") and isinstance(value, str) and not value.strip():
                     errors.append(f"Field '{section}.{field}' cannot be empty")
         return errors

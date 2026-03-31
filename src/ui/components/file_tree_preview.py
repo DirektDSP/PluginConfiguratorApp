@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
@@ -23,10 +22,10 @@ class TreeEntry:
     """Lightweight description of a tree entry."""
 
     name: str
-    children: List["TreeEntry"]
+    children: list[TreeEntry]
     enabled: bool = True
     is_file: bool = False
-    hint: Optional[str] = None
+    hint: str | None = None
 
 
 class FileTreePreview(QWidget):
@@ -38,7 +37,7 @@ class FileTreePreview(QWidget):
     FEATURE_METADATA_SIZE_KB = 2
     DISPLAY_SEPARATOR = " • "
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._pending_config: dict = {}
         self._debounce = QTimer(self)
@@ -126,8 +125,8 @@ class FileTreePreview(QWidget):
         ux = config.get("user_experience", {})
         workflow = config.get("development_workflow", {})
         plugin_type = (
-            project_info.get("plugin_type") or ""
-        ).strip().lower()  # Normalize for comparison (instrument, audio fx, internal)
+            (project_info.get("plugin_type") or "").strip().lower()
+        )  # Normalize for comparison (instrument, audio fx, internal)
 
         root_name = project_info.get("project_name", "").strip() or "YourPlugin"
         root = TreeEntry(
@@ -147,7 +146,7 @@ class FileTreePreview(QWidget):
         ux: dict,
         workflow: dict,
         plugin_type: str,
-    ) -> List[TreeEntry]:
+    ) -> list[TreeEntry]:
         template_name = project_info.get("template_name", "Default Template")
 
         # Base skeleton
@@ -164,10 +163,12 @@ class FileTreePreview(QWidget):
             "packaging": ["icon.png", "installer_banner.png"],
         }
 
-        tree: List[TreeEntry] = [
+        tree: list[TreeEntry] = [
             TreeEntry(
                 name=f"Template{self.DISPLAY_SEPARATOR}{template_name}",
-                children=[TreeEntry(name=project_info.get("template_url", ""), children=[], is_file=True)],
+                children=[
+                    TreeEntry(name=project_info.get("template_url", ""), children=[], is_file=True)
+                ],
                 enabled=True,
                 hint="Selected template source",
             ),
@@ -285,8 +286,12 @@ class FileTreePreview(QWidget):
 
         # Workflow integrations
         workflow_entries = [
-            TreeEntry(name="Version Control", children=[], enabled=bool(workflow.get("vcs")), is_file=True),
-            TreeEntry(name="Testing", children=[], enabled=bool(workflow.get("testing")), is_file=True),
+            TreeEntry(
+                name="Version Control", children=[], enabled=bool(workflow.get("vcs")), is_file=True
+            ),
+            TreeEntry(
+                name="Testing", children=[], enabled=bool(workflow.get("testing")), is_file=True
+            ),
             TreeEntry(
                 name="Code Quality",
                 children=[],
@@ -317,8 +322,8 @@ class FileTreePreview(QWidget):
 
         return tree
 
-    def _build_plugin_type_entries(self, plugin_type: str, project_info: dict) -> List[TreeEntry]:
-        entries: List[TreeEntry] = []
+    def _build_plugin_type_entries(self, plugin_type: str, project_info: dict) -> list[TreeEntry]:
+        entries: list[TreeEntry] = []
         if plugin_type == "instrument":
             polyphony = project_info.get("instrument_polyphony", 64)
             midi_input = bool(project_info.get("instrument_midi_input", True))
@@ -371,13 +376,15 @@ class FileTreePreview(QWidget):
             )
         return entries
 
-    def _make_dir_entries(self, base_dirs: Dict[str, List[str]]) -> List[TreeEntry]:
-        entries: List[TreeEntry] = []
+    def _make_dir_entries(self, base_dirs: dict[str, list[str]]) -> list[TreeEntry]:
+        entries: list[TreeEntry] = []
         for dirname, files in base_dirs.items():
             entries.append(
                 TreeEntry(
                     name=dirname,
-                    children=[TreeEntry(name=f, children=[], enabled=True, is_file=True) for f in files],
+                    children=[
+                        TreeEntry(name=f, children=[], enabled=True, is_file=True) for f in files
+                    ],
                     enabled=True,
                 )
             )
@@ -395,7 +402,7 @@ class FileTreePreview(QWidget):
         self._file_size_lbl.setText(f"Size: {est_size} KB (est.)")
         self._feature_lbl.setText(f"Features: {enabled_file_count} enabled")
 
-    def _populate_items(self, parent_item: QTreeWidgetItem, entries: List[TreeEntry]) -> None:
+    def _populate_items(self, parent_item: QTreeWidgetItem, entries: list[TreeEntry]) -> None:
         for entry in entries:
             item = QTreeWidgetItem(parent_item, [entry.name, self._status_text(entry.enabled)])
             item.setData(0, Qt.ItemDataRole.UserRole, entry.enabled)
@@ -411,25 +418,27 @@ class FileTreePreview(QWidget):
     # ------------------------------------------------------------------ #
     # Metrics                                                            #
     # ------------------------------------------------------------------ #
-    def _iter_items(self) -> List[QTreeWidgetItem]:
-        items: List[QTreeWidgetItem] = []
+    def _iter_items(self) -> list[QTreeWidgetItem]:
+        items: list[QTreeWidgetItem] = []
         root = self._tree.invisibleRootItem()
         for i in range(root.childCount()):
             items.extend(self._collect_children(root.child(i)))
         return items
 
-    def _collect_children(self, item: QTreeWidgetItem) -> List[QTreeWidgetItem]:
+    def _collect_children(self, item: QTreeWidgetItem) -> list[QTreeWidgetItem]:
         items = [item]
         for i in range(item.childCount()):
             items.extend(self._collect_children(item.child(i)))
         return items
 
-    def _compute_metrics(self) -> Tuple[int, int, int]:
+    def _compute_metrics(self) -> tuple[int, int, int]:
         file_items = [i for i in self._iter_items() if i.childCount() == 0]
         file_count = len(file_items)
         # Rough heuristic: average size per file plus small enabled-feature metadata
         enabled_file_count = len([i for i in file_items if i.data(0, Qt.ItemDataRole.UserRole)])
-        est_size = file_count * self.AVG_FILE_SIZE_KB + enabled_file_count * self.FEATURE_METADATA_SIZE_KB
+        est_size = (
+            file_count * self.AVG_FILE_SIZE_KB + enabled_file_count * self.FEATURE_METADATA_SIZE_KB
+        )
         return file_count, est_size, enabled_file_count
 
     def is_updating(self) -> bool:
@@ -442,9 +451,9 @@ class FileTreePreview(QWidget):
         return implementations.get("preset_format") or FileTreePreview.DEFAULT_PRESET_FORMAT
 
     @staticmethod
-    def _format_detail_entries(build: dict) -> List[TreeEntry]:
+    def _format_detail_entries(build: dict) -> list[TreeEntry]:
         """Return per-format detail entries when formats are selected."""
-        entries: List[TreeEntry] = []
+        entries: list[TreeEntry] = []
 
         if build.get("au"):
             comp = "/".join(

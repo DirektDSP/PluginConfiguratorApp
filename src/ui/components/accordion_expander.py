@@ -85,9 +85,7 @@ class AccordionExpander(QWidget):
         self.body_layout.setSpacing(8)
 
         # Qt's property animation API expects property names as bytes literals.
-        self._animation = QPropertyAnimation(
-            self._content, _MAXIMUM_HEIGHT_PROPERTY, self._content
-        )
+        self._animation = QPropertyAnimation(self._content, _MAXIMUM_HEIGHT_PROPERTY, self._content)
         self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
         self._animation.setDuration(self._animation_duration)
         self._animation.finished.connect(self._on_animation_finished)

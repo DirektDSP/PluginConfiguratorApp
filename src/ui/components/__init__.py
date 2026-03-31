@@ -1,4 +1,4 @@
-from .accordion_expander import AccordionExpander, SUBTEXT_COLOR
+from .accordion_expander import SUBTEXT_COLOR, AccordionExpander
 from .file_tree_preview import FileTreePreview
 
-__all__ = ["AccordionExpander", "FileTreePreview", "SUBTEXT_COLOR"]
+__all__ = ["SUBTEXT_COLOR", "AccordionExpander", "FileTreePreview"]

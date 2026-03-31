@@ -151,8 +151,7 @@ class TemplateTab(QWidget):
                 "url": "https://github.com/SeamusMullan/PluginTemplate.git",
                 "branch": "main",
                 "description": (
-                    "A basic audio plugin template based on Pamplejuce, "
-                    "with JUCE and CMake setup."
+                    "A basic audio plugin template based on Pamplejuce, with JUCE and CMake setup."
                 ),
                 "features": "- Modern C++ with CMake\n- JUCE framework\n- Cross-platform\n- CI/CD ready",
             },
@@ -168,8 +167,7 @@ class TemplateTab(QWidget):
                 "url": "https://github.com/DirektDSP/FXPluginTemplate.git",
                 "branch": "main",
                 "description": (
-                    "A template for creating audio effect plugins "
-                    "with common structures."
+                    "A template for creating audio effect plugins with common structures."
                 ),
                 "features": (
                     "- Effect parameter framework\n"
@@ -191,10 +189,7 @@ class TemplateTab(QWidget):
                 "branch": "main",
                 "description": "A template for creating virtual instrument plugins.",
                 "features": (
-                    "- MIDI processing\n"
-                    "- Voice management\n"
-                    "- Polyphony control\n"
-                    "- Sample playback"
+                    "- MIDI processing\n- Voice management\n- Polyphony control\n- Sample playback"
                 ),
             },
         )
@@ -213,9 +208,7 @@ class TemplateTab(QWidget):
     @Slot()
     def browse_local_template(self):
         """Browse for local template directory"""
-        directory = QFileDialog.getExistingDirectory(
-            self, "Select Template Directory", ""
-        )
+        directory = QFileDialog.getExistingDirectory(self, "Select Template Directory", "")
         if directory:
             self.local_path.setText(directory)
 

@@ -282,9 +282,7 @@ class DefineTab(BaseTab):
         or still contains a previously auto-generated value."""
         current = self.bundle_id.text().strip()
         company = self.company_name.text().strip().lower().replace(" ", "")
-        project = (
-            self.project_name.text().strip().lower().replace(" ", "").replace("_", "")
-        )
+        project = self.project_name.text().strip().lower().replace(" ", "").replace("_", "")
 
         if not company or not project:
             return
@@ -319,9 +317,7 @@ class DefineTab(BaseTab):
 
     def _update_validation_state(self):
         """Enable the continue button only when all required fields are filled."""
-        is_valid = bool(self.project_name.text().strip()) and bool(
-            self.company_name.text().strip()
-        )
+        is_valid = bool(self.project_name.text().strip()) and bool(self.company_name.text().strip())
         self._emit_validation_changed(is_valid)
         self.continue_button.setEnabled(is_valid)
 

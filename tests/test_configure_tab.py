@@ -1,7 +1,6 @@
-"""Tests for ConfigureTab – Tab 2 of the 4-lifecycle UI."""
+"""Tests for ConfigureTab - Tab 2 of the 4-lifecycle UI."""
 
 import sys
-from unittest.mock import Mock
 
 import pytest
 from PySide6.QtWidgets import QApplication
@@ -36,7 +35,7 @@ class TestConfigureTabInit:
         assert tab is not None
 
     def test_tab_is_base_tab_subclass(self, tab):
-        from core.base_tab import BaseTab
+        from core.base_tab import BaseTab  # noqa: PLC0415
 
         assert isinstance(tab, BaseTab)
 
@@ -394,8 +393,8 @@ class TestConfigurationRoundTrip:
         tab.load_configuration(full_config)
         result = tab.get_configuration()
 
-        for key in full_config:
-            assert result[key] == full_config[key], f"Mismatch for key: {key}"
+        for key, value in full_config.items():
+            assert result[key] == value, f"Mismatch for key: {key}"
 
     def test_configuration_contains_tab_complete_key(self, tab):
         config = tab.get_configuration()
@@ -403,7 +402,7 @@ class TestConfigurationRoundTrip:
 
 
 # ---------------------------------------------------------------------------
-# reset()
+# reset
 # ---------------------------------------------------------------------------
 
 

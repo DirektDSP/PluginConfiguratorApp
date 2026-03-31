@@ -3,20 +3,17 @@
 import sys
 
 import pytest
-from PySide6.QtWidgets import QApplication, QComboBox, QCheckBox, QTreeWidget
+from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QTreeWidget
 
 from ui.tabs.implement_tab import (
-    ImplementTab,
     _DEFAULT_GRACE_PERIOD_DAYS,
     _DEFAULT_MOONBASE_LICENSE,
     _DEFAULT_PRESET_FORMAT,
     _DEFAULT_PRESET_STORAGE,
     _DSP_TEMPLATES,
-    _MOONBASE_LICENSE_TYPES,
     _MODULES,
-    _PRESET_FORMATS,
-    _PRESET_STORAGE_LOCATIONS,
     _UI_TEMPLATES,
+    ImplementTab,
 )
 
 
@@ -40,6 +37,7 @@ def tab(app):
 # ---------------------------------------------------------------------------
 # Initialisation
 # ---------------------------------------------------------------------------
+
 
 class TestInitialization:
     def test_is_implement_tab_instance(self, tab):
@@ -71,6 +69,7 @@ class TestInitialization:
 # DSP template dropdown
 # ---------------------------------------------------------------------------
 
+
 class TestDspTemplateDropdown:
     def test_has_all_dsp_options(self, tab):
         items = [tab.dsp_combo.itemText(i) for i in range(tab.dsp_combo.count())]
@@ -95,6 +94,7 @@ class TestDspTemplateDropdown:
 # ---------------------------------------------------------------------------
 # UI template dropdown
 # ---------------------------------------------------------------------------
+
 
 class TestUiTemplateDropdown:
     def test_has_all_ui_options(self, tab):
@@ -155,6 +155,7 @@ class TestTemplateDescriptions:
 # Module checkboxes
 # ---------------------------------------------------------------------------
 
+
 class TestModuleCheckboxes:
     def test_modules_unchecked_by_default(self, tab):
         for cb in tab._module_checkboxes.values():
@@ -176,6 +177,7 @@ class TestModuleCheckboxes:
 # ---------------------------------------------------------------------------
 # Accordion disclosure
 # ---------------------------------------------------------------------------
+
 
 class TestAccordion:
     def test_modules_body_hidden_by_default(self, tab):
@@ -200,6 +202,7 @@ class TestAccordion:
 # ---------------------------------------------------------------------------
 # File tree preview
 # ---------------------------------------------------------------------------
+
 
 class TestFileTreePreview:
     def _root_children_names(self, tab) -> list[str]:
@@ -296,6 +299,7 @@ class TestModuleOptions:
 # get_configuration / load_configuration
 # ---------------------------------------------------------------------------
 
+
 class TestConfiguration:
     def test_get_configuration_returns_dict(self, tab):
         config = tab.get_configuration()
@@ -384,6 +388,7 @@ class TestConfiguration:
 # validate / reset
 # ---------------------------------------------------------------------------
 
+
 class TestValidateAndReset:
     def test_validate_always_true(self, tab):
         assert tab.validate() is True
@@ -422,24 +427,25 @@ class TestValidateAndReset:
 # Signals
 # ---------------------------------------------------------------------------
 
+
 class TestSignals:
     def test_config_changed_emitted_on_dsp_change(self, tab):
         received = []
-        tab.config_changed.connect(lambda c: received.append(c))
+        tab.config_changed.connect(received.append)
         tab.dsp_combo.setCurrentText("EQ")
         assert len(received) > 0
         assert received[-1]["dsp_template"] == "EQ"
 
     def test_config_changed_emitted_on_ui_change(self, tab):
         received = []
-        tab.config_changed.connect(lambda c: received.append(c))
+        tab.config_changed.connect(received.append)
         tab.ui_combo.setCurrentText("Standard")
         assert len(received) > 0
         assert received[-1]["ui_template"] == "Standard"
 
     def test_config_changed_emitted_on_module_toggle(self, tab):
         received = []
-        tab.config_changed.connect(lambda c: received.append(c))
+        tab.config_changed.connect(received.append)
         tab._module_checkboxes["Presets"].setChecked(True)
         assert len(received) > 0
         assert received[-1]["module_presets"] is True

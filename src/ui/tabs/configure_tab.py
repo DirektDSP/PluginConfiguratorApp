@@ -1,4 +1,5 @@
 """Configure tab for project metadata and plugin format options."""
+
 from PySide6.QtCore import QDir, Slot
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -127,7 +128,7 @@ class ConfigureTab(BaseTab):
 
         formats_layout.addLayout(formats_form)
 
-        # Format-specific disclosure label – updates dynamically
+        # Format-specific disclosure label - updates dynamically
         self.format_disclosure_label = QLabel()
         self.format_disclosure_label.setWordWrap(True)
         self.format_disclosure_label.setStyleSheet("color: #888; font-size: 11px;")
@@ -240,9 +241,7 @@ class ConfigureTab(BaseTab):
 
         self.enable_signing = QCheckBox("Enable code signing")
         self.enable_signing.setChecked(False)
-        self.enable_signing.setToolTip(
-            "Required for notarised macOS builds and AUv3 distribution."
-        )
+        self.enable_signing.setToolTip("Required for notarised macOS builds and AUv3 distribution.")
         signing_layout.addWidget(self.enable_signing)
 
         # Signing sub-options (shown when enabled)
@@ -402,8 +401,7 @@ class ConfigureTab(BaseTab):
     def _any_format_selected(self) -> bool:
         """Return True if at least one plugin format checkbox is checked."""
         return any(
-            cb.isChecked()
-            for cb in [self.standalone, self.vst3, self.au, self.auv3, self.clap]
+            cb.isChecked() for cb in [self.standalone, self.vst3, self.au, self.auv3, self.clap]
         )
 
     def _update_format_disclosure(self):

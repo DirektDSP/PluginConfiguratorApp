@@ -3,21 +3,21 @@
 from PySide6.QtCore import QEasingCurve, QParallelAnimationGroup, QPropertyAnimation, Qt, Slot
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QFormLayout,
+    QGraphicsOpacityEffect,
     QGroupBox,
     QHBoxLayout,
     QLineEdit,
     QMessageBox,
     QPushButton,
-    QGraphicsOpacityEffect,
     QScrollArea,
     QSizePolicy,
+    QSpinBox,
     QSplitter,
     QStyle,
-    QCheckBox,
-    QSpinBox,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -51,8 +51,7 @@ class ProjectInfoTab(BaseTab):
             "name": "Default Template",
             "url": "https://github.com/SeamusMullan/PluginTemplate.git",
             "description": (
-                "A basic audio plugin template based on Pamplejuce, "
-                "with JUCE and CMake setup."
+                "A basic audio plugin template based on Pamplejuce, with JUCE and CMake setup."
             ),
         }
 
@@ -63,38 +62,26 @@ class ProjectInfoTab(BaseTab):
     def setup_ui(self):
         """Initialize UI components"""
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(
-            0, 0, 0, 0
-        )  # Remove margins to maximize space
+        self.main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins to maximize space
 
         # Create a splitter for the left (form) and right (file tree) sides
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setHandleWidth(5)  # Make the splitter handle thinner
-        self.splitter.setChildrenCollapsible(
-            False
-        )  # Prevent sections from being collapsed
+        self.splitter.setChildrenCollapsible(False)  # Prevent sections from being collapsed
 
         # ---- LEFT SIDE - FORM FIELDS ----
 
         # Create a container widget for the form to add margins
         self.form_container = QWidget()
-        self.form_container.setContentsMargins(
-            10, 10, 10, 10
-        )  # Add margins inside the container
-        self.form_container.setMinimumWidth(
-            400
-        )  # Set minimum width to prevent over-collapsing
+        self.form_container.setContentsMargins(10, 10, 10, 10)  # Add margins inside the container
+        self.form_container.setMinimumWidth(400)  # Set minimum width to prevent over-collapsing
         form_container_layout = QVBoxLayout(self.form_container)
-        form_container_layout.setContentsMargins(
-            0, 0, 0, 0
-        )  # No margins for the layout itself
+        form_container_layout.setContentsMargins(0, 0, 0, 0)  # No margins for the layout itself
 
         # Create a scroll area for the form fields
         self.form_scroll = QScrollArea()
         self.form_scroll.setWidgetResizable(True)
-        self.form_scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
+        self.form_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.form_scroll.setFrameShape(
             QScrollArea.Shape.NoFrame
         )  # Remove border around scroll area
@@ -112,10 +99,7 @@ class ProjectInfoTab(BaseTab):
         )
 
         self.template_combo = QComboBox()
-        self.template_combo.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Fixed
-        )
+        self.template_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.template_combo.addItem("Internal DirektDSP Template")
         self.template_combo.addItem("Audio FX Plugin")
         self.template_combo.addItem("Instrument Plugin")
@@ -234,9 +218,7 @@ class ProjectInfoTab(BaseTab):
         # Output directory group
         self.output_group = QGroupBox("Output Settings")
         self.output_layout = QFormLayout()
-        self.output_layout.setFieldGrowthPolicy(
-            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
-        )
+        self.output_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         # Output directory selection
         self.output_dir_layout = QHBoxLayout()
@@ -285,13 +267,9 @@ class ProjectInfoTab(BaseTab):
         self.filetree_container.setContentsMargins(
             10, 10, 10, 10
         )  # Add margins inside the container
-        self.filetree_container.setMinimumWidth(
-            300
-        )  # Set minimum width to prevent over-collapsing
+        self.filetree_container.setMinimumWidth(300)  # Set minimum width to prevent over-collapsing
         filetree_container_layout = QVBoxLayout(self.filetree_container)
-        filetree_container_layout.setContentsMargins(
-            0, 0, 0, 0
-        )  # No margins for the layout itself
+        filetree_container_layout.setContentsMargins(0, 0, 0, 0)  # No margins for the layout itself
 
         self.filetree_widget = QWidget()
         self.filetree_layout = QVBoxLayout(self.filetree_widget)
@@ -306,9 +284,7 @@ class ProjectInfoTab(BaseTab):
         self.file_tree.setHeaderLabel("Project Files")
         self.file_tree.setMinimumWidth(250)  # Ensure a minimum width
         self.file_tree.setAlternatingRowColors(True)
-        self.file_tree.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        self.file_tree.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Add tree to layout
         self.structure_layout.addWidget(self.file_tree)
@@ -376,9 +352,7 @@ class ProjectInfoTab(BaseTab):
     @Slot()
     def browse_output_dir(self):
         """Open file dialog to select output directory"""
-        directory = QFileDialog.getExistingDirectory(
-            self, "Select Output Directory", ""
-        )
+        directory = QFileDialog.getExistingDirectory(self, "Select Output Directory", "")
         if directory:
             self.output_directory.setText(directory)
 
@@ -396,8 +370,7 @@ class ProjectInfoTab(BaseTab):
                 "name": "Internal DirektDSP Template",
                 "url": "https://github.com/SeamusMullan/PluginTemplate.git",
                 "description": (
-                    "A basic audio plugin template based on Pamplejuce, "
-                    "with JUCE and CMake setup."
+                    "A basic audio plugin template based on Pamplejuce, with JUCE and CMake setup."
                 ),
             }
             self._current_plugin_type = self.PLUGIN_TYPE_INTERNAL
@@ -463,6 +436,23 @@ class ProjectInfoTab(BaseTab):
         # Populate with default structure
         self.populate_file_tree(root_item, "YourPlugin")
 
+    def _add_file_item(self, parent, name, *, disabled=False):
+        """Create a file tree item with icon, optionally disabled."""
+        item = QTreeWidgetItem(parent, [name])
+        icon = self.get_file_icon(name)
+        if icon:
+            item.setIcon(0, icon)
+        item.setDisabled(disabled)
+        return item
+
+    def _add_folder_item(self, parent, name):
+        """Create a folder tree item with icon."""
+        item = QTreeWidgetItem(parent, [name])
+        icon = self.get_folder_icon()
+        if icon:
+            item.setIcon(0, icon)
+        return item
+
     def populate_file_tree(self, parent_item, project_name):
         """Populate the file tree with common JUCE plugin structure
 
@@ -486,17 +476,9 @@ class ProjectInfoTab(BaseTab):
 
         # Create directory items
         for dir_name, files in common_dirs.items():
-            dir_item = QTreeWidgetItem(parent_item, [dir_name])
-            folder_icon = self.get_folder_icon()
-            if folder_icon:  # Only set icon if we have one
-                dir_item.setIcon(0, folder_icon)
-
-            # Add files to directory
+            dir_item = self._add_folder_item(parent_item, dir_name)
             for file_name in files:
-                file_item = QTreeWidgetItem(dir_item, [file_name])
-                file_icon = self.get_file_icon(file_name)
-                if file_icon:  # Only set icon if we have one
-                    file_item.setIcon(0, file_icon)
+                self._add_file_item(dir_item, file_name)
 
         # Add top-level files
         top_files = [
@@ -508,51 +490,33 @@ class ProjectInfoTab(BaseTab):
         ]
 
         for file_name in top_files:
-            file_item = QTreeWidgetItem(parent_item, [file_name])
-            file_icon = self.get_file_icon(file_name)
-            if file_icon:  # Only set icon if we have one
-                file_item.setIcon(0, file_icon)
+            self._add_file_item(parent_item, file_name)
 
         plugin_type = self._current_plugin_type
         if plugin_type == self.PLUGIN_TYPE_FX:
-            fx_item = QTreeWidgetItem(parent_item, ["fx"])
-            folder_icon = self.get_folder_icon()
-            if folder_icon:
-                fx_item.setIcon(0, folder_icon)
-
-            wetdry_item = QTreeWidgetItem(
-                fx_item, [f"WetDryMix_{self.fx_wet_dry.value()}pct.cpp"]
+            fx_item = self._add_folder_item(parent_item, "fx")
+            self._add_file_item(fx_item, f"WetDryMix_{self.fx_wet_dry.value()}pct.cpp")
+            self._add_file_item(
+                fx_item,
+                "SidechainInput.cpp",
+                disabled=not self.fx_sidechain.isChecked(),
             )
-            file_icon = self.get_file_icon("wetdry.cpp")
-            if file_icon:
-                wetdry_item.setIcon(0, file_icon)
-
-            sidechain_item = QTreeWidgetItem(fx_item, ["SidechainInput.cpp"])
-            sidechain_item.setDisabled(not self.fx_sidechain.isChecked())
-            if file_icon:
-                sidechain_item.setIcon(0, file_icon)
-
-            latency_item = QTreeWidgetItem(fx_item, [f"Latency_{self.fx_latency.value()}ms.cpp"])
-            latency_item.setDisabled(self.fx_latency.value() == 0)
-            if file_icon:
-                latency_item.setIcon(0, file_icon)
+            self._add_file_item(
+                fx_item,
+                f"Latency_{self.fx_latency.value()}ms.cpp",
+                disabled=self.fx_latency.value() == 0,
+            )
         elif plugin_type == self.PLUGIN_TYPE_INSTRUMENT:
-            instrument_item = QTreeWidgetItem(parent_item, ["instrument"])
-            folder_icon = self.get_folder_icon()
-            if folder_icon:
-                instrument_item.setIcon(0, folder_icon)
-
-            polyphony_item = QTreeWidgetItem(
-                instrument_item, [f"VoiceManager_{self.instrument_polyphony.value()}voices.cpp"]
+            instrument_item = self._add_folder_item(parent_item, "instrument")
+            self._add_file_item(
+                instrument_item,
+                f"VoiceManager_{self.instrument_polyphony.value()}voices.cpp",
             )
-            file_icon = self.get_file_icon("voice.cpp")
-            if file_icon:
-                polyphony_item.setIcon(0, file_icon)
-
-            midi_item = QTreeWidgetItem(instrument_item, ["MidiInput.cpp"])
-            midi_item.setDisabled(not self.instrument_midi_input.isChecked())
-            if file_icon:
-                midi_item.setIcon(0, file_icon)
+            self._add_file_item(
+                instrument_item,
+                "MidiInput.cpp",
+                disabled=not self.instrument_midi_input.isChecked(),
+            )
 
     def get_folder_icon(self):
         """Return a folder icon from the system"""
@@ -734,7 +698,9 @@ class ProjectInfoTab(BaseTab):
         ready = self.quick_start_checkbox.isChecked() and self._has_required_quick_start_data()
         self.review_generate_button.setEnabled(ready)
         if ready:
-            self.review_generate_button.setToolTip("All required fields look good. Jump to Review & Generate.")
+            self.review_generate_button.setToolTip(
+                "All required fields look good. Jump to Review & Generate."
+            )
         elif not self.quick_start_checkbox.isChecked():
             self.review_generate_button.setToolTip("Enable Quick Start to jump ahead.")
         else:

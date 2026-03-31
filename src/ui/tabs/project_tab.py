@@ -132,9 +132,7 @@ class ProjectTab(QWidget):
     @Slot()
     def browse_output_dir(self):
         """Open file dialog to select output directory"""
-        directory = QFileDialog.getExistingDirectory(
-            self, "Select Output Directory", ""
-        )
+        directory = QFileDialog.getExistingDirectory(self, "Select Output Directory", "")
         if directory:
             self.output_directory.setText(directory)
 

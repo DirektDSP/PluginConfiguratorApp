@@ -67,9 +67,7 @@ class ProjectWorker(QObject):
     def clone_template_repo(self):
         """Clone the template repository"""
         try:
-            self.progress.emit(
-                f"Cloning template repository: {self.params['fork_url']}"
-            )
+            self.progress.emit(f"Cloning template repository: {self.params['fork_url']}")
             self.progress_value.emit(5)
 
             subprocess.run(
@@ -156,9 +154,7 @@ class ProjectWorker(QObject):
                     self.progress_value.emit(50)
                 else:
                     self.progress.emit(f"Error fetching Moonbase submodule: {e.stderr}")
-                    raise RuntimeError(
-                        f"Failed to fetch Moonbase submodule: {e.stderr}"
-                    )
+                    raise RuntimeError(f"Failed to fetch Moonbase submodule: {e.stderr}")
 
     def prepare_project_variables(self):
         """Prepare variables for template substitution"""
@@ -190,15 +186,11 @@ class ProjectWorker(QObject):
         # JUCE options
         juce_web_browser = "1" if self.options.get("juce_web_browser", False) else "0"
         juce_use_curl = "1" if self.options.get("juce_curl", False) else "0"
-        juce_vst3_can_replace_vst2 = (
-            "1" if self.options.get("juce_vst2", False) else "0"
-        )
+        juce_vst3_can_replace_vst2 = "1" if self.options.get("juce_vst2", False) else "0"
 
         # Moonbase options
         moonbase = self.options.get("moonbase", False)
-        moonbase_include = (
-            "add_subdirectory(modules/moonbase_JUCEClient)" if moonbase else ""
-        )
+        moonbase_include = "add_subdirectory(modules/moonbase_JUCEClient)" if moonbase else ""
         moonbase_licensing = (
             f'MOONBASE_DECLARE_LICENSING ("{self.params["company_name"]}", "{self.params["project_name"]}", VERSION)'
             if moonbase

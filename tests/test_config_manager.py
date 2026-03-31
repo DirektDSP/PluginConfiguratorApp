@@ -240,7 +240,7 @@ class TestConfigManager:
         config = config_manager.get_default_config()
 
         assert isinstance(config, dict)
-        for section in ConfigManager.PRESET_SCHEMA.keys():
+        for section in ConfigManager.PRESET_SCHEMA:
             assert section in config
 
     def test_save_and_load_config(self, config_manager, temp_file, sample_config):
