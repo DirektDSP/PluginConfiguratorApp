@@ -1,14 +1,18 @@
+from functools import partial
+from typing import Any
+
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QIcon, QPixmap
+
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFormLayout,
     QGroupBox,
     QLabel,
-    QPushButton,
     QScrollArea,
     QSizePolicy,
+    QSpinBox,
     QSplitter,
     QStyle,
     QTreeWidget,
@@ -18,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.base_tab import BaseTab
+from ui.components import AccordionExpander, SUBTEXT_COLOR
 
 # ---------------------------------------------------------------------------
 # Template & module definitions
@@ -119,6 +124,14 @@ _MODULES: dict[str, dict] = {
         "extra_source": ["PresetManager.cpp", "PresetManager.h"],
     },
 }
+
+_MOONBASE_LICENSE_TYPES = ["Trial", "Perpetual", "Subscription"]
+_DEFAULT_MOONBASE_LICENSE = "Trial"
+_DEFAULT_GRACE_PERIOD_DAYS = 14
+_PRESET_FORMATS = ["XML", "JSON", "Binary"]
+_DEFAULT_PRESET_FORMAT = "XML"
+_PRESET_STORAGE_LOCATIONS = ["Project-relative", "User AppData", "Cloud/Sync"]
+_DEFAULT_PRESET_STORAGE = "Project-relative"
 
 
 class ImplementTab(BaseTab):
@@ -238,41 +251,102 @@ class ImplementTab(BaseTab):
 
         main_layout.addWidget(self.splitter)
 
-    def _build_modules_accordion(self) -> QGroupBox:
+    def _build_modules_accordion(self) -> AccordionExpander:
         """Build the collapsible modules section (accordion disclosure)."""
-        group = QGroupBox()
-
-        outer = QVBoxLayout(group)
-        outer.setContentsMargins(8, 6, 8, 8)
-        outer.setSpacing(4)
-
-        # Toggle button acts as the accordion header
-        self._modules_toggle = QPushButton("▶  Modules  (click to expand)")
-        self._modules_toggle.setCheckable(True)
-        self._modules_toggle.setChecked(False)
-        self._modules_toggle.setFlat(True)
-        self._modules_toggle.setStyleSheet("text-align: left; font-weight: bold; padding: 4px;")
-        self._modules_toggle.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-        # Collapsible body
-        self._modules_body = QWidget()
-        body_layout = QVBoxLayout(self._modules_body)
-        body_layout.setContentsMargins(16, 4, 4, 4)
-        body_layout.setSpacing(8)
-
         self._module_checkboxes: dict[str, QCheckBox] = {}
+        self._module_expanders: dict[str, AccordionExpander] = {}
+
+        self._modules_expander = AccordionExpander(
+            "Modules",
+            "Enable optional modules and configure their options",
+            start_expanded=False,
+        )
+
+        body_layout = self._modules_expander.body_layout
+
         for key, info in _MODULES.items():
-            cb = QCheckBox(info["label"])
-            cb.setToolTip(info["tooltip"])
-            body_layout.addWidget(cb)
-            self._module_checkboxes[key] = cb
+            toggle = QCheckBox("Enable")
+            toggle.setToolTip(info["tooltip"])
+            self._module_checkboxes[key] = toggle
 
-        self._modules_body.setVisible(False)
+            module_expander = AccordionExpander(
+                info["label"],
+                subtitle=info.get("tooltip"),
+                control_widget=toggle,
+                start_expanded=False,
+            )
+            self._module_expanders[key] = module_expander
 
-        outer.addWidget(self._modules_toggle)
-        outer.addWidget(self._modules_body)
+            module_body = module_expander.body_layout
+            module_body.addWidget(self._hint_label(info.get("tooltip", "")))
 
-        return group
+            if key == "Moonbase":
+                module_body.addLayout(self._build_moonbase_options())
+            elif key == "Presets":
+                module_body.addLayout(self._build_presets_options())
+            else:
+                module_body.addWidget(self._hint_label("No additional options for this module."))
+
+            body_layout.addWidget(module_expander)
+
+        body_layout.addStretch()
+        return self._modules_expander
+
+    def _build_moonbase_options(self) -> QFormLayout:
+        layout = QFormLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+
+        self._moonbase_license_type = QComboBox()
+        self._moonbase_license_type.addItems(_MOONBASE_LICENSE_TYPES)
+        default_license_idx = self._moonbase_license_type.findText(_DEFAULT_MOONBASE_LICENSE)
+        if default_license_idx >= 0:
+            self._moonbase_license_type.setCurrentIndex(default_license_idx)
+
+        self._moonbase_grace_period = QSpinBox()
+        self._moonbase_grace_period.setRange(0, 60)
+        self._moonbase_grace_period.setSuffix(" days")
+        self._moonbase_grace_period.setValue(_DEFAULT_GRACE_PERIOD_DAYS)
+
+        layout.addRow("License type:", self._moonbase_license_type)
+        layout.addRow("Grace period:", self._moonbase_grace_period)
+        return layout
+
+    def _build_presets_options(self) -> QFormLayout:
+        layout = QFormLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+
+        self._preset_format = QComboBox()
+        self._preset_format.addItems(_PRESET_FORMATS)
+        default_format_idx = self._preset_format.findText(_DEFAULT_PRESET_FORMAT)
+        if default_format_idx >= 0:
+            self._preset_format.setCurrentIndex(default_format_idx)
+
+        self._preset_storage = QComboBox()
+        self._preset_storage.addItems(_PRESET_STORAGE_LOCATIONS)
+        default_storage_idx = self._preset_storage.findText(_DEFAULT_PRESET_STORAGE)
+        if default_storage_idx >= 0:
+            self._preset_storage.setCurrentIndex(default_storage_idx)
+
+        self._preset_storage_expander = AccordionExpander(
+            "Storage options", "Choose where presets are stored", start_expanded=False
+        )
+        self._preset_storage_expander.body_layout.addWidget(self._preset_storage)
+
+        layout.addRow("Format:", self._preset_format)
+        layout.addRow("Storage:", self._preset_storage_expander)
+        return layout
+
+    def _hint_label(self, text: str) -> QLabel:
+        label = QLabel(text)
+        label.setWordWrap(True)
+        label.setStyleSheet(f"color: {SUBTEXT_COLOR};")
+        return label
+
+    def _value_if_enabled(self, enabled: bool, value: Any) -> Any | None:
+        """Return *value* when the module is enabled, otherwise ``None``."""
+        return value if enabled else None
 
     # ------------------------------------------------------------------
     # Signal connections
@@ -282,9 +356,44 @@ class ImplementTab(BaseTab):
         """Connect signals to slots."""
         self.dsp_combo.currentTextChanged.connect(self._on_dsp_changed)
         self.ui_combo.currentTextChanged.connect(self._on_ui_changed)
-        self._modules_toggle.toggled.connect(self._on_modules_toggle)
-        for cb in self._module_checkboxes.values():
-            cb.toggled.connect(self._on_config_changed)
+        self._modules_expander.toggled.connect(self._on_modules_toggle)
+        for key, cb in self._module_checkboxes.items():
+            cb.toggled.connect(partial(self._on_module_toggled, key))
+
+        self._moonbase_license_type.currentTextChanged.connect(self._on_config_changed)
+        self._moonbase_grace_period.valueChanged.connect(self._on_config_changed)
+        self._preset_format.currentTextChanged.connect(self._on_config_changed)
+        self._preset_storage.currentTextChanged.connect(self._on_config_changed)
+        self._preset_storage_expander.toggled.connect(self._on_config_changed)
+        for module_expander in self._module_expanders.values():
+            module_expander.toggled.connect(self._on_config_changed)
+
+        # Ensure option controls reflect initial checkbox states
+        for key, cb in self._module_checkboxes.items():
+            self._update_module_enabled_state(key, cb.isChecked(), emit=False)
+
+    def _on_module_toggled(self, key: str, checked: bool):
+        """Handle module enablement toggles and reveal nested options."""
+        if checked:
+            self._modules_expander.set_expanded(True)
+        self._update_module_enabled_state(key, checked)
+
+    def _update_module_enabled_state(self, key: str, enabled: bool, *, emit: bool = True):
+        expander = self._module_expanders.get(key)
+        if expander:
+            # Expand when enabled to reveal options; collapse when disabled
+            expander.set_expanded(enabled)
+
+        if key == "Moonbase":
+            self._moonbase_license_type.setEnabled(enabled)
+            self._moonbase_grace_period.setEnabled(enabled)
+        elif key == "Presets":
+            self._preset_format.setEnabled(enabled)
+            self._preset_storage.setEnabled(enabled)
+            self._preset_storage_expander.setEnabled(enabled)
+
+        if emit:
+            self._on_config_changed()
 
     # ------------------------------------------------------------------
     # Slots
@@ -306,11 +415,8 @@ class ImplementTab(BaseTab):
 
     @Slot(bool)
     def _on_modules_toggle(self, checked: bool):
-        """Expand or collapse the modules body."""
-        self._modules_body.setVisible(checked)
-        arrow = "▼" if checked else "▶"
-        label = "collapse" if checked else "expand"
-        self._modules_toggle.setText(f"{arrow}  Modules  (click to {label})")
+        """Emit config when the modules accordion state changes for persistence."""
+        self._emit_config_changed()
 
     @Slot()
     def _on_config_changed(self):
@@ -400,12 +506,31 @@ class ImplementTab(BaseTab):
 
     def get_configuration(self) -> dict:
         """Return the current tab configuration."""
+        moonbase_enabled = self._module_checkboxes["Moonbase"].isChecked()
+        presets_enabled = self._module_checkboxes["Presets"].isChecked()
         return {
             "dsp_template": self.dsp_combo.currentText(),
             "ui_template": self.ui_combo.currentText(),
-            "module_moonbase": self._module_checkboxes["Moonbase"].isChecked(),
+            "module_moonbase": moonbase_enabled,
+            "module_moonbase_license_type": self._value_if_enabled(
+                moonbase_enabled, self._moonbase_license_type.currentText()
+            ),
+            "module_moonbase_grace_period": self._value_if_enabled(
+                moonbase_enabled, self._moonbase_grace_period.value()
+            ),
             "module_inspector": self._module_checkboxes["Inspector"].isChecked(),
-            "module_presets": self._module_checkboxes["Presets"].isChecked(),
+            "module_presets": presets_enabled,
+            "module_presets_format": self._value_if_enabled(
+                presets_enabled, self._preset_format.currentText()
+            ),
+            "module_presets_storage": self._value_if_enabled(
+                presets_enabled, self._preset_storage.currentText()
+            ),
+            "modules_expanded": self._modules_expander.is_expanded,
+            "module_moonbase_expanded": self._module_expanders["Moonbase"].is_expanded,
+            "module_inspector_expanded": self._module_expanders["Inspector"].is_expanded,
+            "module_presets_expanded": self._module_expanders["Presets"].is_expanded,
+            "module_presets_storage_expanded": self._preset_storage_expander.is_expanded,
         }
 
     def load_configuration(self, config: dict):
@@ -420,9 +545,47 @@ class ImplementTab(BaseTab):
         if idx >= 0:
             self.ui_combo.setCurrentIndex(idx)
 
+        self._modules_expander.set_expanded(config.get("modules_expanded", False))
+
         self._module_checkboxes["Moonbase"].setChecked(config.get("module_moonbase", False))
+        moonbase_license = config.get("module_moonbase_license_type")
+        if moonbase_license in _MOONBASE_LICENSE_TYPES:
+            self._moonbase_license_type.setCurrentText(moonbase_license)
+        else:
+            self._moonbase_license_type.setCurrentText(_DEFAULT_MOONBASE_LICENSE)
+
+        grace_period = config.get("module_moonbase_grace_period")
+        self._moonbase_grace_period.setValue(
+            grace_period if grace_period is not None else _DEFAULT_GRACE_PERIOD_DAYS
+        )
+
         self._module_checkboxes["Inspector"].setChecked(config.get("module_inspector", False))
+
         self._module_checkboxes["Presets"].setChecked(config.get("module_presets", False))
+        preset_format = config.get("module_presets_format")
+        if preset_format in _PRESET_FORMATS:
+            self._preset_format.setCurrentText(preset_format)
+        else:
+            self._preset_format.setCurrentText(_DEFAULT_PRESET_FORMAT)
+
+        preset_storage = config.get("module_presets_storage")
+        if preset_storage in _PRESET_STORAGE_LOCATIONS:
+            self._preset_storage.setCurrentText(preset_storage)
+        else:
+            self._preset_storage.setCurrentText(_DEFAULT_PRESET_STORAGE)
+
+        self._module_expanders["Moonbase"].set_expanded(
+            config.get("module_moonbase_expanded", False)
+        )
+        self._module_expanders["Inspector"].set_expanded(
+            config.get("module_inspector_expanded", False)
+        )
+        self._module_expanders["Presets"].set_expanded(
+            config.get("module_presets_expanded", False)
+        )
+        self._preset_storage_expander.set_expanded(
+            config.get("module_presets_storage_expanded", False)
+        )
 
         self.update_file_tree()
         self._emit_config_changed()
@@ -437,7 +600,14 @@ class ImplementTab(BaseTab):
         self.ui_combo.setCurrentIndex(0)
         for cb in self._module_checkboxes.values():
             cb.setChecked(False)
-        # Collapse the accordion
-        self._modules_toggle.setChecked(False)
+        self._moonbase_license_type.setCurrentIndex(0)
+        self._moonbase_grace_period.setValue(_DEFAULT_GRACE_PERIOD_DAYS)
+        self._preset_format.setCurrentIndex(0)
+        self._preset_storage.setCurrentIndex(0)
+
+        self._modules_expander.set_expanded(False)
+        for module_expander in self._module_expanders.values():
+            module_expander.set_expanded(False)
+        self._preset_storage_expander.set_expanded(False)
         self.update_file_tree()
         self._emit_config_changed()
