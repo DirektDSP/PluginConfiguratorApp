@@ -32,6 +32,7 @@ _DSP_TEMPLATES: dict[str, dict] = {
     "Simple": {
         "description": "Basic DSP chain with minimal processing",
         "source_files": ["PluginProcessor.cpp", "PluginProcessor.h"],
+        "features": ["Basic processor scaffold"],
     },
     "EQ": {
         "description": "Parametric EQ with multiple bands",
@@ -42,6 +43,7 @@ _DSP_TEMPLATES: dict[str, dict] = {
             "EqProcessor.h",
             "BandConfig.h",
         ],
+        "features": ["Multi-band EQ processor", "Per-band configuration", "Basic processor scaffold"],
     },
     "Reverb": {
         "description": "Algorithmic reverb with room simulation",
@@ -51,6 +53,7 @@ _DSP_TEMPLATES: dict[str, dict] = {
             "ReverbProcessor.cpp",
             "ReverbProcessor.h",
         ],
+        "features": ["Algorithmic reverb engine", "Room simulation parameters", "Basic processor scaffold"],
     },
     "Full": {
         "description": "Complete DSP chain with all common components",
@@ -64,10 +67,17 @@ _DSP_TEMPLATES: dict[str, dict] = {
             "CompressorProcessor.cpp",
             "CompressorProcessor.h",
         ],
+        "features": [
+            "Multi-band EQ processor",
+            "Algorithmic reverb engine",
+            "Dynamics compressor",
+            "Basic processor scaffold",
+        ],
     },
     "Scratch": {
         "description": "Empty template - build your DSP from scratch",
         "source_files": ["PluginProcessor.cpp", "PluginProcessor.h"],
+        "features": ["Bare processor stub"],
     },
 }
 
@@ -75,6 +85,7 @@ _UI_TEMPLATES: dict[str, dict] = {
     "Minimal": {
         "description": "Basic editor with minimal controls",
         "editor_files": ["PluginEditor.cpp", "PluginEditor.h"],
+        "features": ["Basic editor scaffold"],
     },
     "Standard": {
         "description": "Standard editor with common UI components",
@@ -85,6 +96,7 @@ _UI_TEMPLATES: dict[str, dict] = {
             "MainComponent.h",
             "LookAndFeel.h",
         ],
+        "features": ["Main component layout", "Custom look-and-feel", "Basic editor scaffold"],
     },
     "Advanced": {
         "description": "Advanced editor with custom controls and animations",
@@ -99,10 +111,18 @@ _UI_TEMPLATES: dict[str, dict] = {
             "LookAndFeel.h",
             "Animations.h",
         ],
+        "features": [
+            "Main component layout",
+            "Custom control widgets",
+            "Custom look-and-feel",
+            "Animation system",
+            "Basic editor scaffold",
+        ],
     },
     "Scratch": {
         "description": "Empty editor - build your UI from scratch",
         "editor_files": ["PluginEditor.cpp", "PluginEditor.h"],
+        "features": ["Bare editor stub"],
     },
 }
 
@@ -193,8 +213,13 @@ class ImplementTab(BaseTab):
         self.dsp_description.setWordWrap(True)
         self.dsp_description.setStyleSheet("color: grey; font-style: italic;")
 
+        self.dsp_features = QLabel(self._format_features(_DSP_TEMPLATES["Simple"]))
+        self.dsp_features.setWordWrap(True)
+        self.dsp_features.setStyleSheet(f"color: {SUBTEXT_COLOR}; font-size: 11px;")
+
         dsp_form.addRow("Template:", self.dsp_combo)
         dsp_form.addRow("", self.dsp_description)
+        dsp_form.addRow("", self.dsp_features)
         dsp_group.setLayout(dsp_form)
 
         # -- UI template --
@@ -211,8 +236,13 @@ class ImplementTab(BaseTab):
         self.ui_description.setWordWrap(True)
         self.ui_description.setStyleSheet("color: grey; font-style: italic;")
 
+        self.ui_features = QLabel(self._format_features(_UI_TEMPLATES["Minimal"]))
+        self.ui_features.setWordWrap(True)
+        self.ui_features.setStyleSheet(f"color: {SUBTEXT_COLOR}; font-size: 11px;")
+
         ui_form.addRow("Template:", self.ui_combo)
         ui_form.addRow("", self.ui_description)
+        ui_form.addRow("", self.ui_features)
         ui_group.setLayout(ui_form)
 
         # -- Modules accordion --
@@ -399,11 +429,20 @@ class ImplementTab(BaseTab):
     # Slots
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _format_features(info: dict) -> str:
+        """Format a template's feature list as checkmark-prefixed lines."""
+        features = info.get("features", [])
+        if not features:
+            return ""
+        return "\n".join(f"\u2713  {f}" for f in features)
+
     @Slot(str)
     def _on_dsp_changed(self, text: str):
         """Update DSP description label and refresh file tree."""
         info = _DSP_TEMPLATES.get(text, {})
         self.dsp_description.setText(info.get("description", ""))
+        self.dsp_features.setText(self._format_features(info))
         self._on_config_changed()
 
     @Slot(str)
@@ -411,6 +450,7 @@ class ImplementTab(BaseTab):
         """Update UI description label and refresh file tree."""
         info = _UI_TEMPLATES.get(text, {})
         self.ui_description.setText(info.get("description", ""))
+        self.ui_features.setText(self._format_features(info))
         self._on_config_changed()
 
     @Slot(bool)

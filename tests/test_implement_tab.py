@@ -115,6 +115,43 @@ class TestUiTemplateDropdown:
 
 
 # ---------------------------------------------------------------------------
+# Template description panels (features)
+# ---------------------------------------------------------------------------
+
+
+class TestTemplateDescriptions:
+    def test_dsp_features_label_exists(self, tab):
+        assert hasattr(tab, "dsp_features")
+
+    def test_ui_features_label_exists(self, tab):
+        assert hasattr(tab, "ui_features")
+
+    def test_dsp_features_updates_on_selection(self, tab):
+        for name, info in _DSP_TEMPLATES.items():
+            tab.dsp_combo.setCurrentText(name)
+            for feature in info.get("features", []):
+                assert feature in tab.dsp_features.text()
+
+    def test_ui_features_updates_on_selection(self, tab):
+        for name, info in _UI_TEMPLATES.items():
+            tab.ui_combo.setCurrentText(name)
+            for feature in info.get("features", []):
+                assert feature in tab.ui_features.text()
+
+    def test_features_use_checkmark_prefix(self, tab):
+        tab.dsp_combo.setCurrentText("EQ")
+        assert "\u2713" in tab.dsp_features.text()
+
+    def test_all_templates_have_features(self):
+        for name, info in _DSP_TEMPLATES.items():
+            assert "features" in info, f"DSP template '{name}' missing features"
+            assert len(info["features"]) > 0
+        for name, info in _UI_TEMPLATES.items():
+            assert "features" in info, f"UI template '{name}' missing features"
+            assert len(info["features"]) > 0
+
+
+# ---------------------------------------------------------------------------
 # Module checkboxes
 # ---------------------------------------------------------------------------
 
