@@ -1,7 +1,4 @@
-import os
 import sys
-
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 from PySide6.QtWidgets import QApplication
@@ -102,6 +99,7 @@ def test_preview_reflects_plugin_type(qtbot, app):
     ]
     assert any("Instrument" in text for text in instrument_entries)
     assert any("Polyphony" in text for text in instrument_entries)
+
 
 
 def test_preview_shows_format_details(qtbot, app):

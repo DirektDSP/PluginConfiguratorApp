@@ -5,7 +5,19 @@ import sys
 import pytest
 from PySide6.QtWidgets import QApplication, QComboBox, QCheckBox, QTreeWidget
 
-from ui.tabs.implement_tab import ImplementTab, _DSP_TEMPLATES, _UI_TEMPLATES, _MODULES
+from ui.tabs.implement_tab import (
+    ImplementTab,
+    _DEFAULT_GRACE_PERIOD_DAYS,
+    _DEFAULT_MOONBASE_LICENSE,
+    _DEFAULT_PRESET_FORMAT,
+    _DEFAULT_PRESET_STORAGE,
+    _DSP_TEMPLATES,
+    _MOONBASE_LICENSE_TYPES,
+    _MODULES,
+    _PRESET_FORMATS,
+    _PRESET_STORAGE_LOCATIONS,
+    _UI_TEMPLATES,
+)
 
 
 @pytest.fixture(scope="module")
@@ -49,6 +61,10 @@ class TestInitialization:
         for key in ("Moonbase", "Inspector", "Presets"):
             assert key in tab._module_checkboxes
             assert isinstance(tab._module_checkboxes[key], QCheckBox)
+        assert hasattr(tab, "_moonbase_license_type")
+        assert hasattr(tab, "_moonbase_grace_period")
+        assert hasattr(tab, "_preset_format")
+        assert hasattr(tab, "_preset_storage")
 
 
 # ---------------------------------------------------------------------------
@@ -126,23 +142,22 @@ class TestModuleCheckboxes:
 
 class TestAccordion:
     def test_modules_body_hidden_by_default(self, tab):
-        assert not tab._modules_body.isVisible()
+        assert tab._modules_expander.is_expanded is False
 
     def test_toggle_shows_modules_body(self, tab):
-        tab._modules_toggle.setChecked(True)
-        # isVisible() needs the top-level window shown; use isHidden() instead
-        assert not tab._modules_body.isHidden()
+        tab._modules_expander.set_expanded(True)
+        assert tab._modules_expander.is_expanded is True
 
     def test_toggle_hides_modules_body_again(self, tab):
-        tab._modules_toggle.setChecked(True)
-        tab._modules_toggle.setChecked(False)
-        assert not tab._modules_body.isVisible()
+        tab._modules_expander.set_expanded(True)
+        tab._modules_expander.set_expanded(False)
+        assert tab._modules_expander.is_expanded is False
 
     def test_toggle_text_changes(self, tab):
-        tab._modules_toggle.setChecked(True)
-        assert "collapse" in tab._modules_toggle.text().lower()
-        tab._modules_toggle.setChecked(False)
-        assert "expand" in tab._modules_toggle.text().lower()
+        tab._modules_expander.set_expanded(True)
+        assert "▼" in tab._modules_expander.indicator_text
+        tab._modules_expander.set_expanded(False)
+        assert "▶" in tab._modules_expander.indicator_text
 
 
 # ---------------------------------------------------------------------------
@@ -207,6 +222,40 @@ class TestFileTreePreview:
 
 
 # ---------------------------------------------------------------------------
+# Module option panels
+# ---------------------------------------------------------------------------
+
+
+class TestModuleOptions:
+    def test_module_options_disabled_until_enabled(self, tab):
+        assert not tab._moonbase_license_type.isEnabled()
+        assert not tab._moonbase_grace_period.isEnabled()
+        assert not tab._preset_format.isEnabled()
+        assert not tab._preset_storage.isEnabled()
+
+    def test_enabling_module_reveals_options(self, tab):
+        tab._module_checkboxes["Moonbase"].setChecked(True)
+        assert tab._moonbase_license_type.isEnabled()
+        assert tab._moonbase_grace_period.isEnabled()
+        assert tab._module_expanders["Moonbase"].is_expanded
+
+    def test_preset_storage_nested_accordion(self, tab):
+        tab._module_checkboxes["Presets"].setChecked(True)
+        tab._preset_storage_expander.set_expanded(True)
+        assert tab._preset_storage_expander.is_expanded is True
+
+    def test_enabling_presets_enables_controls(self, tab):
+        tab._module_checkboxes["Presets"].setChecked(True)
+        assert tab._preset_format.isEnabled()
+        assert tab._preset_storage.isEnabled()
+
+    def test_disabling_module_collapses_expander(self, tab):
+        tab._module_checkboxes["Moonbase"].setChecked(True)
+        tab._module_checkboxes["Moonbase"].setChecked(False)
+        assert tab._module_expanders["Moonbase"].is_expanded is False
+
+
+# ---------------------------------------------------------------------------
 # get_configuration / load_configuration
 # ---------------------------------------------------------------------------
 
@@ -220,8 +269,13 @@ class TestConfiguration:
         assert "dsp_template" in config
         assert "ui_template" in config
         assert "module_moonbase" in config
+        assert "module_moonbase_license_type" in config
+        assert "module_moonbase_grace_period" in config
         assert "module_inspector" in config
         assert "module_presets" in config
+        assert "module_presets_format" in config
+        assert "module_presets_storage" in config
+        assert "modules_expanded" in config
 
     def test_get_configuration_defaults(self, tab):
         config = tab.get_configuration()
@@ -230,14 +284,27 @@ class TestConfiguration:
         assert config["module_moonbase"] is False
         assert config["module_inspector"] is False
         assert config["module_presets"] is False
+        assert config["module_moonbase_license_type"] is None
+        assert config["module_moonbase_grace_period"] is None
+        assert config["module_presets_format"] is None
+        assert config["module_presets_storage"] is None
 
     def test_load_configuration_restores_state(self, tab):
         saved = {
             "dsp_template": "EQ",
             "ui_template": "Advanced",
             "module_moonbase": True,
+            "module_moonbase_license_type": "Perpetual",
+            "module_moonbase_grace_period": 30,
             "module_inspector": False,
             "module_presets": True,
+            "module_presets_format": "JSON",
+            "module_presets_storage": "Cloud/Sync",
+            "module_moonbase_expanded": True,
+            "module_inspector_expanded": False,
+            "module_presets_expanded": True,
+            "module_presets_storage_expanded": True,
+            "modules_expanded": True,
         }
         tab.load_configuration(saved)
         assert tab.dsp_combo.currentText() == "EQ"
@@ -245,6 +312,15 @@ class TestConfiguration:
         assert tab._module_checkboxes["Moonbase"].isChecked() is True
         assert tab._module_checkboxes["Inspector"].isChecked() is False
         assert tab._module_checkboxes["Presets"].isChecked() is True
+        assert tab._moonbase_license_type.currentText() == "Perpetual"
+        assert tab._moonbase_grace_period.value() == 30
+        assert tab._preset_format.currentText() == "JSON"
+        assert tab._preset_storage.currentText() == "Cloud/Sync"
+        assert tab._module_expanders["Moonbase"].is_expanded is True
+        assert tab._module_expanders["Inspector"].is_expanded is False
+        assert tab._module_expanders["Presets"].is_expanded is True
+        assert tab._preset_storage_expander.is_expanded is True
+        assert tab._modules_expander.is_expanded is True
 
     def test_load_configuration_unknown_template_ignored(self, tab):
         tab.load_configuration({"dsp_template": "NonExistent"})
@@ -255,6 +331,9 @@ class TestConfiguration:
         tab.dsp_combo.setCurrentText("Reverb")
         tab.ui_combo.setCurrentText("Standard")
         tab._module_checkboxes["Inspector"].setChecked(True)
+        tab._module_checkboxes["Moonbase"].setChecked(True)
+        tab._moonbase_license_type.setCurrentText("Subscription")
+        tab._moonbase_grace_period.setValue(21)
 
         config = tab.get_configuration()
 
@@ -276,7 +355,10 @@ class TestValidateAndReset:
         tab.dsp_combo.setCurrentText("Full")
         tab.ui_combo.setCurrentText("Advanced")
         tab._module_checkboxes["Moonbase"].setChecked(True)
-        tab._modules_toggle.setChecked(True)
+        tab._modules_expander.set_expanded(True)
+        tab._moonbase_license_type.setCurrentText("Subscription")
+        tab._moonbase_grace_period.setValue(25)
+        tab._preset_storage_expander.set_expanded(True)
 
         tab.reset()
 
@@ -284,8 +366,12 @@ class TestValidateAndReset:
         assert tab.ui_combo.currentText() == "Minimal"
         for cb in tab._module_checkboxes.values():
             assert not cb.isChecked()
-        assert not tab._modules_toggle.isChecked()
-        assert not tab._modules_body.isVisible()
+        assert tab._moonbase_license_type.currentText() == _DEFAULT_MOONBASE_LICENSE
+        assert tab._moonbase_grace_period.value() == _DEFAULT_GRACE_PERIOD_DAYS
+        assert tab._preset_format.currentText() == _DEFAULT_PRESET_FORMAT
+        assert tab._preset_storage.currentText() == _DEFAULT_PRESET_STORAGE
+        assert not tab._modules_expander.is_expanded
+        assert all(not expander.is_expanded for expander in tab._module_expanders.values())
 
     def test_reset_repopulates_file_tree(self, tab):
         tab.dsp_combo.setCurrentText("Full")
