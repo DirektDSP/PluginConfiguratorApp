@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, Signal, Slot
+from PySide6.QtCore import QByteArray, QEasingCurve, QPropertyAnimation, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 SUBTEXT_COLOR = "#666"
-_MAXIMUM_HEIGHT_PROPERTY = b"maximumHeight"
+_MAXIMUM_HEIGHT_PROPERTY = QByteArray(b"maximumHeight")
 
 
 class AccordionExpander(QWidget):

@@ -13,7 +13,7 @@ class TabSignals(QObject):
     validation_changed = Signal(bool)
 
 
-class BaseTabMeta(type(QWidget), ABCMeta):
+class BaseTabMeta(type(QWidget), ABCMeta):  # type: ignore[misc]
     """Metaclass that combines QWidget and ABC metaclasses."""
 
     pass

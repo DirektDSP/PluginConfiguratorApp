@@ -1,6 +1,13 @@
 """Project info tab with metadata form and live file tree preview."""
 
-from PySide6.QtCore import QEasingCurve, QParallelAnimationGroup, QPropertyAnimation, Qt, Slot
+from PySide6.QtCore import (
+    QByteArray,
+    QEasingCurve,
+    QParallelAnimationGroup,
+    QPropertyAnimation,
+    Qt,
+    Slot,
+)
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -781,13 +788,13 @@ class ProjectInfoTab(BaseTab):
         start_height = current_height if current_height > 0 else 0
         end_height = target_height if should_show else 0
 
-        height_anim = QPropertyAnimation(widget, b"maximumHeight", self)
+        height_anim = QPropertyAnimation(widget, QByteArray(b"maximumHeight"), self)
         height_anim.setDuration(self._ANIMATION_MS)
         height_anim.setStartValue(start_height)
         height_anim.setEndValue(end_height)
         height_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
-        opacity_anim = QPropertyAnimation(effect, b"opacity", self)
+        opacity_anim = QPropertyAnimation(effect, QByteArray(b"opacity"), self)
         opacity_anim.setDuration(self._ANIMATION_MS)
         opacity_anim.setStartValue(effect.opacity())
         opacity_anim.setEndValue(1.0 if should_show else 0.0)
