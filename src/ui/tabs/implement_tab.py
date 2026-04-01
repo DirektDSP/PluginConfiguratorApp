@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.base_tab import BaseTab
+from core.gui_components import get_components_grouped
 from ui.components import SUBTEXT_COLOR, AccordionExpander
 
 # ---------------------------------------------------------------------------
@@ -247,9 +248,19 @@ class ImplementTab(BaseTab):
         self.ui_features.setWordWrap(True)
         self.ui_features.setStyleSheet(f"color: {SUBTEXT_COLOR}; font-size: 11px;")
 
+        self.ui_components_label = QLabel("DirektDSP_GUI Components:")
+        self.ui_components_label.setStyleSheet("font-weight: bold; margin-top: 6px;")
+
+        self.ui_components_list = QLabel(self._format_components("Minimal"))
+        self.ui_components_list.setWordWrap(True)
+        self.ui_components_list.setStyleSheet(f"color: {SUBTEXT_COLOR}; font-size: 11px;")
+        self.ui_components_list.setTextFormat(Qt.TextFormat.RichText)
+
         ui_form.addRow("Template:", self.ui_combo)
         ui_form.addRow("", self.ui_description)
         ui_form.addRow("", self.ui_features)
+        ui_form.addRow("", self.ui_components_label)
+        ui_form.addRow("", self.ui_components_list)
         ui_group.setLayout(ui_form)
 
         # -- Modules accordion --
@@ -444,6 +455,19 @@ class ImplementTab(BaseTab):
             return ""
         return "\n".join(f"\u2713  {f}" for f in features)
 
+    @staticmethod
+    def _format_components(template_name: str) -> str:
+        """Format DirektDSP_GUI components as an HTML list grouped by category."""
+        grouped = get_components_grouped(template_name)
+        if not grouped:
+            return ""
+        lines: list[str] = []
+        for category, components in grouped.items():
+            lines.append(f"<b>{category}/</b>")
+            for comp in components:
+                lines.append(f"&nbsp;&nbsp;\u2713 {comp.name} — <i>{comp.description}</i>")
+        return "<br>".join(lines)
+
     @Slot(str)
     def _on_dsp_changed(self, text: str):
         """Update DSP description label and refresh file tree."""
@@ -458,6 +482,7 @@ class ImplementTab(BaseTab):
         info = _UI_TEMPLATES.get(text, {})
         self.ui_description.setText(info.get("description", ""))
         self.ui_features.setText(self._format_features(info))
+        self.ui_components_list.setText(self._format_components(text))
         self._on_config_changed()
 
     @Slot(bool)

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.base_tab import BaseTab
+from core.gui_components import get_components_grouped
 
 
 class ImplementationsTab(BaseTab):
@@ -71,6 +72,11 @@ class ImplementationsTab(BaseTab):
         self.custom_gui = QCheckBox("Custom GUI Framework")
         self.custom_gui.setToolTip("Implements a custom GUI framework with additional components")
         implementations_layout.addWidget(self.custom_gui)
+
+        # DirektDSP_GUI component panel (shown when Custom GUI is checked)
+        self.gui_components_panel = self._build_gui_components_panel()
+        self.gui_components_panel.setVisible(False)
+        implementations_layout.addWidget(self.gui_components_panel)
 
         self.logging_framework = QCheckBox("Logging Framework")
         self.logging_framework.setToolTip(
@@ -171,6 +177,7 @@ class ImplementationsTab(BaseTab):
         """Connect signals to slots"""
         # Connect checkboxes to update their dependent widgets
         self.preset_management.toggled.connect(self.update_dependent_widgets)
+        self.custom_gui.toggled.connect(self.gui_components_panel.setVisible)
 
         # Connect all implementation checkboxes to emit signal
         implementations = [
@@ -191,6 +198,9 @@ class ImplementationsTab(BaseTab):
     @Slot()
     def update_dependent_widgets(self):
         """Enable/disable dependent widgets based on checkbox states"""
+        # GUI components panel
+        self.gui_components_panel.setVisible(self.custom_gui.isChecked())
+
         # Preset options
         for i in range(self.preset_options_layout.rowCount()):
             label_item = self.preset_options_layout.itemAt(i, QFormLayout.ItemRole.LabelRole)
@@ -198,6 +208,47 @@ class ImplementationsTab(BaseTab):
             if label_item and field_item:
                 label_item.widget().setEnabled(self.preset_management.isChecked())
                 field_item.widget().setEnabled(self.preset_management.isChecked())
+
+    @staticmethod
+    def _build_gui_components_panel() -> QWidget:
+        """Build a styled panel showing DirektDSP_GUI components by category."""
+        grouped = get_components_grouped("Advanced")  # Full catalogue
+
+        container = QWidget()
+        container.setContentsMargins(20, 4, 0, 8)
+        outer = QVBoxLayout(container)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(6)
+
+        header = QLabel("Included DirektDSP_GUI Components:")
+        header.setStyleSheet("font-weight: bold; font-size: 12px; margin-bottom: 2px;")
+        outer.addWidget(header)
+
+        for category, components in grouped.items():
+            cat_label = QLabel(f"{category}/")
+            cat_label.setStyleSheet(
+                "font-weight: bold; font-size: 11px; color: #aaa; margin-top: 4px;"
+            )
+            outer.addWidget(cat_label)
+
+            for comp in components:
+                row = QHBoxLayout()
+                row.setContentsMargins(12, 0, 0, 0)
+                row.setSpacing(6)
+
+                name = QLabel(f"\u2713 {comp.name}")
+                name.setStyleSheet("font-size: 11px; color: #ccc;")
+                name.setFixedWidth(200)
+
+                desc = QLabel(comp.description)
+                desc.setStyleSheet("font-size: 11px; color: #888; font-style: italic;")
+
+                row.addWidget(name)
+                row.addWidget(desc)
+                row.addStretch()
+                outer.addLayout(row)
+
+        return container
 
     @Slot()
     def emit_implementations_changed(self):
