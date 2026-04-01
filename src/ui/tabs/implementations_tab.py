@@ -73,13 +73,8 @@ class ImplementationsTab(BaseTab):
         self.custom_gui.setToolTip("Implements a custom GUI framework with additional components")
         implementations_layout.addWidget(self.custom_gui)
 
-        # DirektDSP_GUI component description panel (shown when Custom GUI is checked)
-        self.gui_components_panel = QLabel()
-        self.gui_components_panel.setWordWrap(True)
-        self.gui_components_panel.setTextFormat(self.gui_components_panel.TextFormat.RichText)
-        self.gui_components_panel.setContentsMargins(20, 4, 0, 4)
-        self.gui_components_panel.setStyleSheet("color: #999; font-size: 12px;")
-        self.gui_components_panel.setText(self._format_gui_components())
+        # DirektDSP_GUI component panel (shown when Custom GUI is checked)
+        self.gui_components_panel = self._build_gui_components_panel()
         self.gui_components_panel.setVisible(False)
         implementations_layout.addWidget(self.gui_components_panel)
 
@@ -215,17 +210,45 @@ class ImplementationsTab(BaseTab):
                 field_item.widget().setEnabled(self.preset_management.isChecked())
 
     @staticmethod
-    def _format_gui_components() -> str:
-        """Format all DirektDSP_GUI components as HTML grouped by category."""
-        grouped = get_components_grouped("Advanced")  # Show full catalogue
-        if not grouped:
-            return ""
-        lines: list[str] = []
+    def _build_gui_components_panel() -> QWidget:
+        """Build a styled panel showing DirektDSP_GUI components by category."""
+        grouped = get_components_grouped("Advanced")  # Full catalogue
+
+        container = QWidget()
+        container.setContentsMargins(20, 4, 0, 8)
+        outer = QVBoxLayout(container)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(6)
+
+        header = QLabel("Included DirektDSP_GUI Components:")
+        header.setStyleSheet("font-weight: bold; font-size: 12px; margin-bottom: 2px;")
+        outer.addWidget(header)
+
         for category, components in grouped.items():
-            lines.append(f"<b>{category}/</b>")
+            cat_label = QLabel(f"{category}/")
+            cat_label.setStyleSheet(
+                "font-weight: bold; font-size: 11px; color: #aaa; margin-top: 4px;"
+            )
+            outer.addWidget(cat_label)
+
             for comp in components:
-                lines.append(f"&nbsp;&nbsp;\u2713 {comp.name} \u2014 <i>{comp.description}</i>")
-        return "<br>".join(lines)
+                row = QHBoxLayout()
+                row.setContentsMargins(12, 0, 0, 0)
+                row.setSpacing(6)
+
+                name = QLabel(f"\u2713 {comp.name}")
+                name.setStyleSheet("font-size: 11px; color: #ccc;")
+                name.setFixedWidth(200)
+
+                desc = QLabel(comp.description)
+                desc.setStyleSheet("font-size: 11px; color: #888; font-style: italic;")
+
+                row.addWidget(name)
+                row.addWidget(desc)
+                row.addStretch()
+                outer.addLayout(row)
+
+        return container
 
     @Slot()
     def emit_implementations_changed(self):
