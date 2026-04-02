@@ -119,28 +119,27 @@ class TestPresetManagementDialogInit:
     def test_preset_list_is_present(self, dialog):
         assert dialog._preset_list is not None
 
-    def test_delete_button_disabled_initially_without_presets(self, app, preset_dir):
+    def test_delete_button_disabled_initially_without_presets(self, app, preset_dir, monkeypatch):
         """When there are no presets the delete button must be disabled."""
-        # Use an empty preset_dir (no bundled presets to avoid pre-population)
         empty_dir = preset_dir / "empty"
         empty_dir.mkdir(parents=True, exist_ok=True)
         cfg = ConfigManager.__new__(ConfigManager)
         cfg.preset_dir = empty_dir
         cfg.example_presets_dir = Path("/nonexistent")
         cfg.preset_dir.mkdir(parents=True, exist_ok=True)
-        cfg._install_bundled_presets = lambda: None  # type: ignore[method-assign]
+        monkeypatch.setattr(cfg, "_install_bundled_presets", lambda: None)
         dlg = PresetManagementDialog(cfg)
         assert not dlg._delete_btn.isEnabled()
         dlg.deleteLater()
 
-    def test_export_button_disabled_initially_without_presets(self, app, preset_dir):
+    def test_export_button_disabled_initially_without_presets(self, app, preset_dir, monkeypatch):
         """When there are no presets the export button must be disabled."""
         empty_dir = preset_dir / "empty2"
         empty_dir.mkdir(parents=True, exist_ok=True)
         cfg = ConfigManager.__new__(ConfigManager)
         cfg.preset_dir = empty_dir
         cfg.example_presets_dir = Path("/nonexistent")
-        cfg._install_bundled_presets = lambda: None  # type: ignore[method-assign]
+        monkeypatch.setattr(cfg, "_install_bundled_presets", lambda: None)
         dlg = PresetManagementDialog(cfg)
         assert not dlg._export_btn.isEnabled()
         dlg.deleteLater()
