@@ -12,7 +12,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.config_manager import ConfigManager
 from ui.components import FileTreePreview
+from ui.dialogs import PresetManagementDialog
 from ui.tabs.configuration_tab import ConfigurationTab
 from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
 from ui.tabs.generate_tab import GenerateTab
@@ -30,6 +32,7 @@ class MainWindow(QMainWindow):
     def __init__(self, theme_manager=None, parent=None):
         super().__init__(parent)
         self.theme_manager = theme_manager
+        self._config_manager = ConfigManager()
         self.setup_ui()
         self.setup_menu()
         self.setup_statusbar()
@@ -120,6 +123,10 @@ class MainWindow(QMainWindow):
         save_preset_action.setShortcut("Ctrl+S")
         save_preset_action.triggered.connect(self.save_current_as_preset)
 
+        manage_presets_action = QAction("&Manage Presets…", self)
+        manage_presets_action.setShortcut("Ctrl+M")
+        manage_presets_action.triggered.connect(self.show_preset_management)
+
         generate_action = QAction("&Generate Project", self)
         generate_action.setShortcut("Ctrl+G")
         generate_action.triggered.connect(self.generate_project)
@@ -131,6 +138,7 @@ class MainWindow(QMainWindow):
         # Add actions to file menu
         file_menu.addAction(new_action)
         file_menu.addAction(save_preset_action)
+        file_menu.addAction(manage_presets_action)
         file_menu.addAction(generate_action)
         file_menu.addSeparator()
         file_menu.addAction(exit_action)
@@ -204,6 +212,12 @@ class MainWindow(QMainWindow):
         """Save current configuration as a preset"""
         self.collect_configuration()
         self.status_bar.showMessage("Preset saved")
+
+    @Slot()
+    def show_preset_management(self):
+        """Open the preset management dialog."""
+        dialog = PresetManagementDialog(self._config_manager, parent=self)
+        dialog.exec()
 
     @Slot()
     def generate_project(self):
