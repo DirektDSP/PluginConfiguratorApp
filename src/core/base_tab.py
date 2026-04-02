@@ -3,7 +3,7 @@
 from abc import ABC, ABCMeta, abstractmethod
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QLineEdit, QScrollArea, QWidget
 
 
 class TabSignals(QObject):
@@ -98,6 +98,49 @@ class BaseTab(QWidget, ABC, metaclass=BaseTabMeta):
         """Reset the tab to its default state"""
         pass
 
+    def get_required_fields(self) -> list:
+        """Return a list of (widget, label) pairs for required fields.
+
+        Subclasses should override this to describe which fields are required.
+        The default implementation returns an empty list (no required fields).
+
+        Returns:
+            list[tuple[QWidget, str]]: Each tuple contains the widget and its
+            human-readable label, e.g. ``(self.project_name, "Project Name")``.
+        """
+        return []
+
+    def get_invalid_field_count(self) -> int:
+        """Return the number of required fields that are currently incomplete.
+
+        The base implementation counts QLineEdit widgets whose text is empty
+        after stripping whitespace.  Subclasses may override this for custom
+        validation logic (e.g. checkbox groups, spin-box ranges).
+
+        Returns:
+            int: Number of unfilled / invalid required fields.
+        """
+        count = 0
+        for widget, _label in self.get_required_fields():
+            if isinstance(widget, QLineEdit) and not widget.text().strip():
+                count += 1
+        return count
+
+    def focus_first_invalid(self):
+        """Scroll to and focus the first invalid required field.
+
+        The base implementation iterates ``get_required_fields()`` and focuses
+        the first QLineEdit that is empty.  Subclasses may override this to
+        handle non-text widgets or custom scroll areas.
+        """
+        for widget, _label in self.get_required_fields():
+            if isinstance(widget, QLineEdit) and not widget.text().strip():
+                widget.setFocus()
+                widget.ensurePolished()
+                # Scroll into view if the field is inside a QScrollArea
+                _scroll_into_view(widget)
+                return
+
     def _emit_validation_changed(self, is_valid):
         """Emit validation changed signal if state changed
 
@@ -126,3 +169,13 @@ class BaseTab(QWidget, ABC, metaclass=BaseTabMeta):
             dict: The last configuration that was emitted via config_changed
         """
         return self._config.copy() if self._config else {}
+
+
+def _scroll_into_view(widget: QWidget) -> None:
+    """Walk up the widget tree and scroll ``widget`` into view in any QScrollArea."""
+    parent = widget.parent()
+    while parent is not None:
+        if isinstance(parent, QScrollArea):
+            parent.ensureWidgetVisible(widget)
+            return
+        parent = parent.parent() if hasattr(parent, "parent") else None

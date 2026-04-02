@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from core.base_tab import BaseTab
 from core.gui_components import get_components_grouped
+from ui.components.validation_footer import ValidationFooter
 
 
 class ImplementationsTab(BaseTab):
@@ -145,6 +146,11 @@ class ImplementationsTab(BaseTab):
         # Set the content widget to the scroll area
         self.scroll_area.setWidget(self.content_widget)
         self.main_layout.addWidget(self.scroll_area)
+
+        # Validation footer (always ready - no required fields)
+        self.validation_footer = ValidationFooter(self)
+        self.validation_footer.set_ready()
+        self.main_layout.addWidget(self.validation_footer)
 
         # Initialize UI states
         self.update_dependent_widgets()

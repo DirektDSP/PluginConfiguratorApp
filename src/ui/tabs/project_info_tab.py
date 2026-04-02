@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 from core.base_tab import BaseTab
 from core.config_manager import ConfigurationManager
 from core.utils import generate_plugin_id
+from ui.components.validation_footer import ValidationFooter
 from core.validators import (
     validate_bundle_id,
     validate_company_name,
@@ -352,6 +353,10 @@ class ProjectInfoTab(BaseTab):
         # Add splitter to main layout
         self.main_layout.addWidget(self.splitter)
 
+        # Validation footer - shows required-field count and allows jump-to-fix
+        self.validation_footer = ValidationFooter(self)
+        self.main_layout.addWidget(self.validation_footer)
+
     def setup_connections(self):
         """Connect signals to slots"""
         self.project_name.textChanged.connect(self.update_from_project_name)
@@ -380,8 +385,13 @@ class ProjectInfoTab(BaseTab):
         for widget in text_widgets:
             widget.textChanged.connect(self._on_form_field_changed)
             widget.textChanged.connect(self._update_quick_start_button_state)
+            widget.textChanged.connect(self._update_validation_footer)
         self._update_quick_start_button_state()
         self._update_plugin_type_sections()
+        # Connect footer's fix_requested to focus the first invalid field
+        self.validation_footer.fix_requested.connect(self.focus_first_invalid)
+        # Set initial footer state
+        self._update_validation_footer()
         self._wire_field_validators()
 
     def _wire_field_validators(self):
@@ -711,6 +721,55 @@ class ProjectInfoTab(BaseTab):
             self.generate_plugin_code()
 
         return True
+
+    def get_required_fields(self) -> list:
+        """Return (widget, label) pairs for all required text fields."""
+        return [
+            (self.project_name, "Project Name"),
+            (self.product_name, "Product Name"),
+            (self.company_name, "Company Name"),
+            (self.bundle_id, "Bundle ID"),
+            (self.manufacturer_code, "Manufacturer Code"),
+            (self.output_directory, "Output Directory"),
+        ]
+
+    def get_invalid_field_count(self) -> int:
+        """Count required fields that are empty or otherwise invalid."""
+        count = 0
+        for widget, _label in self.get_required_fields():
+            if not widget.text().strip():
+                count += 1
+        # Manufacturer code also requires exactly 4 characters
+        if not self._is_manufacturer_code_valid():
+            count += 1
+        return count
+
+    def focus_first_invalid(self):
+        """Scroll to and focus the first empty required field."""
+        for widget, _label in self.get_required_fields():
+            if not widget.text().strip():
+                widget.setFocus()
+                self.form_scroll.ensureWidgetVisible(widget)
+                return
+        # If all fields filled but manufacturer code length is wrong, focus it
+        if not self._is_manufacturer_code_valid():
+            self.manufacturer_code.setFocus()
+            self.form_scroll.ensureWidgetVisible(self.manufacturer_code)
+
+    def _is_manufacturer_code_valid(self) -> bool:
+        """Return True only if the manufacturer code is exactly 4 non-empty characters."""
+        code = self.manufacturer_code.text().strip()
+        # An empty code is caught by the required-field check, not here
+        return not code or len(code) == 4
+
+    @Slot()
+    def _update_validation_footer(self, _text=None):
+        """Refresh the validation footer to reflect the current field state."""
+        remaining = self.get_invalid_field_count()
+        if remaining == 0:
+            self.validation_footer.set_ready()
+        else:
+            self.validation_footer.set_errors(remaining)
 
     def reset(self):
         """Reset form to default values"""

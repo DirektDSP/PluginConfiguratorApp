@@ -3,6 +3,7 @@
 from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QVBoxLayout
 
 from core.base_tab import BaseTab
+from ui.components.validation_footer import ValidationFooter
 
 
 class UserExperienceTab(BaseTab):
@@ -27,6 +28,11 @@ class UserExperienceTab(BaseTab):
         self.group.setLayout(form)
         self.main_layout.addWidget(self.group)
         self.main_layout.addStretch()
+
+        # Validation footer (always ready - no required fields)
+        self.validation_footer = ValidationFooter(self)
+        self.validation_footer.set_ready()
+        self.main_layout.addWidget(self.validation_footer)
 
     def setup_connections(self):
         """Connect signals to slots"""
