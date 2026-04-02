@@ -84,3 +84,45 @@ class TestFileTreeUpdates:
         child_labels = [fx_node.child(i).text(0) for i in range(fx_node.childCount())]
         assert any("SidechainInput" in name for name in child_labels)
         assert any("Latency_15ms" in name for name in child_labels)
+
+
+class TestProjectInfoTabValidationIssues:
+    def test_get_validation_issues_returns_list(self, tab):
+        issues = tab.get_validation_issues()
+        assert isinstance(issues, list)
+
+    def test_get_validation_issues_empty_when_all_fields_filled(self, tab):
+        tab.project_name.setText("MyPlugin")
+        tab.product_name.setText("My Plugin")
+        tab.company_name.setText("Acme Corp")
+        tab.bundle_id.setText("com.acme.myplugin")
+        tab.manufacturer_code.setText("Acme")
+        tab.output_directory.setText("/tmp/output")
+        assert tab.get_validation_issues() == []
+
+    def test_get_validation_issues_reports_missing_project_name(self, tab):
+        tab.project_name.clear()
+        tab.product_name.setText("My Plugin")
+        tab.company_name.setText("Acme")
+        tab.bundle_id.setText("com.acme")
+        tab.manufacturer_code.setText("Acme")
+        tab.output_directory.setText("/tmp")
+        issues = tab.get_validation_issues()
+        assert any("Project Name" in i for i in issues)
+
+    def test_get_validation_issues_reports_bad_manufacturer_code(self, tab):
+        tab.project_name.setText("MyPlugin")
+        tab.product_name.setText("My Plugin")
+        tab.company_name.setText("Acme")
+        tab.bundle_id.setText("com.acme")
+        tab.manufacturer_code.setText("AB")  # too short
+        tab.output_directory.setText("/tmp")
+        issues = tab.get_validation_issues()
+        assert any("Manufacturer Code" in i for i in issues)
+
+    def test_get_validation_issues_does_not_show_dialogs(self, tab):
+        """Silent validation must never open a QMessageBox."""
+        tab.project_name.clear()
+        # Should not raise or block — just return issues
+        issues = tab.get_validation_issues()
+        assert isinstance(issues, list)

@@ -155,6 +155,12 @@ class ConfigurationTab(BaseTab):
             or self.clap_cb.isChecked()
         )
 
+    def get_validation_issues(self) -> list[str]:
+        """Return a list of validation issues without showing any dialog boxes."""
+        if not self.validate():
+            return ["Configuration: At least one plugin format must be selected"]
+        return []
+
     def reset(self):
         self.standalone_cb.setChecked(False)
         self.vst3_cb.setChecked(True)

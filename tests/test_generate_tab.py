@@ -290,3 +290,36 @@ class TestGenerateTabButton:
     def test_generate_button_tooltip_mentions_configuration(self, generate_tab):
         tooltip = generate_tab._generate_button.toolTip()
         assert "configuration" in tooltip.lower() or "generate" in tooltip.lower()
+
+
+class TestGenerateTabGlobalValidation:
+    def test_set_global_validation_disables_button_when_invalid(self, generate_tab):
+        generate_tab.set_global_validation(False, ["Project Info: Project Name is required"])
+        assert not generate_tab._generate_button.isEnabled()
+
+    def test_set_global_validation_enables_button_when_valid(self, generate_tab):
+        generate_tab.set_global_validation(False, ["some issue"])
+        generate_tab.set_global_validation(True, [])
+        assert generate_tab._generate_button.isEnabled()
+
+    def test_set_global_validation_tooltip_lists_issues_when_invalid(self, generate_tab):
+        issues = ["Project Info: Project Name is required", "Configuration: Select a format"]
+        generate_tab.set_global_validation(False, issues)
+        tooltip = generate_tab._generate_button.toolTip()
+        assert "Project Name" in tooltip
+        assert "Select a format" in tooltip
+
+    def test_set_global_validation_tooltip_contains_bullet_points(self, generate_tab):
+        generate_tab.set_global_validation(False, ["Issue one", "Issue two"])
+        tooltip = generate_tab._generate_button.toolTip()
+        assert "•" in tooltip
+
+    def test_set_global_validation_tooltip_restored_when_valid(self, generate_tab):
+        generate_tab.set_global_validation(False, ["some issue"])
+        generate_tab.set_global_validation(True, [])
+        tooltip = generate_tab._generate_button.toolTip()
+        assert "Generate" in tooltip or "generate" in tooltip.lower()
+
+    def test_set_global_validation_empty_issues_enables_button(self, generate_tab):
+        generate_tab.set_global_validation(True, [])
+        assert generate_tab._generate_button.isEnabled()

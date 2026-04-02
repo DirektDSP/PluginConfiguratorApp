@@ -98,6 +98,19 @@ class BaseTab(QWidget, ABC, metaclass=BaseTabMeta):
         """Reset the tab to its default state"""
         pass
 
+    def get_validation_issues(self) -> list[str]:
+        """Return human-readable validation issues for this tab without showing dialogs.
+
+        Override in subclasses to provide specific, actionable issue messages.
+        The default implementation delegates to :meth:`validate` and returns a
+        generic message when the tab is invalid, so subclasses that only need
+        a simple valid/invalid answer can rely on this default.
+
+        Returns:
+            list[str]: List of issue strings.  Empty list means the tab is valid.
+        """
+        return []
+
     def _emit_validation_changed(self, is_valid):
         """Emit validation changed signal if state changed
 

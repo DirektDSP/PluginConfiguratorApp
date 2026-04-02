@@ -189,6 +189,29 @@ class GenerateTab(BaseTab):
         self._full_config = config.copy()
         self._refresh_summary()
 
+    def set_global_validation(self, is_valid: bool, issues: list[str]) -> None:
+        """Update the Generate button state and tooltip based on global validation.
+
+        Called by MainWindow whenever the aggregated validation status changes,
+        allowing the button to be disabled and its tooltip to list all outstanding
+        issues so the user knows exactly what needs to be fixed.
+
+        Args:
+            is_valid: True when all configuration tabs are valid.
+            issues:   Human-readable issue strings collected from each tab.
+        """
+        self._generate_button.setEnabled(is_valid)
+        if is_valid:
+            self._generate_button.setToolTip(
+                "Generate the plugin project based on the current configuration.\n"
+                "Metadata fields and at least one plugin format must be filled in."
+            )
+        else:
+            issues_text = "\n".join(f"• {issue}" for issue in issues)
+            self._generate_button.setToolTip(
+                f"Cannot generate — fix the following issues first:\n{issues_text}"
+            )
+
     # ------------------------------------------------------------------ #
     # Private helpers                                                      #
     # ------------------------------------------------------------------ #
