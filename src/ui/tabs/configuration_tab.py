@@ -110,13 +110,13 @@ class ConfigurationTab(BaseTab):
             self.out_gain_cb,
         ]
         for cb in format_checkboxes:
-            cb.toggled.connect(lambda _: self._emit_config_changed())
+            cb.toggled.connect(lambda checked: self._emit_config_changed())
             cb.toggled.connect(self._update_validation_footer)
         for cb in other_checkboxes:
-            cb.toggled.connect(lambda _: self._emit_config_changed())
-        self.gui_width.valueChanged.connect(lambda _: self._emit_config_changed())
-        self.gui_height.valueChanged.connect(lambda _: self._emit_config_changed())
-        self.bg_image.textChanged.connect(lambda _: self._emit_config_changed())
+            cb.toggled.connect(lambda checked: self._emit_config_changed())
+        self.gui_width.valueChanged.connect(lambda value: self._emit_config_changed())
+        self.gui_height.valueChanged.connect(lambda value: self._emit_config_changed())
+        self.bg_image.textChanged.connect(lambda text: self._emit_config_changed())
         self.validation_footer.fix_requested.connect(self._focus_first_invalid_format)
         self._update_validation_footer()
 

@@ -671,10 +671,7 @@ class ProjectInfoTab(BaseTab):
             if not widget.text().strip():
                 count += 1
         # Manufacturer code also requires exactly 4 characters
-        if (
-            self.manufacturer_code.text().strip()
-            and len(self.manufacturer_code.text().strip()) != 4
-        ):
+        if not self._is_manufacturer_code_valid():
             count += 1
         return count
 
@@ -686,9 +683,15 @@ class ProjectInfoTab(BaseTab):
                 self.form_scroll.ensureWidgetVisible(widget)
                 return
         # If all fields filled but manufacturer code length is wrong, focus it
-        if len(self.manufacturer_code.text().strip()) != 4:
+        if not self._is_manufacturer_code_valid():
             self.manufacturer_code.setFocus()
             self.form_scroll.ensureWidgetVisible(self.manufacturer_code)
+
+    def _is_manufacturer_code_valid(self) -> bool:
+        """Return True only if the manufacturer code is exactly 4 non-empty characters."""
+        code = self.manufacturer_code.text().strip()
+        # An empty code is caught by the required-field check, not here
+        return not code or len(code) == 4
 
     @Slot()
     def _update_validation_footer(self, _text=None):
