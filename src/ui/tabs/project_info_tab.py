@@ -35,6 +35,28 @@ from core.base_tab import BaseTab
 from core.config_manager import ConfigurationManager
 from core.utils import generate_plugin_id
 from ui.components.validation_footer import ValidationFooter
+from core.validators import (
+    validate_bundle_id,
+    validate_company_name,
+    validate_manufacturer_code,
+    validate_output_directory,
+    validate_plugin_code,
+    validate_product_name,
+    validate_project_name,
+    validate_version,
+)
+from ui.components.field_validator import FieldValidator, make_error_label
+
+
+def _wrap_with_error(field, error_label):
+    """Return a QWidget container holding *field* above *error_label*."""
+    container = QWidget()
+    layout = QVBoxLayout(container)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(2)
+    layout.addWidget(field)
+    layout.addWidget(error_label)
+    return container
 
 
 class ProjectInfoTab(BaseTab):
@@ -171,18 +193,21 @@ class ProjectInfoTab(BaseTab):
         # Project name field
         self.project_name = QLineEdit()
         self.project_name.setPlaceholderText("No spaces, only letters and numbers")
-        self.project_layout.addRow("Project Name:", self.project_name)
+        self._project_name_error = make_error_label()
+        self.project_layout.addRow("Project Name:", _wrap_with_error(self.project_name, self._project_name_error))
 
         # Product name field
         self.product_name = QLineEdit()
         self.product_name.setPlaceholderText("Display name in DAWs")
-        self.project_layout.addRow("Product Name:", self.product_name)
+        self._product_name_error = make_error_label()
+        self.project_layout.addRow("Product Name:", _wrap_with_error(self.product_name, self._product_name_error))
 
         # Version field
         self.version = QLineEdit()
         self.version.setPlaceholderText("1.0.0")
         self.version.setText("1.0.0")
-        self.project_layout.addRow("Version:", self.version)
+        self._version_error = make_error_label()
+        self.project_layout.addRow("Version:", _wrap_with_error(self.version, self._version_error))
 
         self.project_group.setLayout(self.project_layout)
 
@@ -197,19 +222,22 @@ class ProjectInfoTab(BaseTab):
         self.company_name = QLineEdit()
         self.company_name.setPlaceholderText("Your Company Name")
         self.company_name.setText("DirektDSP")
-        self.company_layout.addRow("Company Name:", self.company_name)
+        self._company_name_error = make_error_label()
+        self.company_layout.addRow("Company Name:", _wrap_with_error(self.company_name, self._company_name_error))
 
         # Bundle ID field
         self.bundle_id = QLineEdit()
         self.bundle_id.setPlaceholderText("com.yourcompany.pluginname")
-        self.company_layout.addRow("Bundle ID:", self.bundle_id)
+        self._bundle_id_error = make_error_label()
+        self.company_layout.addRow("Bundle ID:", _wrap_with_error(self.bundle_id, self._bundle_id_error))
 
         # Manufacturer code field
         self.manufacturer_code = QLineEdit()
         self.manufacturer_code.setPlaceholderText("Four character code")
-        self.manufacturer_code.setText("NewCode")
+        self.manufacturer_code.setText("Ddsp")
         self.manufacturer_code.setMaxLength(4)
-        self.company_layout.addRow("Manufacturer Code:", self.manufacturer_code)
+        self._manufacturer_code_error = make_error_label()
+        self.company_layout.addRow("Manufacturer Code:", _wrap_with_error(self.manufacturer_code, self._manufacturer_code_error))
 
         # Plugin code field with generate button
         plugin_code_layout = QHBoxLayout()
@@ -219,7 +247,14 @@ class ProjectInfoTab(BaseTab):
         self.generate_code_button = QPushButton("Generate")
         plugin_code_layout.addWidget(self.plugin_code)
         plugin_code_layout.addWidget(self.generate_code_button)
-        self.company_layout.addRow("Plugin Code:", plugin_code_layout)
+        self._plugin_code_error = make_error_label()
+        plugin_code_container = QWidget()
+        plugin_code_container_layout = QVBoxLayout(plugin_code_container)
+        plugin_code_container_layout.setContentsMargins(0, 0, 0, 0)
+        plugin_code_container_layout.setSpacing(2)
+        plugin_code_container_layout.addLayout(plugin_code_layout)
+        plugin_code_container_layout.addWidget(self._plugin_code_error)
+        self.company_layout.addRow("Plugin Code:", plugin_code_container)
 
         self.company_group.setLayout(self.company_layout)
 
@@ -235,7 +270,14 @@ class ProjectInfoTab(BaseTab):
         self.browse_button = QPushButton("Browse...")
         self.output_dir_layout.addWidget(self.output_directory)
         self.output_dir_layout.addWidget(self.browse_button)
-        self.output_layout.addRow("Output Directory:", self.output_dir_layout)
+        self._output_directory_error = make_error_label()
+        output_dir_container = QWidget()
+        output_dir_container_layout = QVBoxLayout(output_dir_container)
+        output_dir_container_layout.setContentsMargins(0, 0, 0, 0)
+        output_dir_container_layout.setSpacing(2)
+        output_dir_container_layout.addLayout(self.output_dir_layout)
+        output_dir_container_layout.addWidget(self._output_directory_error)
+        self.output_layout.addRow("Output Directory:", output_dir_container)
 
         self.output_group.setLayout(self.output_layout)
 
@@ -350,6 +392,33 @@ class ProjectInfoTab(BaseTab):
         self.validation_footer.fix_requested.connect(self.focus_first_invalid)
         # Set initial footer state
         self._update_validation_footer()
+        self._wire_field_validators()
+
+    def _wire_field_validators(self):
+        """Attach real-time validators with visual feedback to all form fields."""
+        self._field_validators: list[FieldValidator] = [
+            FieldValidator(self.project_name, self._project_name_error, validate_project_name),
+            FieldValidator(self.product_name, self._product_name_error, validate_product_name),
+            FieldValidator(
+                self.version, self._version_error, validate_version, validate_on_empty=True
+            ),
+            FieldValidator(self.company_name, self._company_name_error, validate_company_name),
+            FieldValidator(self.bundle_id, self._bundle_id_error, validate_bundle_id),
+            FieldValidator(
+                self.manufacturer_code,
+                self._manufacturer_code_error,
+                validate_manufacturer_code,
+            ),
+            FieldValidator(self.plugin_code, self._plugin_code_error, validate_plugin_code),
+            FieldValidator(
+                self.output_directory,
+                self._output_directory_error,
+                validate_output_directory,
+            ),
+        ]
+        # Show initial feedback for fields that already have pre-populated values.
+        for fv in self._field_validators:
+            fv.trigger_validation()
 
     @Slot(str)
     def update_from_project_name(self, text):
