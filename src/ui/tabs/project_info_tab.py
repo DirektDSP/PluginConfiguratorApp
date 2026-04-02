@@ -233,7 +233,7 @@ class ProjectInfoTab(BaseTab):
         # Manufacturer code field
         self.manufacturer_code = QLineEdit()
         self.manufacturer_code.setPlaceholderText("Four character code")
-        self.manufacturer_code.setText("NewCode")
+        self.manufacturer_code.setText("Ddsp")
         self.manufacturer_code.setMaxLength(4)
         self._manufacturer_code_error = make_error_label()
         self.company_layout.addRow("Manufacturer Code:", _wrap_with_error(self.manufacturer_code, self._manufacturer_code_error))
@@ -408,7 +408,7 @@ class ProjectInfoTab(BaseTab):
         ]
         # Show initial feedback for fields that already have pre-populated values.
         for fv in self._field_validators:
-            fv._on_text_changed(fv._field.text())
+            fv.trigger_validation()
 
     @Slot(str)
     def update_from_project_name(self, text):

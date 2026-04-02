@@ -98,6 +98,16 @@ class FieldValidator:
     # Public helpers
     # ------------------------------------------------------------------
 
+    def trigger_validation(self) -> bool:
+        """Run validation using the current field text and show feedback.
+
+        Unlike :meth:`revalidate`, this respects the *neutral* state: an
+        untouched empty field is left without feedback unless
+        ``validate_on_empty`` was set to ``True``.
+        """
+        self._on_text_changed(self._field.text())
+        return self.is_valid
+
     def revalidate(self) -> bool:
         """Force a validation run and return whether the field is valid.
 
