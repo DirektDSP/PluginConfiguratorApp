@@ -30,9 +30,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 # Stylesheet templates applied to the QLineEdit
-_STYLE_VALID = (
-    "QLineEdit { border: 1.5px solid #4CAF50; border-radius: 4px; padding-right: 24px; }"
-)
+_STYLE_VALID = "QLineEdit { border: 1.5px solid #4CAF50; border-radius: 4px; padding-right: 24px; }"
 _STYLE_INVALID = (
     "QLineEdit { border: 1.5px solid #F44336; border-radius: 4px; padding-right: 24px; }"
 )

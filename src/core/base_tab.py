@@ -178,4 +178,4 @@ def _scroll_into_view(widget: QWidget) -> None:
         if isinstance(parent, QScrollArea):
             parent.ensureWidgetVisible(widget)
             return
-        parent = parent.parent() if hasattr(parent, "parent") else None
+        parent = parent.parent() if hasattr(parent, "parent") else None  # type: ignore[assignment]

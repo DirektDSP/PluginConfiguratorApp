@@ -377,9 +377,7 @@ class TestImportPreset:
         assert emitted, "presets_changed signal was not emitted"
         dlg.deleteLater()
 
-    def test_import_invalid_file_shows_warning(
-        self, app, config_manager, tmp_path, monkeypatch
-    ):
+    def test_import_invalid_file_shows_warning(self, app, config_manager, tmp_path, monkeypatch):
         bad_file = tmp_path / "bad_preset.xml"
         bad_file.write_text("<not_a_preset/>", encoding="utf-8")
 

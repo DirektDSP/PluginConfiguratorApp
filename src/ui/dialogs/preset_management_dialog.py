@@ -110,9 +110,7 @@ class PresetManagementDialog(QDialog):
         file_header = QLabel("<b>File</b>")
         self._file_label = QLabel("—")
         self._file_label.setWordWrap(True)
-        self._file_label.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByMouse
-        )
+        self._file_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
         metadata_layout.addWidget(name_header)
         metadata_layout.addWidget(self._name_label)
@@ -313,8 +311,7 @@ class PresetManagementDialog(QDialog):
             reply = QMessageBox.question(
                 self,
                 "Overwrite Preset",
-                f'A preset named "{source.stem}" already exists.\n'
-                "Do you want to overwrite it?",
+                f'A preset named "{source.stem}" already exists.\nDo you want to overwrite it?',
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )

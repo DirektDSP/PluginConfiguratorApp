@@ -194,13 +194,17 @@ class ProjectInfoTab(BaseTab):
         self.project_name = QLineEdit()
         self.project_name.setPlaceholderText("No spaces, only letters and numbers")
         self._project_name_error = make_error_label()
-        self.project_layout.addRow("Project Name:", _wrap_with_error(self.project_name, self._project_name_error))
+        self.project_layout.addRow(
+            "Project Name:", _wrap_with_error(self.project_name, self._project_name_error)
+        )
 
         # Product name field
         self.product_name = QLineEdit()
         self.product_name.setPlaceholderText("Display name in DAWs")
         self._product_name_error = make_error_label()
-        self.project_layout.addRow("Product Name:", _wrap_with_error(self.product_name, self._product_name_error))
+        self.project_layout.addRow(
+            "Product Name:", _wrap_with_error(self.product_name, self._product_name_error)
+        )
 
         # Version field
         self.version = QLineEdit()
@@ -223,13 +227,17 @@ class ProjectInfoTab(BaseTab):
         self.company_name.setPlaceholderText("Your Company Name")
         self.company_name.setText("DirektDSP")
         self._company_name_error = make_error_label()
-        self.company_layout.addRow("Company Name:", _wrap_with_error(self.company_name, self._company_name_error))
+        self.company_layout.addRow(
+            "Company Name:", _wrap_with_error(self.company_name, self._company_name_error)
+        )
 
         # Bundle ID field
         self.bundle_id = QLineEdit()
         self.bundle_id.setPlaceholderText("com.yourcompany.pluginname")
         self._bundle_id_error = make_error_label()
-        self.company_layout.addRow("Bundle ID:", _wrap_with_error(self.bundle_id, self._bundle_id_error))
+        self.company_layout.addRow(
+            "Bundle ID:", _wrap_with_error(self.bundle_id, self._bundle_id_error)
+        )
 
         # Manufacturer code field
         self.manufacturer_code = QLineEdit()
@@ -237,7 +245,10 @@ class ProjectInfoTab(BaseTab):
         self.manufacturer_code.setText("Ddsp")
         self.manufacturer_code.setMaxLength(4)
         self._manufacturer_code_error = make_error_label()
-        self.company_layout.addRow("Manufacturer Code:", _wrap_with_error(self.manufacturer_code, self._manufacturer_code_error))
+        self.company_layout.addRow(
+            "Manufacturer Code:",
+            _wrap_with_error(self.manufacturer_code, self._manufacturer_code_error),
+        )
 
         # Plugin code field with generate button
         plugin_code_layout = QHBoxLayout()
