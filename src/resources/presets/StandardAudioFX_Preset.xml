@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<preset name="StandardAudioFX">
+<preset name="StandardAudioFX" schema_version="1.0">
   <meta>
     <description>A balanced audio FX starting point with common plugin formats, logging, and preset management enabled.</description>
   </meta>
@@ -21,6 +21,13 @@
     <au>true</au>
     <auv3>false</auv3>
     <clap>true</clap>
+    <au_component_type>aufx</au_component_type>
+    <au_component_subtype>plug</au_component_subtype>
+    <au_component_manufacturer>Ddsp</au_component_manufacturer>
+    <au_version>1.0.0</au_version>
+    <clap_extensions>note-ports,state</clap_extensions>
+    <clap_features>audio-effect</clap_features>
+    <auv3_platform>iOS</auv3_platform>
     <gui_width>1100</gui_width>
     <gui_height>700</gui_height>
     <resizable>true</resizable>

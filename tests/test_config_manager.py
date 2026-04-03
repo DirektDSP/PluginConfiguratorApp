@@ -398,3 +398,202 @@ class TestConfigManager:
         assert instrument["configuration"]["auv3"] is True
         minimal = config_manager.load_preset("MinimalPlugin_Preset")
         assert minimal["configuration"]["clap"] is False
+
+
+class TestSchemaVersioning:
+    """Tests for schema versioning support in ConfigManager."""
+
+    @pytest.fixture
+    def config_manager(self, tmp_path: Path):
+        return ConfigManager(preset_dir=tmp_path / "presets")
+
+    @pytest.fixture
+    def minimal_preset_xml(self) -> str:
+        """A valid minimal preset XML with schema_version set to 1.0."""
+        return """\
+<?xml version="1.0" encoding="utf-8"?>
+<preset name="VersionTest" schema_version="1.0">
+  <meta><description>Version test</description></meta>
+  <project_info>
+    <template_name>T</template_name>
+    <template_url>https://github.com/example/repo.git</template_url>
+    <project_name>VersionProj</project_name>
+    <product_name>Version Project</product_name>
+    <version>1.0.0</version>
+    <company_name>TestCo</company_name>
+    <bundle_id>com.test.version</bundle_id>
+    <manufacturer_code>TSTV</manufacturer_code>
+    <plugin_code>TSTV</plugin_code>
+    <output_directory>/tmp</output_directory>
+  </project_info>
+  <configuration>
+    <standalone>false</standalone><vst3>true</vst3><au>false</au>
+    <auv3>false</auv3><clap>false</clap>
+    <au_component_type>aufx</au_component_type>
+    <au_component_subtype>plug</au_component_subtype>
+    <au_component_manufacturer>Ddsp</au_component_manufacturer>
+    <au_version>1.0.0</au_version>
+    <clap_extensions>note-ports,state</clap_extensions>
+    <clap_features>audio-effect</clap_features>
+    <auv3_platform>iOS</auv3_platform>
+    <gui_width>800</gui_width><gui_height>500</gui_height>
+    <resizable>false</resizable><background_image></background_image>
+    <code_signing>false</code_signing><installer>false</installer>
+    <default_bypass>false</default_bypass>
+    <input_gain>false</input_gain><output_gain>false</output_gain>
+  </configuration>
+  <implementations>
+    <moonbase_licensing>false</moonbase_licensing>
+    <melatonin_inspector>false</melatonin_inspector>
+    <custom_gui_framework>false</custom_gui_framework>
+    <logging_framework>false</logging_framework>
+    <clap_builds>false</clap_builds>
+    <preset_management>false</preset_management>
+    <preset_format></preset_format>
+    <ab_comparison>false</ab_comparison>
+    <state_management>false</state_management>
+    <gpu_audio>false</gpu_audio>
+  </implementations>
+  <user_experience>
+    <wizard>false</wizard><preview>false</preview>
+    <preset_management>false</preset_management>
+  </user_experience>
+  <development_workflow>
+    <vcs>false</vcs><testing>false</testing>
+    <code_quality>false</code_quality>
+    <validation_tools>false</validation_tools>
+    <scaffolding>false</scaffolding>
+  </development_workflow>
+</preset>"""
+
+    def test_schema_version_constant_exists(self):
+        """ConfigManager must expose a SCHEMA_VERSION class attribute."""
+        assert hasattr(ConfigManager, "SCHEMA_VERSION")
+        assert isinstance(ConfigManager.SCHEMA_VERSION, str)
+
+    def test_schema_version_format(self):
+        """SCHEMA_VERSION must follow MAJOR.MINOR format."""
+        import re
+
+        assert re.fullmatch(r"\d+\.\d+", ConfigManager.SCHEMA_VERSION)
+
+    def test_schema_xsd_path_constant_exists(self):
+        """ConfigManager must expose a SCHEMA_XSD_PATH class attribute."""
+        assert hasattr(ConfigManager, "SCHEMA_XSD_PATH")
+        assert isinstance(ConfigManager.SCHEMA_XSD_PATH, Path)
+
+    def test_schema_xsd_file_exists(self):
+        """The XSD file referenced by SCHEMA_XSD_PATH must exist on disk."""
+        assert ConfigManager.SCHEMA_XSD_PATH.exists(), (
+            f"XSD file not found at {ConfigManager.SCHEMA_XSD_PATH}"
+        )
+
+    def test_saved_preset_has_schema_version_attribute(self, config_manager, tmp_path):
+        """Saving a preset must write the schema_version attribute."""
+        config = config_manager.get_default_config()
+        config["project_info"].update(
+            {
+                "project_name": "VTest",
+                "product_name": "VTest",
+                "company_name": "VCo",
+                "bundle_id": "com.v.test",
+                "manufacturer_code": "VTST",
+                "output_directory": str(tmp_path),
+            }
+        )
+        config["meta"]["name"] = "VTest"
+        preset_path = tmp_path / "vtest.xml"
+        config_manager.save_config(config, preset_path)
+
+        tree = ET.parse(preset_path)
+        root = tree.getroot()
+        assert root.attrib.get("schema_version") == ConfigManager.SCHEMA_VERSION
+
+    def test_load_current_version_no_warning(self, config_manager, tmp_path, minimal_preset_xml):
+        """Loading a preset with the current schema_version must not add a warning."""
+        preset_file = tmp_path / "current_ver.xml"
+        preset_file.write_text(minimal_preset_xml)
+        config = config_manager.load_config(preset_file)
+        assert "schema_version_warning" not in config["meta"]
+
+    def test_load_older_version_emits_warning(self, config_manager, tmp_path, minimal_preset_xml):
+        """Loading a preset with an older schema_version must surface a warning in meta."""
+        old_version_xml = minimal_preset_xml.replace(
+            f'schema_version="{ConfigManager.SCHEMA_VERSION}"', 'schema_version="0.9"'
+        )
+        preset_file = tmp_path / "old_ver.xml"
+        preset_file.write_text(old_version_xml)
+        config = config_manager.load_config(preset_file)
+        assert "schema_version_warning" in config["meta"]
+        assert "0.9" in config["meta"]["schema_version_warning"]
+        assert ConfigManager.SCHEMA_VERSION in config["meta"]["schema_version_warning"]
+
+    def test_load_missing_version_no_warning(self, config_manager, tmp_path, minimal_preset_xml):
+        """Loading a preset without a schema_version attribute (legacy) must not add a warning."""
+        no_version_xml = minimal_preset_xml.replace(
+            f' schema_version="{ConfigManager.SCHEMA_VERSION}"', ""
+        )
+        preset_file = tmp_path / "no_ver.xml"
+        preset_file.write_text(no_version_xml)
+        config = config_manager.load_config(preset_file)
+        assert "schema_version_warning" not in config["meta"]
+
+
+class TestXsdValidation:
+    """Tests for XSD-based preset validation via ConfigManager."""
+
+    @pytest.fixture
+    def config_manager(self, tmp_path: Path):
+        return ConfigManager(preset_dir=tmp_path / "presets")
+
+    def test_validate_against_xsd_returns_tuple(self, config_manager):
+        """validate_against_xsd must return a (bool, list) tuple."""
+        preset_path = config_manager.preset_dir / "StandardAudioFX_Preset.xml"
+        result = config_manager.validate_against_xsd(preset_path)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        ok, errors = result
+        assert isinstance(ok, bool)
+        assert isinstance(errors, list)
+
+    def test_bundled_presets_pass_xsd_validation(self, config_manager):
+        """All bundled presets must pass XSD validation."""
+        for preset_name in ConfigManager.BUNDLED_PRESETS:
+            preset_path = config_manager.preset_dir / f"{preset_name}.xml"
+            ok, errors = config_manager.validate_against_xsd(preset_path)
+            assert ok, f"{preset_name} failed XSD validation: {errors}"
+
+    def test_validate_preset_file_uses_xsd(self, config_manager):
+        """validate_preset_file must succeed (including XSD pass) for bundled presets."""
+        for preset_name in ConfigManager.BUNDLED_PRESETS:
+            preset_path = config_manager.preset_dir / f"{preset_name}.xml"
+            ok, errors = config_manager.validate_preset_file(preset_path)
+            assert ok, f"{preset_name} failed combined validation: {errors}"
+
+    def test_invalid_xml_fails_validate_against_xsd(self, config_manager, tmp_path):
+        """Malformed XML must cause validate_against_xsd to return errors."""
+        bad_file = tmp_path / "bad.xml"
+        bad_file.write_text("not valid xml <<>>>")
+        ok, errors = config_manager.validate_against_xsd(bad_file)
+        assert not ok
+        assert errors
+
+    def test_xsd_rejects_missing_required_section(self, config_manager, tmp_path):
+        """A preset missing required sections must fail XSD validation."""
+        bad_preset = """\
+<?xml version="1.0" encoding="utf-8"?>
+<preset name="Bad" schema_version="1.0">
+  <project_info>
+    <project_name>Bad</project_name>
+    <product_name>Bad</product_name>
+    <company_name>Co</company_name>
+    <bundle_id>com.bad.bad</bundle_id>
+    <manufacturer_code>BADD</manufacturer_code>
+    <output_directory>/tmp</output_directory>
+  </project_info>
+</preset>"""
+        bad_file = tmp_path / "missing_sections.xml"
+        bad_file.write_text(bad_preset)
+        ok, errors = config_manager.validate_against_xsd(bad_file)
+        assert not ok
+        assert errors

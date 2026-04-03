@@ -7,6 +7,13 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, ClassVar
 
+try:
+    import xmlschema  # type: ignore[import-untyped]
+
+    _XMLSCHEMA_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _XMLSCHEMA_AVAILABLE = False
+
 
 class ConfigurationManager:
     """Singleton for centralized, thread-safe configuration management across all tabs.
@@ -118,6 +125,16 @@ class ConfigurationManager:
 
 class ConfigManager:
     """Manages loading and saving of XML configuration files and presets"""
+
+    #: Current preset XML schema version.  Increment the minor component for
+    #: backwards-compatible additions and the major component for breaking
+    #: changes that require a migration path.
+    SCHEMA_VERSION: ClassVar[str] = "1.0"
+
+    #: Path to the bundled XSD that formally defines the preset schema.
+    SCHEMA_XSD_PATH: ClassVar[Path] = (
+        Path(__file__).resolve().parents[1] / "resources" / "preset_schema.xsd"
+    )
 
     # Stored with file stems to mirror the shipped preset filenames.
     BUNDLED_PRESETS: ClassVar[tuple[str, ...]] = (
@@ -291,13 +308,66 @@ class ConfigManager:
             return False
 
     def validate_preset_file(self, file_path: Path | str) -> tuple[bool, list[str]]:
-        """Validate a preset file against the schema."""
+        """Validate a preset file against the schema.
+
+        Validation is performed in two steps:
+
+        1. **XSD validation** – the file is checked against the bundled
+           ``preset_schema.xsd`` when the *xmlschema* package is installed.
+        2. **Python schema validation** – the parsed configuration dict is
+           checked against :attr:`PRESET_SCHEMA` regardless of whether
+           *xmlschema* is available.
+
+        Args:
+            file_path: Path to the preset XML file to validate.
+
+        Returns:
+            tuple[bool, list[str]]: A ``(valid, errors)`` pair where *valid*
+            is ``True`` only when both validation steps pass, and *errors*
+            contains human-readable descriptions of any failures.
+        """
+        errors: list[str] = []
+
+        xsd_ok, xsd_errors = self.validate_against_xsd(file_path)
+        if not xsd_ok:
+            errors.extend(xsd_errors)
+
         try:
             config = self.load_config(file_path)
         except ValueError as exc:
-            return False, [str(exc)]
-        errors = self.validate_config(config)
+            errors.append(str(exc))
+            return False, errors
+
+        schema_errors = self.validate_config(config)
+        errors.extend(schema_errors)
         return (not errors, errors)
+
+    def validate_against_xsd(self, file_path: Path | str) -> tuple[bool, list[str]]:
+        """Validate a preset file against the bundled XSD schema.
+
+        Requires the *xmlschema* package.  When the package is not installed
+        this method returns ``(True, [])`` so that callers can still fall back
+        to Python-based validation without treating a missing optional
+        dependency as an error.
+
+        Args:
+            file_path: Path to the preset XML file to validate.
+
+        Returns:
+            tuple[bool, list[str]]: ``(True, [])`` on success or when
+            *xmlschema* is unavailable; ``(False, [<error messages>])`` when
+            XSD validation finds problems.
+        """
+        if not _XMLSCHEMA_AVAILABLE:
+            return True, []
+        if not self.SCHEMA_XSD_PATH.exists():
+            return True, []
+        try:
+            xs = xmlschema.XMLSchema(str(self.SCHEMA_XSD_PATH))
+            errors = [str(e) for e in xs.iter_errors(str(file_path))]
+            return (not errors, errors)
+        except Exception as exc:
+            return False, [f"XSD validation error: {exc}"]
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -374,6 +444,16 @@ class ConfigManager:
     def _load_structured_preset(self, root: ET.Element, file_path: Path) -> dict:
         config: dict[str, Any] = {"meta": {"name": root.attrib.get("name", file_path.stem)}}
 
+        # Record the schema version stored in the file (may be absent for
+        # presets created before versioning was introduced).
+        file_schema_version = root.attrib.get("schema_version", "")
+        version_warning: str | None = None
+        if file_schema_version and file_schema_version != self.SCHEMA_VERSION:
+            version_warning = (
+                f"Preset was created with schema version {file_schema_version!r}; "
+                f"current version is {self.SCHEMA_VERSION!r}."
+            )
+
         meta_element = root.find("meta")
         if meta_element is not None:
             for key, meta_def in self.META_FIELDS.items():
@@ -396,6 +476,10 @@ class ConfigManager:
             config[section] = section_data
 
         config = self._apply_defaults(config)
+        # Re-apply the version warning after _apply_defaults, which rebuilds
+        # the meta dict and would otherwise discard it.
+        if version_warning is not None:
+            config["meta"]["schema_version_warning"] = version_warning
         errors = self.validate_config(config)
         if errors:
             raise ValueError(f"Invalid preset: {', '.join(errors)}")
@@ -432,6 +516,7 @@ class ConfigManager:
         meta = config_with_defaults.get("meta", {})
         if meta.get("name"):
             root.set("name", str(meta.get("name")))
+        root.set("schema_version", self.SCHEMA_VERSION)
         if meta.get("description"):
             meta_elem = ET.SubElement(root, "meta")
             desc_elem = ET.SubElement(meta_elem, "description")

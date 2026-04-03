@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<preset name="MinimalPlugin">
+<preset name="MinimalPlugin" schema_version="1.0">
   <meta>
     <description>The lightest configuration: VST3-only with no optional modules, ideal for quick scaffolding.</description>
   </meta>
@@ -21,6 +21,13 @@
     <au>false</au>
     <auv3>false</auv3>
     <clap>false</clap>
+    <au_component_type>aufx</au_component_type>
+    <au_component_subtype>plug</au_component_subtype>
+    <au_component_manufacturer>Ddsp</au_component_manufacturer>
+    <au_version>1.0.0</au_version>
+    <clap_extensions>note-ports,state</clap_extensions>
+    <clap_features>audio-effect</clap_features>
+    <auv3_platform>iOS</auv3_platform>
     <gui_width>800</gui_width>
     <gui_height>500</gui_height>
     <resizable>false</resizable>

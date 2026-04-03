@@ -5,9 +5,52 @@ tab structure used by the application (`project_info`, `configuration`, `impleme
 `user_experience`, and `development_workflow`). Each section contains simple elements with
 string, integer, or boolean values.
 
+### Schema Versioning
+
+The `<preset>` root element carries a `schema_version` attribute that records the version of
+the schema used when the file was written.  The current schema version is **1.0**.
+
+Version numbers follow a `MAJOR.MINOR` notation:
+
+- **Minor** increments are backwards-compatible additions (new optional fields).
+- **Major** increments indicate breaking changes that may require migration.
+
+When a preset file is loaded and its `schema_version` differs from the current version, the
+application attaches a `schema_version_warning` key to the returned `meta` dictionary so that
+callers can alert the user or take corrective action.
+
+### Formal Schema (XSD)
+
+The formal XML Schema Definition for preset files is located at
+`src/resources/preset_schema.xsd`.  It can be used by external editors, CI pipelines, and
+other tooling for automated validation without running the Python application.
+
+When the `xmlschema` Python package is installed, `ConfigManager.validate_preset_file()` also
+validates against this XSD file before applying the additional Python-level checks.  Without
+the package the validation falls back transparently to the Python-only path.
+
+#### Validating with the bundled XSD
+
+```python
+import xmlschema
+from pathlib import Path
+
+xs = xmlschema.XMLSchema("src/resources/preset_schema.xsd")
+ok = xs.is_valid("path/to/my_preset.xml")
+errors = list(xs.iter_errors("path/to/my_preset.xml"))
+```
+
+Or from the command line with `xmllint` (libxml2):
+
+```bash
+xmllint --schema src/resources/preset_schema.xsd path/to/my_preset.xml --noout
+```
+
+### Preset Structure
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<preset name="PresetName">
+<preset name="PresetName" schema_version="1.0">
   <meta>
     <description>Optional human-friendly description</description>
   </meta>
@@ -29,6 +72,13 @@ string, integer, or boolean values.
     <au>true</au>
     <auv3>false</auv3>
     <clap>true</clap>
+    <au_component_type>aufx</au_component_type>
+    <au_component_subtype>plug</au_component_subtype>
+    <au_component_manufacturer>Ddsp</au_component_manufacturer>
+    <au_version>1.0.0</au_version>
+    <clap_extensions>note-ports,state</clap_extensions>
+    <clap_features>audio-effect</clap_features>
+    <auv3_platform>iOS</auv3_platform>
     <gui_width>1100</gui_width>
     <gui_height>700</gui_height>
     <resizable>true</resizable>
@@ -75,6 +125,16 @@ string, integer, or boolean values.
   - Booleans: `true`/`false` (case-insensitive; `1/0/yes/on` also accepted)
   - Integers: whole numbers (GUI sizes)
   - Strings: everything else
+- `preset_format` must be `XML`, `Binary`, or an empty string.
+- `schema_version` must follow `MAJOR.MINOR` notation (e.g. `1.0`).
+
+### XSD-Defined Types
+
+| Type name          | Description                                           |
+|--------------------|-------------------------------------------------------|
+| `booleanString`    | `true`, `false`, `1`, `0`, `yes`, `no`, `on`, `off`  |
+| `schemaVersionString` | `MAJOR.MINOR` pattern (e.g. `1.0`)               |
+| `presetFormat`     | `XML`, `Binary`, or empty string                      |
 
 ### Bundled Example Presets
 
@@ -84,3 +144,6 @@ preset folder (`~/.plugin_configurator/presets`) on startup:
 1. **StandardAudioFX_Preset.xml** — balanced audio effect defaults with preset management.
 2. **Instrument_Preset.xml** — instrument-focused template with CLAP/AUv3 targets.
 3. **MinimalPlugin_Preset.xml** — lightweight VST3-only scaffold with no optional modules.
+
+All bundled presets carry `schema_version="1.0"` and are validated against the XSD as
+part of the test suite.

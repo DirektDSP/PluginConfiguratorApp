@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Plugin Configurator Preset XML Schema Definition
+  Schema Version: 1.0
+
+  This XSD formally defines the structure of preset files used by the
+  Plugin Configurator App.  Every preset file must conform to this schema
+  to be considered valid.
+
+  Sections (all required):
+    - meta            : Human-readable metadata (name attribute + description)
+    - project_info    : Project identifiers and paths
+    - configuration   : Plugin format toggles and GUI dimensions
+    - implementations : Optional module selections
+    - user_experience : UX feature toggles
+    - development_workflow : Tooling and CI selections
+
+  Boolean fields accept: true / false (canonical form emitted by the app).
+  Integers are used for GUI dimensions only.
+  All other fields are plain strings.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified"
+           version="1.0">
+
+  <!-- ================================================================
+       Simple type definitions
+       ================================================================ -->
+
+  <!--
+    booleanString restricts field text to the values produced by the app
+    ("true" / "false") while also accepting the common alternatives
+    ("1" / "0" / "yes" / "no" / "on" / "off") that may appear in
+    hand-edited presets.
+  -->
+  <xs:simpleType name="booleanString">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+      <xs:enumeration value="1"/>
+      <xs:enumeration value="0"/>
+      <xs:enumeration value="yes"/>
+      <xs:enumeration value="no"/>
+      <xs:enumeration value="on"/>
+      <xs:enumeration value="off"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Schema version follows MAJOR.MINOR notation (e.g. "1.0") -->
+  <xs:simpleType name="schemaVersionString">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d+\.\d+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Plugin / manufacturer codes are exactly four characters -->
+  <xs:simpleType name="fourCharCode">
+    <xs:restriction base="xs:string">
+      <xs:length value="4"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Reverse-DNS bundle identifier (e.g. com.company.plugin) -->
+  <xs:simpleType name="bundleId">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-zA-Z][a-zA-Z0-9\-]*(\.[a-zA-Z][a-zA-Z0-9\-]*)+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Semantic version string (e.g. 1.0.0) -->
+  <xs:simpleType name="semanticVersion">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d+\.\d+\.\d+.*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Preset format choices -->
+  <xs:simpleType name="presetFormat">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="XML"/>
+      <xs:enumeration value="Binary"/>
+      <xs:enumeration value=""/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ================================================================
+       Complex type definitions
+       ================================================================ -->
+
+  <!-- meta element: optional human-readable description -->
+  <xs:complexType name="metaType">
+    <xs:sequence>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- project_info: identifiers, paths, and template configuration -->
+  <xs:complexType name="projectInfoType">
+    <xs:all>
+      <xs:element name="template_name"       type="xs:string"       minOccurs="0"/>
+      <xs:element name="template_url"        type="xs:string"       minOccurs="0"/>
+      <xs:element name="project_name"        type="xs:string"/>
+      <xs:element name="product_name"        type="xs:string"/>
+      <xs:element name="version"             type="xs:string"       minOccurs="0"/>
+      <xs:element name="company_name"        type="xs:string"/>
+      <xs:element name="bundle_id"           type="xs:string"/>
+      <xs:element name="manufacturer_code"   type="xs:string"/>
+      <xs:element name="plugin_code"         type="xs:string"       minOccurs="0"/>
+      <xs:element name="output_directory"    type="xs:string"/>
+    </xs:all>
+  </xs:complexType>
+
+  <!-- configuration: plugin format toggles, AU/CLAP specifics, GUI dimensions -->
+  <xs:complexType name="configurationType">
+    <xs:all>
+      <!-- Plugin format toggles -->
+      <xs:element name="standalone"              type="booleanString" minOccurs="0"/>
+      <xs:element name="vst3"                    type="booleanString" minOccurs="0"/>
+      <xs:element name="au"                      type="booleanString" minOccurs="0"/>
+      <xs:element name="auv3"                    type="booleanString" minOccurs="0"/>
+      <xs:element name="clap"                    type="booleanString" minOccurs="0"/>
+      <!-- AU-specific configuration -->
+      <xs:element name="au_component_type"       type="xs:string"     minOccurs="0"/>
+      <xs:element name="au_component_subtype"    type="xs:string"     minOccurs="0"/>
+      <xs:element name="au_component_manufacturer" type="xs:string"   minOccurs="0"/>
+      <xs:element name="au_version"              type="xs:string"     minOccurs="0"/>
+      <!-- CLAP-specific configuration -->
+      <xs:element name="clap_extensions"         type="xs:string"     minOccurs="0"/>
+      <xs:element name="clap_features"           type="xs:string"     minOccurs="0"/>
+      <!-- AUv3-specific configuration -->
+      <xs:element name="auv3_platform"           type="xs:string"     minOccurs="0"/>
+      <!-- GUI dimensions -->
+      <xs:element name="gui_width"               type="xs:integer"    minOccurs="0"/>
+      <xs:element name="gui_height"              type="xs:integer"    minOccurs="0"/>
+      <xs:element name="resizable"               type="booleanString" minOccurs="0"/>
+      <xs:element name="background_image"        type="xs:string"     minOccurs="0"/>
+      <!-- Distribution options -->
+      <xs:element name="code_signing"            type="booleanString" minOccurs="0"/>
+      <xs:element name="installer"               type="booleanString" minOccurs="0"/>
+      <!-- DSP features -->
+      <xs:element name="default_bypass"          type="booleanString" minOccurs="0"/>
+      <xs:element name="input_gain"              type="booleanString" minOccurs="0"/>
+      <xs:element name="output_gain"             type="booleanString" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <!-- implementations: optional module selections -->
+  <xs:complexType name="implementationsType">
+    <xs:all>
+      <xs:element name="moonbase_licensing"    type="booleanString" minOccurs="0"/>
+      <xs:element name="melatonin_inspector"   type="booleanString" minOccurs="0"/>
+      <xs:element name="custom_gui_framework"  type="booleanString" minOccurs="0"/>
+      <xs:element name="logging_framework"     type="booleanString" minOccurs="0"/>
+      <xs:element name="clap_builds"           type="booleanString" minOccurs="0"/>
+      <xs:element name="preset_management"     type="booleanString" minOccurs="0"/>
+      <xs:element name="preset_format"         type="presetFormat"  minOccurs="0"/>
+      <xs:element name="ab_comparison"         type="booleanString" minOccurs="0"/>
+      <xs:element name="state_management"      type="booleanString" minOccurs="0"/>
+      <xs:element name="gpu_audio"             type="booleanString" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <!-- user_experience: UX feature toggles -->
+  <xs:complexType name="userExperienceType">
+    <xs:all>
+      <xs:element name="wizard"            type="booleanString" minOccurs="0"/>
+      <xs:element name="preview"           type="booleanString" minOccurs="0"/>
+      <xs:element name="preset_management" type="booleanString" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <!-- development_workflow: tooling and CI selections -->
+  <xs:complexType name="developmentWorkflowType">
+    <xs:all>
+      <xs:element name="vcs"              type="booleanString" minOccurs="0"/>
+      <xs:element name="testing"          type="booleanString" minOccurs="0"/>
+      <xs:element name="code_quality"     type="booleanString" minOccurs="0"/>
+      <xs:element name="validation_tools" type="booleanString" minOccurs="0"/>
+      <xs:element name="scaffolding"      type="booleanString" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <!-- root preset element -->
+  <xs:complexType name="presetType">
+    <xs:sequence>
+      <xs:element name="meta"                 type="metaType"               minOccurs="0"/>
+      <xs:element name="project_info"         type="projectInfoType"/>
+      <xs:element name="configuration"        type="configurationType"/>
+      <xs:element name="implementations"      type="implementationsType"/>
+      <xs:element name="user_experience"      type="userExperienceType"/>
+      <xs:element name="development_workflow" type="developmentWorkflowType"/>
+    </xs:sequence>
+    <!-- Human-readable preset name (e.g. "StandardAudioFX") -->
+    <xs:attribute name="name"           type="xs:string" use="required"/>
+    <!-- Schema version used when this preset was written (e.g. "1.0") -->
+    <xs:attribute name="schema_version" type="schemaVersionString" use="optional"/>
+  </xs:complexType>
+
+  <!-- ================================================================
+       Root element declaration
+       ================================================================ -->
+  <xs:element name="preset" type="presetType"/>
+
+</xs:schema>

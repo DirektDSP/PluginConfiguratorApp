@@ -16,6 +16,7 @@ dependencies = [
     "shiboken6==6.8.3",
     "urllib3==2.3.0",
     "uuid==1.30",
+    "xmlschema>=4.3.1",
 ]
 
 [dependency-groups]
