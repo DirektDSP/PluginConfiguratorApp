@@ -5,6 +5,7 @@ import sys
 import pytest
 from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
 
+from ui.components.accordion_expander import AccordionExpander
 from ui.tabs.generate_tab import GenerateTab
 
 
@@ -570,3 +571,59 @@ class TestGenerateTabScrollReference:
     def test_section_groups_are_qgroupbox_instances(self, generate_tab):
         for group in generate_tab._section_groups.values():
             assert isinstance(group, QGroupBox)
+
+
+class TestGenerateTabModulesAccordion:
+    """The Modules section uses an AccordionExpander for expand/collapse."""
+
+    def test_modules_expander_attribute_exists(self, generate_tab):
+        assert hasattr(generate_tab, "_modules_expander")
+
+    def test_modules_expander_is_accordion_expander(self, generate_tab):
+        assert isinstance(generate_tab._modules_expander, AccordionExpander)
+
+    def test_modules_expander_starts_expanded(self, generate_tab):
+        assert generate_tab._modules_expander.is_expanded is True
+
+    def test_modules_expander_can_be_collapsed(self, generate_tab):
+        generate_tab._modules_expander.set_expanded(False)
+        assert generate_tab._modules_expander.is_expanded is False
+
+    def test_modules_expander_can_be_re_expanded(self, generate_tab):
+        generate_tab._modules_expander.set_expanded(False)
+        generate_tab._modules_expander.set_expanded(True)
+        assert generate_tab._modules_expander.is_expanded is True
+
+    def test_modules_expander_contains_modules_label(self, generate_tab):
+        # The body layout of the expander should contain _modules_lbl
+        body_layout = generate_tab._modules_expander.body_layout
+        found = False
+        for i in range(body_layout.count()):
+            item = body_layout.itemAt(i)
+            if item and item.widget() is generate_tab._modules_lbl:
+                found = True
+                break
+        assert found
+
+    def test_modules_label_content_visible_when_expander_expanded(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab._modules_expander.set_expanded(True)
+        assert "Moonbase" in generate_tab._modules_lbl.text()
+
+    def test_modules_section_group_wraps_expander(self, generate_tab):
+        modules_group = generate_tab._section_groups["Modules"]
+        # The QGroupBox layout must contain the AccordionExpander
+        layout = modules_group.layout()
+        found = False
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item and item.widget() is generate_tab._modules_expander:
+                found = True
+                break
+        assert found
+
+    def test_reset_leaves_expander_expanded(self, generate_tab):
+        generate_tab._modules_expander.set_expanded(False)
+        generate_tab.reset()
+        # reset() should restore the expander to its default expanded state
+        assert generate_tab._modules_expander.is_expanded is True
