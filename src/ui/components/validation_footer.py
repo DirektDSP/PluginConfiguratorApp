@@ -20,23 +20,17 @@ class ValidationFooter(QFrame):
 
     # Stylesheet tokens - kept as class constants so they are easy to theme.
     _READY_STYLE = (
-        "background-color: #1e4620;"
-        "border: 1px solid #2e7d32;"
-        "border-radius: 4px;"
-        "padding: 4px 8px;"
+        "background-color: #1e4620;border: 1px solid #2e7d32;border-radius: 4px;padding: 4px 8px;"
     )
     _ERROR_STYLE = (
-        "background-color: #4a1942;"
-        "border: 1px solid #7b1fa2;"
-        "border-radius: 4px;"
-        "padding: 4px 8px;"
+        "background-color: #4a1942;border: 1px solid #7b1fa2;border-radius: 4px;padding: 4px 8px;"
     )
     _READY_ICON = "✓"
     _ERROR_ICON = "✗"
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._is_ready = False
+        self._is_ready: bool = False
         self._setup_ui()
         self.set_ready()
 
