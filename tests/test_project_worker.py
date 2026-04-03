@@ -364,7 +364,7 @@ class TestInitGitRepoEnv:
 
         # The commit call is the third subprocess.run call (init, add, commit)
         commit_call = mock_run.call_args_list[2]
-        env_arg = commit_call[1].get("env") or commit_call.kwargs.get("env")
+        env_arg = commit_call.kwargs["env"]
         assert env_arg is not None
         assert "GIT_AUTHOR_NAME" in env_arg
         assert "GIT_COMMITTER_NAME" in env_arg
@@ -386,7 +386,7 @@ class TestInitGitRepoEnv:
 
 
 class TestDefaultTemplateUrl:
-    def test_constant_is_a_valid_url(self):
+    def test_constant_starts_with_https(self):
         assert DEFAULT_TEMPLATE_URL.startswith("https://")
 
     def test_constant_ends_with_git(self):
