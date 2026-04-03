@@ -1,7 +1,6 @@
 """Generate Tab - summary review and project generation."""
 
-from PySide6.QtCore import Qt, QThread, QUrl, Slot
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import Qt, QThread, Slot
 from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
@@ -19,6 +18,7 @@ from PySide6.QtWidgets import (
 from core.base_tab import BaseTab
 from core.project_worker import ProjectWorker
 from ui.components.validation_footer import ValidationFooter
+from ui.dialogs.success_dialog import SuccessDialog
 
 
 class GenerateTab(BaseTab):
@@ -36,6 +36,7 @@ class GenerateTab(BaseTab):
         self._worker: ProjectWorker | None = None
         self._thread: QThread | None = None
         self._had_error: bool = False
+        self._section_groups: dict[str, QGroupBox] = {}
         self.setup_ui()
         self.setup_connections()
         self._emit_config_changed()
@@ -55,6 +56,7 @@ class GenerateTab(BaseTab):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll = scroll
 
         content = QWidget()
         content_layout = QVBoxLayout(content)
@@ -65,6 +67,14 @@ class GenerateTab(BaseTab):
         status_group = QGroupBox("Configuration Status")
         status_inner = QVBoxLayout()
         status_inner.setSpacing(4)
+
+        # Overall status indicator (top of the status group)
+        self._overall_status_lbl = QLabel("")
+        self._overall_status_lbl.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
+        status_inner.addWidget(self._overall_status_lbl)
+
         self._status_icons: dict[str, QLabel] = {}
         for section in ("Metadata", "Build", "DSP", "UI", "Modules"):
             row = QHBoxLayout()
@@ -81,19 +91,29 @@ class GenerateTab(BaseTab):
 
         # -- Summary sections --
         self._metadata_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("Metadata", self._metadata_lbl))
+        metadata_group = self._make_section_group("Metadata", self._metadata_lbl)
+        self._section_groups["Metadata"] = metadata_group
+        content_layout.addWidget(metadata_group)
 
         self._build_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("Build", self._build_lbl))
+        build_group = self._make_section_group("Build", self._build_lbl)
+        self._section_groups["Build"] = build_group
+        content_layout.addWidget(build_group)
 
         self._dsp_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("DSP", self._dsp_lbl))
+        dsp_group = self._make_section_group("DSP", self._dsp_lbl)
+        self._section_groups["DSP"] = dsp_group
+        content_layout.addWidget(dsp_group)
 
         self._ui_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("UI", self._ui_lbl))
+        ui_group = self._make_section_group("UI", self._ui_lbl)
+        self._section_groups["UI"] = ui_group
+        content_layout.addWidget(ui_group)
 
         self._modules_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("Modules", self._modules_lbl))
+        modules_group = self._make_section_group("Modules", self._modules_lbl)
+        self._section_groups["Modules"] = modules_group
+        content_layout.addWidget(modules_group)
 
         # -- Progress group --
         progress_group = QGroupBox("Generation Progress")
@@ -176,6 +196,9 @@ class GenerateTab(BaseTab):
         for icon in self._status_icons.values():
             icon.setText("⚪")
             icon.setToolTip("")
+        for group in self._section_groups.values():
+            group.setStyleSheet("")
+        self._overall_status_lbl.setText("")
         self._log_text.clear()
         self._progress_bar.setValue(0)
         self._status_label.setText("Ready to generate project")
@@ -323,31 +346,74 @@ class GenerateTab(BaseTab):
         )
 
         # ---- Validation status indicators ----
-        metadata_valid = all(
-            project_info.get(f, "").strip()
-            for f in (
-                "project_name",
-                "company_name",
-                "bundle_id",
-                "manufacturer_code",
-                "output_directory",
-            )
-        )
-        build_valid = bool(formats)
-
-        statuses: dict[str, bool] = {
-            "Metadata": metadata_valid,
-            "Build": build_valid,
-            "DSP": True,
-            "UI": True,
-            "Modules": True,
+        # Metadata: collect specific missing fields
+        _required_metadata = {
+            "project_name": "Project Name",
+            "company_name": "Company Name",
+            "bundle_id": "Bundle ID",
+            "manufacturer_code": "Manufacturer Code",
+            "output_directory": "Output Directory",
         }
-        for section, ok in statuses.items():
+        metadata_missing = [
+            label
+            for field, label in _required_metadata.items()
+            if not project_info.get(field, "").strip()
+        ]
+        metadata_valid = not metadata_missing
+
+        # Build: at least one format must be selected
+        build_errors = [] if formats else ["No plugin format selected"]
+        build_valid = not build_errors
+
+        statuses: dict[str, tuple[bool, list[str]]] = {
+            "Metadata": (metadata_valid, metadata_missing),
+            "Build": (build_valid, build_errors),
+            "DSP": (True, []),
+            "UI": (True, []),
+            "Modules": (True, []),
+        }
+
+        first_invalid_group: QGroupBox | None = None
+        invalid_count = 0
+
+        for section, (ok, errors) in statuses.items():
             icon = self._status_icons[section]
             icon.setText("✅" if ok else "❌")
-            icon.setToolTip(
-                f"{section}: {'Valid' if ok else 'Incomplete — please check this section'}"
-            )
+            if ok:
+                icon.setToolTip(f"{section}: Valid")
+            else:
+                detail = ", ".join(errors)
+                icon.setToolTip(f"{section}: Missing — {detail}")
+
+            # Apply border highlight to the section group box
+            group = self._section_groups.get(section)
+            if group is not None:
+                if ok:
+                    group.setStyleSheet(
+                        "QGroupBox { border: 2px solid #2e7d32; border-radius: 4px; margin-top: 0.5em; }"
+                        " QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }"
+                    )
+                else:
+                    group.setStyleSheet(
+                        "QGroupBox { border: 2px solid #c62828; border-radius: 4px; margin-top: 0.5em; }"
+                        " QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; }"
+                    )
+                    if first_invalid_group is None:
+                        first_invalid_group = group
+                    invalid_count += 1
+
+        # ---- Overall status label ----
+        if invalid_count == 0:
+            self._overall_status_lbl.setText("✅  All sections valid")
+            self._overall_status_lbl.setStyleSheet("color: #66bb6a; font-weight: bold;")
+        else:
+            noun = "section" if invalid_count == 1 else "sections"
+            self._overall_status_lbl.setText(f"❌  {invalid_count} {noun} need attention")
+            self._overall_status_lbl.setStyleSheet("color: #ef5350; font-weight: bold;")
+
+        # ---- Scroll to first invalid section ----
+        if first_invalid_group is not None:
+            self._scroll.ensureWidgetVisible(first_invalid_group)
 
     # ------------------------------------------------------------------ #
     # Generation                                                           #
@@ -449,15 +515,9 @@ class GenerateTab(BaseTab):
         self._log_text.append("\n=== Generation Complete ===")
         self._log_text.append("Project generated successfully!")
 
-        output_dir = self._full_config.get("project_info", {}).get("output_directory", "")
+        project_info = self._full_config.get("project_info", {})
+        project_name = project_info.get("project_name", "")
+        output_dir = project_info.get("output_directory", "")
 
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("Project Generated")
-        msg_box.setText(f"Project generated successfully!\n\nLocation: {output_dir}")
-        msg_box.setIcon(QMessageBox.Icon.Information)
-        open_btn = msg_box.addButton("Open Folder", QMessageBox.ButtonRole.ActionRole)
-        msg_box.addButton("Close", QMessageBox.ButtonRole.RejectRole)
-        msg_box.exec()
-
-        if msg_box.clickedButton() is open_btn and output_dir:
-            QDesktopServices.openUrl(QUrl.fromLocalFile(output_dir))
+        dlg = SuccessDialog(project_name, output_dir, parent=self)
+        dlg.exec()
