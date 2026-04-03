@@ -605,7 +605,7 @@ class TestGenerateTabModulesAccordion:
                 break
         assert found
 
-    def test_modules_label_content_visible_when_expander_expanded(self, generate_tab):
+    def test_modules_label_contains_expected_content_after_config_update(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
         generate_tab._modules_expander.set_expanded(True)
         assert "Moonbase" in generate_tab._modules_lbl.text()

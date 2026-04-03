@@ -113,7 +113,7 @@ class GenerateTab(BaseTab):
 
         self._modules_lbl = self._make_summary_label()
         self._modules_expander = AccordionExpander(
-            "Active Modules",
+            "",
             subtitle="Expand to review selected optional modules",
             start_expanded=True,
         )
