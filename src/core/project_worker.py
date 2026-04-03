@@ -13,6 +13,8 @@ from core.utils import (
     update_workflow_files,
 )
 
+DEFAULT_TEMPLATE_URL = "https://github.com/SeamusMullan/PluginTemplate.git"
+
 
 class ProjectWorker(QObject):
     """Worker class that handles project generation in a separate thread"""
@@ -61,21 +63,41 @@ class ProjectWorker(QObject):
             self.finished.emit()
 
         except Exception as e:
+            self._cleanup_on_failure()
             self.error.emit(f"Project generation failed: {e!s}")
             self.finished.emit()
 
+    def _cleanup_on_failure(self) -> None:
+        """Remove a partially-created output directory after a generation failure."""
+        output_dir = self.params.get("output_directory", "")
+        if output_dir and os.path.exists(output_dir):
+            try:
+                shutil.rmtree(output_dir, onerror=self.remove_readonly)
+                self.progress.emit("Cleaned up partial output directory")
+            except Exception:
+                pass
+
     def clone_template_repo(self):
         """Clone the template repository"""
+        output_dir = self.params.get("output_directory", "")
+        if not output_dir:
+            raise RuntimeError("Output directory is not specified")
+
+        if os.path.exists(output_dir):
+            raise RuntimeError(f"Output directory already exists: {output_dir}")
+
+        fork_url = self.params.get("fork_url", "") or DEFAULT_TEMPLATE_URL
+
         try:
-            self.progress.emit(f"Cloning template repository: {self.params['fork_url']}")
+            self.progress.emit(f"Cloning template repository: {fork_url}")
             self.progress_value.emit(5)
 
             subprocess.run(
                 [
                     "git",
                     "clone",
-                    self.params["fork_url"],
-                    self.params["output_directory"],
+                    fork_url,
+                    output_dir,
                 ],
                 check=True,
                 capture_output=True,
@@ -158,16 +180,18 @@ class ProjectWorker(QObject):
 
     def prepare_project_variables(self):
         """Prepare variables for template substitution"""
-        # Read version from file if it exists
-        version_path = os.path.join(self.params["output_directory"], "VERSION")
-        if os.path.exists(version_path):
-            with open(version_path) as f:
-                version = f.read().strip()
-        else:
-            version = "0.0.1"
+        # Use version from params if provided; fall back to VERSION file or default.
+        version = self.params.get("version", "").strip()
+        if not version:
+            version_path = os.path.join(self.params["output_directory"], "VERSION")
+            if os.path.exists(version_path):
+                with open(version_path) as f:
+                    version = f.read().strip()
+            else:
+                version = "0.0.1"
 
-        # Generate unique plugin code
-        plugin_code = generate_plugin_id()
+        # Use plugin code from params if provided, otherwise generate a unique one.
+        plugin_code = (self.params.get("plugin_code", "") or "").strip() or generate_plugin_id()
 
         # Format selection
         formats = []
@@ -179,6 +203,8 @@ class ProjectWorker(QObject):
             formats.append("AU")
         if self.options.get("auv3", False):
             formats.append("AUv3")
+        if self.options.get("clap", False):
+            formats.append("CLAP")
 
         # Format string for CMake
         formats_string = f"FORMATS {' '.join(formats)}"
@@ -297,6 +323,14 @@ class ProjectWorker(QObject):
                     text=True,
                 )
 
+                # Provide fallback git author info for CI or clean environments that
+                # have no global git user.name / user.email configured.
+                env = os.environ.copy()
+                env.setdefault("GIT_AUTHOR_NAME", "Plugin Configurator")
+                env.setdefault("GIT_AUTHOR_EMAIL", "noreply@direktdsp.com")
+                env.setdefault("GIT_COMMITTER_NAME", "Plugin Configurator")
+                env.setdefault("GIT_COMMITTER_EMAIL", "noreply@direktdsp.com")
+
                 # Commit
                 subprocess.run(
                     [
@@ -309,6 +343,7 @@ class ProjectWorker(QObject):
                     check=True,
                     capture_output=True,
                     text=True,
+                    env=env,
                 )
 
                 self.progress.emit("Git repository initialized successfully")
