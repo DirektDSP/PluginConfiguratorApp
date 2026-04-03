@@ -1,7 +1,6 @@
 """Generate Tab - summary review and project generation."""
 
-from PySide6.QtCore import Qt, QThread, QUrl, Slot
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import Qt, QThread, Slot
 from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
@@ -19,6 +18,7 @@ from PySide6.QtWidgets import (
 from core.base_tab import BaseTab
 from core.project_worker import ProjectWorker
 from ui.components.validation_footer import ValidationFooter
+from ui.dialogs.success_dialog import SuccessDialog
 
 
 class GenerateTab(BaseTab):
@@ -515,15 +515,9 @@ class GenerateTab(BaseTab):
         self._log_text.append("\n=== Generation Complete ===")
         self._log_text.append("Project generated successfully!")
 
-        output_dir = self._full_config.get("project_info", {}).get("output_directory", "")
+        project_info = self._full_config.get("project_info", {})
+        project_name = project_info.get("project_name", "")
+        output_dir = project_info.get("output_directory", "")
 
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("Project Generated")
-        msg_box.setText(f"Project generated successfully!\n\nLocation: {output_dir}")
-        msg_box.setIcon(QMessageBox.Icon.Information)
-        open_btn = msg_box.addButton("Open Folder", QMessageBox.ButtonRole.ActionRole)
-        msg_box.addButton("Close", QMessageBox.ButtonRole.RejectRole)
-        msg_box.exec()
-
-        if msg_box.clickedButton() is open_btn and output_dir:
-            QDesktopServices.openUrl(QUrl.fromLocalFile(output_dir))
+        dlg = SuccessDialog(project_name, output_dir, parent=self)
+        dlg.exec()
