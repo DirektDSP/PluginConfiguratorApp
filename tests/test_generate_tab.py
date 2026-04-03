@@ -3,7 +3,7 @@
 import sys
 
 import pytest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
 
 from ui.tabs.generate_tab import GenerateTab
 
@@ -323,3 +323,250 @@ class TestGenerateTabGlobalValidation:
     def test_set_global_validation_empty_issues_enables_button(self, generate_tab):
         generate_tab.set_global_validation(True, [])
         assert generate_tab._generate_button.isEnabled()
+
+
+# ------------------------------------------------------------------ #
+# New feature tests                                                    #
+# ------------------------------------------------------------------ #
+
+MISSING_METADATA_CONFIG = {
+    "project_info": {
+        "project_name": "",
+        "product_name": "My Plugin",
+        "company_name": "",
+        "bundle_id": "",
+        "manufacturer_code": "Acme",
+        "plugin_code": "",
+        "version": "1.0.0",
+        "output_directory": "",
+    },
+    "configuration": {
+        "vst3": True,
+    },
+    "implementations": {},
+    "user_experience": {},
+}
+
+NO_FORMAT_CONFIG = {
+    "project_info": SAMPLE_CONFIG["project_info"],
+    "configuration": {
+        "standalone": False,
+        "vst3": False,
+        "au": False,
+        "auv3": False,
+        "clap": False,
+    },
+    "implementations": {},
+    "user_experience": {},
+}
+
+TWO_INVALID_SECTIONS_CONFIG = {
+    "project_info": {
+        "project_name": "",
+        "company_name": "",
+        "bundle_id": "",
+        "manufacturer_code": "",
+        "output_directory": "",
+    },
+    "configuration": {
+        "standalone": False,
+        "vst3": False,
+        "au": False,
+        "auv3": False,
+        "clap": False,
+    },
+    "implementations": {},
+    "user_experience": {},
+}
+
+
+class TestGenerateTabSectionTooltips:
+    """Section-specific error messages in status icon tooltips."""
+
+    def test_valid_metadata_tooltip_says_valid(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        tooltip = generate_tab._status_icons["Metadata"].toolTip()
+        assert "Valid" in tooltip
+
+    def test_invalid_metadata_tooltip_mentions_missing_project_name(self, generate_tab):
+        cfg = {
+            "project_info": {
+                "project_name": "",
+                "company_name": "Acme",
+                "bundle_id": "com.acme.plugin",
+                "manufacturer_code": "Acme",
+                "output_directory": "/tmp",
+            },
+            "configuration": {},
+        }
+        generate_tab.update_full_config(cfg)
+        tooltip = generate_tab._status_icons["Metadata"].toolTip()
+        assert "Project Name" in tooltip
+
+    def test_invalid_metadata_tooltip_mentions_all_missing_fields(self, generate_tab):
+        generate_tab.update_full_config(MISSING_METADATA_CONFIG)
+        tooltip = generate_tab._status_icons["Metadata"].toolTip()
+        assert "Project Name" in tooltip
+        assert "Company Name" in tooltip
+        assert "Bundle ID" in tooltip
+        assert "Output Directory" in tooltip
+
+    def test_invalid_metadata_tooltip_contains_missing_prefix(self, generate_tab):
+        cfg = {
+            "project_info": {
+                "project_name": "",
+                "company_name": "Acme",
+                "bundle_id": "com.acme.plugin",
+                "manufacturer_code": "Acme",
+                "output_directory": "/tmp",
+            },
+            "configuration": {},
+        }
+        generate_tab.update_full_config(cfg)
+        tooltip = generate_tab._status_icons["Metadata"].toolTip()
+        assert "Missing" in tooltip
+
+    def test_invalid_build_tooltip_mentions_no_format(self, generate_tab):
+        generate_tab.update_full_config(NO_FORMAT_CONFIG)
+        tooltip = generate_tab._status_icons["Build"].toolTip()
+        assert "No plugin format selected" in tooltip
+
+    def test_valid_build_tooltip_says_valid(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        tooltip = generate_tab._status_icons["Build"].toolTip()
+        assert "Valid" in tooltip
+
+    def test_dsp_tooltip_says_valid(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        tooltip = generate_tab._status_icons["DSP"].toolTip()
+        assert "Valid" in tooltip
+
+    def test_ui_tooltip_says_valid(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        tooltip = generate_tab._status_icons["UI"].toolTip()
+        assert "Valid" in tooltip
+
+    def test_modules_tooltip_says_valid(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        tooltip = generate_tab._status_icons["Modules"].toolTip()
+        assert "Valid" in tooltip
+
+
+class TestGenerateTabSectionHighlighting:
+    """Visual border highlighting of section group boxes."""
+
+    def test_section_groups_dict_has_all_five_sections(self, generate_tab):
+        assert set(generate_tab._section_groups.keys()) == {
+            "Metadata",
+            "Build",
+            "DSP",
+            "UI",
+            "Modules",
+        }
+
+    def test_valid_metadata_group_has_green_border(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        style = generate_tab._section_groups["Metadata"].styleSheet()
+        assert "#2e7d32" in style
+
+    def test_invalid_metadata_group_has_red_border(self, generate_tab):
+        generate_tab.update_full_config(MISSING_METADATA_CONFIG)
+        style = generate_tab._section_groups["Metadata"].styleSheet()
+        assert "#c62828" in style
+
+    def test_invalid_build_group_has_red_border(self, generate_tab):
+        generate_tab.update_full_config(NO_FORMAT_CONFIG)
+        style = generate_tab._section_groups["Build"].styleSheet()
+        assert "#c62828" in style
+
+    def test_valid_build_group_has_green_border(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        style = generate_tab._section_groups["Build"].styleSheet()
+        assert "#2e7d32" in style
+
+    def test_dsp_group_has_green_border_when_config_loaded(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        style = generate_tab._section_groups["DSP"].styleSheet()
+        assert "#2e7d32" in style
+
+    def test_ui_group_has_green_border_when_config_loaded(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        style = generate_tab._section_groups["UI"].styleSheet()
+        assert "#2e7d32" in style
+
+    def test_modules_group_has_green_border_when_config_loaded(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        style = generate_tab._section_groups["Modules"].styleSheet()
+        assert "#2e7d32" in style
+
+    def test_reset_clears_section_group_styles(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab.reset()
+        for group in generate_tab._section_groups.values():
+            assert group.styleSheet() == ""
+
+
+class TestGenerateTabOverallStatus:
+    """Overall status label in the Configuration Status group."""
+
+    def test_overall_status_label_exists(self, generate_tab):
+        assert hasattr(generate_tab, "_overall_status_lbl")
+
+    def test_overall_status_empty_initially(self, app):
+        new_tab = GenerateTab()
+        assert new_tab._overall_status_lbl.text() == ""
+        new_tab.deleteLater()
+
+    def test_overall_status_shows_all_valid_when_full_config_valid(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        text = generate_tab._overall_status_lbl.text()
+        assert "All sections valid" in text
+
+    def test_overall_status_shows_checkmark_when_all_valid(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        text = generate_tab._overall_status_lbl.text()
+        assert "✅" in text
+
+    def test_overall_status_shows_count_when_sections_invalid(self, generate_tab):
+        generate_tab.update_full_config(MISSING_METADATA_CONFIG)
+        text = generate_tab._overall_status_lbl.text()
+        assert "need attention" in text
+
+    def test_overall_status_shows_cross_mark_when_invalid(self, generate_tab):
+        generate_tab.update_full_config(MISSING_METADATA_CONFIG)
+        text = generate_tab._overall_status_lbl.text()
+        assert "❌" in text
+
+    def test_overall_status_counts_one_invalid_section(self, generate_tab):
+        generate_tab.update_full_config(MISSING_METADATA_CONFIG)
+        text = generate_tab._overall_status_lbl.text()
+        assert "1 section" in text
+
+    def test_overall_status_counts_two_invalid_sections(self, generate_tab):
+        generate_tab.update_full_config(TWO_INVALID_SECTIONS_CONFIG)
+        text = generate_tab._overall_status_lbl.text()
+        assert "2 sections" in text
+
+    def test_overall_status_uses_plural_for_multiple_sections(self, generate_tab):
+        generate_tab.update_full_config(TWO_INVALID_SECTIONS_CONFIG)
+        text = generate_tab._overall_status_lbl.text()
+        assert "sections" in text
+
+    def test_reset_clears_overall_status_label(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab.reset()
+        assert generate_tab._overall_status_lbl.text() == ""
+
+
+class TestGenerateTabScrollReference:
+    """Scroll area reference is set and section groups are stored."""
+
+    def test_scroll_area_reference_exists(self, generate_tab):
+        assert hasattr(generate_tab, "_scroll")
+
+    def test_scroll_area_is_qscrollarea(self, generate_tab):
+        assert isinstance(generate_tab._scroll, QScrollArea)
+
+    def test_section_groups_are_qgroupbox_instances(self, generate_tab):
+        for group in generate_tab._section_groups.values():
+            assert isinstance(group, QGroupBox)
