@@ -3,6 +3,7 @@
 from PySide6.QtCore import Qt, QThread, QUrl, Slot
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
+    QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -18,16 +19,22 @@ from PySide6.QtWidgets import (
 
 from core.base_tab import BaseTab
 from core.project_worker import ProjectWorker
+from ui.components.accordion_expander import AccordionExpander
 from ui.components.validation_footer import ValidationFooter
+
+_FIELD_LABEL_STYLE = "font-weight: bold;"
 
 
 class GenerateTab(BaseTab):
     """Tab: Generate - Summary review and project generation.
 
     Displays a read-only summary of the entire project configuration grouped
-    into Metadata, Build, DSP, UI, and Modules sections, with per-section
-    validation status indicators, a prominent Generate button, threaded
-    progress tracking, and a post-generation success dialog with actions.
+    into Metadata, Build Configuration, DSP Template, UI Template, and Modules
+    sections.  Each section uses a structured form layout for clean, scannable
+    display of individual fields.  The Modules section is wrapped in a
+    collapsible AccordionExpander.  Per-section validation status indicators,
+    a prominent Generate button, threaded progress tracking, and a
+    post-generation success dialog are also included.
     """
 
     def __init__(self, parent=None):
@@ -79,21 +86,64 @@ class GenerateTab(BaseTab):
         status_group.setLayout(status_inner)
         content_layout.addWidget(status_group)
 
-        # -- Summary sections --
-        self._metadata_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("Metadata", self._metadata_lbl))
+        # -- Metadata section --
+        meta_widget, self._meta_fields = self._make_form_section(
+            [
+                ("project_name", "Project Name"),
+                ("product_name", "Product Name"),
+                ("company_name", "Company"),
+                ("bundle_id", "Bundle ID"),
+                ("manufacturer_code", "Manufacturer Code"),
+                ("plugin_code", "Plugin Code"),
+                ("version", "Version"),
+                ("output_directory", "Output Directory"),
+            ]
+        )
+        content_layout.addWidget(self._make_section_group("Metadata", meta_widget))
 
-        self._build_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("Build", self._build_lbl))
+        # -- Build Configuration section --
+        build_widget, self._build_fields = self._make_form_section(
+            [
+                ("formats", "Plugin Formats"),
+                ("code_signing", "Code Signing"),
+                ("installer", "Installer"),
+            ]
+        )
+        content_layout.addWidget(self._make_section_group("Build Configuration", build_widget))
 
-        self._dsp_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("DSP", self._dsp_lbl))
+        # -- DSP Template section --
+        dsp_widget, self._dsp_fields = self._make_form_section(
+            [
+                ("default_bypass", "Default Bypass"),
+                ("input_gain", "Input Gain"),
+                ("output_gain", "Output Gain"),
+            ]
+        )
+        content_layout.addWidget(self._make_section_group("DSP Template", dsp_widget))
 
-        self._ui_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("UI", self._ui_lbl))
+        # -- UI Template section --
+        ui_widget, self._ui_fields = self._make_form_section(
+            [
+                ("gui_size", "GUI Size"),
+                ("resizable", "Resizable"),
+                ("wizard", "Wizard"),
+                ("preview", "Preview"),
+            ]
+        )
+        content_layout.addWidget(self._make_section_group("UI Template", ui_widget))
 
-        self._modules_lbl = self._make_summary_label()
-        content_layout.addWidget(self._make_section_group("Modules", self._modules_lbl))
+        # -- Modules section (collapsible accordion) --
+        self._modules_accordion = AccordionExpander(
+            "Modules",
+            subtitle="Optional modules included in the project",
+            start_expanded=True,
+        )
+        self._modules_lbl = QLabel("No optional modules selected")
+        self._modules_lbl.setWordWrap(True)
+        self._modules_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._modules_lbl.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self._modules_accordion.body_layout.addWidget(self._modules_lbl)
+        content_layout.addWidget(self._modules_accordion)
 
         # -- Progress group --
         progress_group = QGroupBox("Generation Progress")
@@ -165,14 +215,15 @@ class GenerateTab(BaseTab):
     def reset(self) -> None:
         """Reset the tab to its initial state."""
         self._full_config = {}
-        for lbl in (
-            self._metadata_lbl,
-            self._build_lbl,
-            self._dsp_lbl,
-            self._ui_lbl,
-            self._modules_lbl,
+        for field_dict in (
+            self._meta_fields,
+            self._build_fields,
+            self._dsp_fields,
+            self._ui_fields,
         ):
-            lbl.setText("—")
+            for lbl in field_dict.values():
+                lbl.setText("—")
+        self._modules_lbl.setText("No optional modules selected")
         for icon in self._status_icons.values():
             icon.setText("⚪")
             icon.setToolTip("")
@@ -223,23 +274,44 @@ class GenerateTab(BaseTab):
     # ------------------------------------------------------------------ #
 
     @staticmethod
-    def _make_summary_label() -> QLabel:
-        lbl = QLabel("—")
-        lbl.setWordWrap(True)
-        lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        lbl.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        return lbl
+    def _make_form_section(
+        fields: list[tuple[str, str]],
+    ) -> tuple[QWidget, dict[str, QLabel]]:
+        """Create a form widget with labeled rows and return (widget, value_labels_dict).
+
+        Args:
+            fields: Ordered list of (key, display_name) pairs.
+
+        Returns:
+            A tuple of (container QWidget with QFormLayout, dict mapping key → value QLabel).
+        """
+        widget = QWidget()
+        layout = QFormLayout(widget)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(6)
+        layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        labels: dict[str, QLabel] = {}
+        for key, display_name in fields:
+            name_lbl = QLabel(f"{display_name}:")
+            name_lbl.setStyleSheet(_FIELD_LABEL_STYLE)
+            val_lbl = QLabel("—")
+            val_lbl.setWordWrap(True)
+            val_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            layout.addRow(name_lbl, val_lbl)
+            labels[key] = val_lbl
+        return widget, labels
 
     @staticmethod
-    def _make_section_group(title: str, label: QLabel) -> QGroupBox:
+    def _make_section_group(title: str, widget: QWidget) -> QGroupBox:
         group = QGroupBox(title)
         inner = QVBoxLayout()
-        inner.addWidget(label)
+        inner.setContentsMargins(0, 4, 0, 4)
+        inner.addWidget(widget)
         group.setLayout(inner)
         return group
 
     def _refresh_summary(self) -> None:
-        """Populate summary labels and update validation indicators."""
+        """Populate summary field labels and update validation indicators."""
         project_info = self._full_config.get("project_info", {})
         config_data = self._full_config.get("configuration", {})
         implementations = self._full_config.get("implementations", {})
@@ -248,60 +320,51 @@ class GenerateTab(BaseTab):
         def _val(v: str) -> str:
             return v if v else "—"
 
+        def _enabled(b: bool) -> str:
+            return "Enabled" if b else "Disabled"
+
         # ---- Metadata ----
-        self._metadata_lbl.setText(
-            "\n".join(
-                [
-                    f"Project Name:      {_val(project_info.get('project_name', ''))}",
-                    f"Product Name:      {_val(project_info.get('product_name', ''))}",
-                    f"Company:           {_val(project_info.get('company_name', ''))}",
-                    f"Bundle ID:         {_val(project_info.get('bundle_id', ''))}",
-                    f"Manufacturer Code: {_val(project_info.get('manufacturer_code', ''))}",
-                    f"Plugin Code:       {_val(project_info.get('plugin_code', ''))}",
-                    f"Version:           {_val(project_info.get('version', ''))}",
-                    f"Output Directory:  {_val(project_info.get('output_directory', ''))}",
-                ]
-            )
+        self._meta_fields["project_name"].setText(_val(project_info.get("project_name", "")))
+        self._meta_fields["product_name"].setText(_val(project_info.get("product_name", "")))
+        self._meta_fields["company_name"].setText(_val(project_info.get("company_name", "")))
+        self._meta_fields["bundle_id"].setText(_val(project_info.get("bundle_id", "")))
+        self._meta_fields["manufacturer_code"].setText(
+            _val(project_info.get("manufacturer_code", ""))
+        )
+        self._meta_fields["plugin_code"].setText(_val(project_info.get("plugin_code", "")))
+        self._meta_fields["version"].setText(_val(project_info.get("version", "")))
+        self._meta_fields["output_directory"].setText(
+            _val(project_info.get("output_directory", ""))
         )
 
-        # ---- Build ----
+        # ---- Build Configuration ----
         formats = [
             fmt.upper()
             for fmt in ("standalone", "vst3", "au", "auv3", "clap")
             if config_data.get(fmt, False)
         ]
-        self._build_lbl.setText(
-            "\n".join(
-                [
-                    f"Plugin Formats: {', '.join(formats) if formats else 'None selected'}",
-                    f"Code Signing:   {'Enabled' if config_data.get('code_signing') else 'Disabled'}",
-                    f"Installer:      {'Enabled' if config_data.get('installer') else 'Disabled'}",
-                ]
-            )
+        self._build_fields["formats"].setText(
+            ", ".join(formats) if formats else "None selected"
         )
+        self._build_fields["code_signing"].setText(
+            _enabled(config_data.get("code_signing", False))
+        )
+        self._build_fields["installer"].setText(_enabled(config_data.get("installer", False)))
 
-        # ---- DSP ----
-        self._dsp_lbl.setText(
-            "\n".join(
-                [
-                    f"Default Bypass: {'Enabled' if config_data.get('default_bypass') else 'Disabled'}",
-                    f"Input Gain:     {'Enabled' if config_data.get('input_gain') else 'Disabled'}",
-                    f"Output Gain:    {'Enabled' if config_data.get('output_gain') else 'Disabled'}",
-                ]
-            )
+        # ---- DSP Template ----
+        self._dsp_fields["default_bypass"].setText(
+            _enabled(config_data.get("default_bypass", False))
         )
+        self._dsp_fields["input_gain"].setText(_enabled(config_data.get("input_gain", False)))
+        self._dsp_fields["output_gain"].setText(_enabled(config_data.get("output_gain", False)))
 
-        # ---- UI ----
-        self._ui_lbl.setText(
-            "\n".join(
-                [
-                    f"GUI Size:   {config_data.get('gui_width', 800)} x {config_data.get('gui_height', 600)}",
-                    f"Resizable:  {'Yes' if config_data.get('resizable') else 'No'}",
-                    f"Wizard:     {'Enabled' if user_exp.get('wizard') else 'Disabled'}",
-                    f"Preview:    {'Enabled' if user_exp.get('preview') else 'Disabled'}",
-                ]
-            )
+        # ---- UI Template ----
+        self._ui_fields["gui_size"].setText(
+            f"{config_data.get('gui_width', 800)} x {config_data.get('gui_height', 600)}"
         )
+        self._ui_fields["resizable"].setText("Yes" if config_data.get("resizable") else "No")
+        self._ui_fields["wizard"].setText(_enabled(user_exp.get("wizard", False)))
+        self._ui_fields["preview"].setText(_enabled(user_exp.get("preview", False)))
 
         # ---- Modules ----
         module_map = {

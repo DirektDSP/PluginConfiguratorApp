@@ -134,42 +134,70 @@ class TestGenerateTabSummary:
         generate_tab.update_full_config(SAMPLE_CONFIG)
         assert generate_tab._full_config == SAMPLE_CONFIG
 
-    def test_metadata_label_shows_project_name(self, generate_tab):
+    def test_metadata_field_shows_project_name(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "MyPlugin" in generate_tab._metadata_lbl.text()
+        assert generate_tab._meta_fields["project_name"].text() == "MyPlugin"
 
-    def test_metadata_label_shows_company(self, generate_tab):
+    def test_metadata_field_shows_company(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "Acme Corp" in generate_tab._metadata_lbl.text()
+        assert generate_tab._meta_fields["company_name"].text() == "Acme Corp"
 
-    def test_metadata_label_shows_output_directory(self, generate_tab):
+    def test_metadata_field_shows_output_directory(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "/tmp/output" in generate_tab._metadata_lbl.text()
+        assert generate_tab._meta_fields["output_directory"].text() == "/tmp/output"
 
-    def test_build_label_shows_vst3(self, generate_tab):
+    def test_metadata_field_shows_product_name(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "VST3" in generate_tab._build_lbl.text()
+        assert generate_tab._meta_fields["product_name"].text() == "My Plugin"
 
-    def test_build_label_shows_au(self, generate_tab):
+    def test_metadata_field_shows_bundle_id(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "AU" in generate_tab._build_lbl.text()
+        assert generate_tab._meta_fields["bundle_id"].text() == "com.acme.myplugin"
 
-    def test_build_label_shows_clap(self, generate_tab):
+    def test_metadata_field_shows_version(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "CLAP" in generate_tab._build_lbl.text()
+        assert generate_tab._meta_fields["version"].text() == "1.0.0"
 
-    def test_build_label_does_not_show_standalone_when_disabled(self, generate_tab):
+    def test_build_field_shows_vst3(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "STANDALONE" not in generate_tab._build_lbl.text()
+        assert "VST3" in generate_tab._build_fields["formats"].text()
 
-    def test_dsp_label_shows_default_bypass_enabled(self, generate_tab):
+    def test_build_field_shows_au(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "Enabled" in generate_tab._dsp_lbl.text()
+        assert "AU" in generate_tab._build_fields["formats"].text()
 
-    def test_ui_label_shows_gui_size(self, generate_tab):
+    def test_build_field_shows_clap(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
-        assert "800" in generate_tab._ui_lbl.text()
-        assert "600" in generate_tab._ui_lbl.text()
+        assert "CLAP" in generate_tab._build_fields["formats"].text()
+
+    def test_build_field_does_not_show_standalone_when_disabled(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        assert "STANDALONE" not in generate_tab._build_fields["formats"].text()
+
+    def test_build_field_code_signing_disabled(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        assert generate_tab._build_fields["code_signing"].text() == "Disabled"
+
+    def test_dsp_field_shows_default_bypass_enabled(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        assert generate_tab._dsp_fields["default_bypass"].text() == "Enabled"
+
+    def test_dsp_field_shows_input_gain_disabled(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        assert generate_tab._dsp_fields["input_gain"].text() == "Disabled"
+
+    def test_ui_field_shows_gui_size(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        assert "800" in generate_tab._ui_fields["gui_size"].text()
+        assert "600" in generate_tab._ui_fields["gui_size"].text()
+
+    def test_ui_field_shows_resizable_no(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        assert generate_tab._ui_fields["resizable"].text() == "No"
+
+    def test_ui_field_shows_wizard_enabled(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        assert generate_tab._ui_fields["wizard"].text() == "Enabled"
 
     def test_modules_label_shows_moonbase(self, generate_tab):
         generate_tab.update_full_config(SAMPLE_CONFIG)
@@ -185,6 +213,14 @@ class TestGenerateTabSummary:
         cfg["implementations"] = {}
         generate_tab.update_full_config(cfg)
         assert "No optional modules selected" in generate_tab._modules_lbl.text()
+
+    def test_metadata_field_shows_dash_for_empty_value(self, generate_tab):
+        generate_tab.update_full_config({"project_info": {"project_name": ""}})
+        assert generate_tab._meta_fields["project_name"].text() == "—"
+
+    def test_build_field_shows_none_selected_when_no_formats(self, generate_tab):
+        generate_tab.update_full_config({"configuration": {}})
+        assert generate_tab._build_fields["formats"].text() == "None selected"
 
 
 class TestGenerateTabStatusIcons:
@@ -281,6 +317,55 @@ class TestGenerateTabLoadAndReset:
         generate_tab.reset()
         assert generate_tab._log_text.toPlainText() == ""
 
+    def test_reset_clears_meta_fields_to_dash(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab.reset()
+        for lbl in generate_tab._meta_fields.values():
+            assert lbl.text() == "—"
+
+    def test_reset_clears_build_fields_to_dash(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab.reset()
+        for lbl in generate_tab._build_fields.values():
+            assert lbl.text() == "—"
+
+    def test_reset_clears_dsp_fields_to_dash(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab.reset()
+        for lbl in generate_tab._dsp_fields.values():
+            assert lbl.text() == "—"
+
+    def test_reset_clears_ui_fields_to_dash(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab.reset()
+        for lbl in generate_tab._ui_fields.values():
+            assert lbl.text() == "—"
+
+    def test_reset_resets_modules_label(self, generate_tab):
+        generate_tab.update_full_config(SAMPLE_CONFIG)
+        generate_tab.reset()
+        assert generate_tab._modules_lbl.text() == "No optional modules selected"
+
+
+class TestGenerateTabModulesAccordion:
+    def test_modules_accordion_exists(self, generate_tab):
+        assert generate_tab._modules_accordion is not None
+
+    def test_modules_accordion_starts_expanded(self, generate_tab):
+        assert generate_tab._modules_accordion.is_expanded is True
+
+    def test_modules_accordion_can_be_collapsed(self, generate_tab):
+        generate_tab._modules_accordion.set_expanded(False)
+        assert generate_tab._modules_accordion.is_expanded is False
+
+    def test_modules_accordion_can_be_re_expanded(self, generate_tab):
+        generate_tab._modules_accordion.set_expanded(False)
+        generate_tab._modules_accordion.set_expanded(True)
+        assert generate_tab._modules_accordion.is_expanded is True
+
+    def test_modules_lbl_is_inside_accordion(self, generate_tab):
+        # The modules label should be a child of the accordion's content widget
+        assert generate_tab._modules_lbl.parent() is not None
 
 class TestGenerateTabButton:
     def test_generate_button_has_tooltip(self, generate_tab):
