@@ -165,7 +165,7 @@ class TestConfigManager:
     def sample_config(self):
         """Sample configuration dict"""
         return {
-            "meta": {"name": "SamplePreset", "description": "Testing preset"},
+            "meta": {"name": "SamplePreset", "description": "Testing preset", "schema_version": "1.0"},
             "project_info": {
                 "template_name": "Audio FX Plugin",
                 "template_url": "https://github.com/SeamusMullan/PluginTemplate.git",

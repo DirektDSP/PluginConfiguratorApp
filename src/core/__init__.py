@@ -4,5 +4,6 @@ Contains business logic and worker classes.
 """
 
 from .base_tab import BaseTab, TabSignals
+from .preset_validator import PresetXSDValidator
 
-__all__ = ["BaseTab", "TabSignals"]
+__all__ = ["BaseTab", "PresetXSDValidator", "TabSignals"]
