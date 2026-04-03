@@ -34,6 +34,29 @@ from PySide6.QtWidgets import (
 from core.base_tab import BaseTab
 from core.config_manager import ConfigurationManager
 from core.utils import generate_plugin_id
+from core.validators import (
+    validate_bundle_id,
+    validate_company_name,
+    validate_manufacturer_code,
+    validate_output_directory,
+    validate_plugin_code,
+    validate_product_name,
+    validate_project_name,
+    validate_version,
+)
+from ui.components.field_validator import FieldValidator, make_error_label
+from ui.components.validation_footer import ValidationFooter
+
+
+def _wrap_with_error(field, error_label):
+    """Return a QWidget container holding *field* above *error_label*."""
+    container = QWidget()
+    layout = QVBoxLayout(container)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(2)
+    layout.addWidget(field)
+    layout.addWidget(error_label)
+    return container
 
 
 class ProjectInfoTab(BaseTab):
@@ -170,18 +193,25 @@ class ProjectInfoTab(BaseTab):
         # Project name field
         self.project_name = QLineEdit()
         self.project_name.setPlaceholderText("No spaces, only letters and numbers")
-        self.project_layout.addRow("Project Name:", self.project_name)
+        self._project_name_error = make_error_label()
+        self.project_layout.addRow(
+            "Project Name:", _wrap_with_error(self.project_name, self._project_name_error)
+        )
 
         # Product name field
         self.product_name = QLineEdit()
         self.product_name.setPlaceholderText("Display name in DAWs")
-        self.project_layout.addRow("Product Name:", self.product_name)
+        self._product_name_error = make_error_label()
+        self.project_layout.addRow(
+            "Product Name:", _wrap_with_error(self.product_name, self._product_name_error)
+        )
 
         # Version field
         self.version = QLineEdit()
         self.version.setPlaceholderText("1.0.0")
         self.version.setText("1.0.0")
-        self.project_layout.addRow("Version:", self.version)
+        self._version_error = make_error_label()
+        self.project_layout.addRow("Version:", _wrap_with_error(self.version, self._version_error))
 
         self.project_group.setLayout(self.project_layout)
 
@@ -196,19 +226,29 @@ class ProjectInfoTab(BaseTab):
         self.company_name = QLineEdit()
         self.company_name.setPlaceholderText("Your Company Name")
         self.company_name.setText("DirektDSP")
-        self.company_layout.addRow("Company Name:", self.company_name)
+        self._company_name_error = make_error_label()
+        self.company_layout.addRow(
+            "Company Name:", _wrap_with_error(self.company_name, self._company_name_error)
+        )
 
         # Bundle ID field
         self.bundle_id = QLineEdit()
         self.bundle_id.setPlaceholderText("com.yourcompany.pluginname")
-        self.company_layout.addRow("Bundle ID:", self.bundle_id)
+        self._bundle_id_error = make_error_label()
+        self.company_layout.addRow(
+            "Bundle ID:", _wrap_with_error(self.bundle_id, self._bundle_id_error)
+        )
 
         # Manufacturer code field
         self.manufacturer_code = QLineEdit()
         self.manufacturer_code.setPlaceholderText("Four character code")
-        self.manufacturer_code.setText("NewCode")
+        self.manufacturer_code.setText("Ddsp")
         self.manufacturer_code.setMaxLength(4)
-        self.company_layout.addRow("Manufacturer Code:", self.manufacturer_code)
+        self._manufacturer_code_error = make_error_label()
+        self.company_layout.addRow(
+            "Manufacturer Code:",
+            _wrap_with_error(self.manufacturer_code, self._manufacturer_code_error),
+        )
 
         # Plugin code field with generate button
         plugin_code_layout = QHBoxLayout()
@@ -218,7 +258,14 @@ class ProjectInfoTab(BaseTab):
         self.generate_code_button = QPushButton("Generate")
         plugin_code_layout.addWidget(self.plugin_code)
         plugin_code_layout.addWidget(self.generate_code_button)
-        self.company_layout.addRow("Plugin Code:", plugin_code_layout)
+        self._plugin_code_error = make_error_label()
+        plugin_code_container = QWidget()
+        plugin_code_container_layout = QVBoxLayout(plugin_code_container)
+        plugin_code_container_layout.setContentsMargins(0, 0, 0, 0)
+        plugin_code_container_layout.setSpacing(2)
+        plugin_code_container_layout.addLayout(plugin_code_layout)
+        plugin_code_container_layout.addWidget(self._plugin_code_error)
+        self.company_layout.addRow("Plugin Code:", plugin_code_container)
 
         self.company_group.setLayout(self.company_layout)
 
@@ -234,7 +281,14 @@ class ProjectInfoTab(BaseTab):
         self.browse_button = QPushButton("Browse...")
         self.output_dir_layout.addWidget(self.output_directory)
         self.output_dir_layout.addWidget(self.browse_button)
-        self.output_layout.addRow("Output Directory:", self.output_dir_layout)
+        self._output_directory_error = make_error_label()
+        output_dir_container = QWidget()
+        output_dir_container_layout = QVBoxLayout(output_dir_container)
+        output_dir_container_layout.setContentsMargins(0, 0, 0, 0)
+        output_dir_container_layout.setSpacing(2)
+        output_dir_container_layout.addLayout(self.output_dir_layout)
+        output_dir_container_layout.addWidget(self._output_directory_error)
+        self.output_layout.addRow("Output Directory:", output_dir_container)
 
         self.output_group.setLayout(self.output_layout)
 
@@ -310,6 +364,10 @@ class ProjectInfoTab(BaseTab):
         # Add splitter to main layout
         self.main_layout.addWidget(self.splitter)
 
+        # Validation footer - shows required-field count and allows jump-to-fix
+        self.validation_footer = ValidationFooter(self)
+        self.main_layout.addWidget(self.validation_footer)
+
     def setup_connections(self):
         """Connect signals to slots"""
         self.project_name.textChanged.connect(self.update_from_project_name)
@@ -338,8 +396,40 @@ class ProjectInfoTab(BaseTab):
         for widget in text_widgets:
             widget.textChanged.connect(self._on_form_field_changed)
             widget.textChanged.connect(self._update_quick_start_button_state)
+            widget.textChanged.connect(self._update_validation_footer)
         self._update_quick_start_button_state()
         self._update_plugin_type_sections()
+        # Connect footer's fix_requested to focus the first invalid field
+        self.validation_footer.fix_requested.connect(self.focus_first_invalid)
+        # Set initial footer state
+        self._update_validation_footer()
+        self._wire_field_validators()
+
+    def _wire_field_validators(self):
+        """Attach real-time validators with visual feedback to all form fields."""
+        self._field_validators: list[FieldValidator] = [
+            FieldValidator(self.project_name, self._project_name_error, validate_project_name),
+            FieldValidator(self.product_name, self._product_name_error, validate_product_name),
+            FieldValidator(
+                self.version, self._version_error, validate_version, validate_on_empty=True
+            ),
+            FieldValidator(self.company_name, self._company_name_error, validate_company_name),
+            FieldValidator(self.bundle_id, self._bundle_id_error, validate_bundle_id),
+            FieldValidator(
+                self.manufacturer_code,
+                self._manufacturer_code_error,
+                validate_manufacturer_code,
+            ),
+            FieldValidator(self.plugin_code, self._plugin_code_error, validate_plugin_code),
+            FieldValidator(
+                self.output_directory,
+                self._output_directory_error,
+                validate_output_directory,
+            ),
+        ]
+        # Show initial feedback for fields that already have pre-populated values.
+        for fv in self._field_validators:
+            fv.trigger_validation()
 
     @Slot(str)
     def update_from_project_name(self, text):
@@ -663,6 +753,55 @@ class ProjectInfoTab(BaseTab):
             self.generate_plugin_code()
 
         return True
+
+    def get_required_fields(self) -> list:
+        """Return (widget, label) pairs for all required text fields."""
+        return [
+            (self.project_name, "Project Name"),
+            (self.product_name, "Product Name"),
+            (self.company_name, "Company Name"),
+            (self.bundle_id, "Bundle ID"),
+            (self.manufacturer_code, "Manufacturer Code"),
+            (self.output_directory, "Output Directory"),
+        ]
+
+    def get_invalid_field_count(self) -> int:
+        """Count required fields that are empty or otherwise invalid."""
+        count = 0
+        for widget, _label in self.get_required_fields():
+            if not widget.text().strip():
+                count += 1
+        # Manufacturer code also requires exactly 4 characters
+        if not self._is_manufacturer_code_valid():
+            count += 1
+        return count
+
+    def focus_first_invalid(self):
+        """Scroll to and focus the first empty required field."""
+        for widget, _label in self.get_required_fields():
+            if not widget.text().strip():
+                widget.setFocus()
+                self.form_scroll.ensureWidgetVisible(widget)
+                return
+        # If all fields filled but manufacturer code length is wrong, focus it
+        if not self._is_manufacturer_code_valid():
+            self.manufacturer_code.setFocus()
+            self.form_scroll.ensureWidgetVisible(self.manufacturer_code)
+
+    def _is_manufacturer_code_valid(self) -> bool:
+        """Return True only if the manufacturer code is exactly 4 non-empty characters."""
+        code = self.manufacturer_code.text().strip()
+        # An empty code is caught by the required-field check, not here
+        return not code or len(code) == 4
+
+    @Slot()
+    def _update_validation_footer(self, _text=None):
+        """Refresh the validation footer to reflect the current field state."""
+        remaining = self.get_invalid_field_count()
+        if remaining == 0:
+            self.validation_footer.set_ready()
+        else:
+            self.validation_footer.set_errors(remaining)
 
     def reset(self):
         """Reset form to default values"""

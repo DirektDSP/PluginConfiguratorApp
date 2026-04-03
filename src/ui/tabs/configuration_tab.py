@@ -1,5 +1,6 @@
 """Configuration tab for build, GUI, and DSP options."""
 
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QCheckBox,
     QFormLayout,
@@ -10,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.base_tab import BaseTab
+from ui.components.validation_footer import ValidationFooter
 
 
 class ConfigurationTab(BaseTab):
@@ -86,14 +88,20 @@ class ConfigurationTab(BaseTab):
         self.main_layout.addWidget(self.dsp_group)
         self.main_layout.addStretch()
 
+        # Validation footer
+        self.validation_footer = ValidationFooter(self)
+        self.main_layout.addWidget(self.validation_footer)
+
     def setup_connections(self):
         """Connect signals to slots"""
-        checkboxes = [
+        format_checkboxes = [
             self.standalone_cb,
             self.vst3_cb,
             self.au_cb,
             self.auv3_cb,
             self.clap_cb,
+        ]
+        other_checkboxes = [
             self.resizable_cb,
             self.code_signing_cb,
             self.installer_cb,
@@ -101,11 +109,16 @@ class ConfigurationTab(BaseTab):
             self.in_gain_cb,
             self.out_gain_cb,
         ]
-        for cb in checkboxes:
-            cb.toggled.connect(lambda _: self._emit_config_changed())
-        self.gui_width.valueChanged.connect(lambda _: self._emit_config_changed())
-        self.gui_height.valueChanged.connect(lambda _: self._emit_config_changed())
-        self.bg_image.textChanged.connect(lambda _: self._emit_config_changed())
+        for cb in format_checkboxes:
+            cb.toggled.connect(lambda checked: self._emit_config_changed())
+            cb.toggled.connect(self._update_validation_footer)
+        for cb in other_checkboxes:
+            cb.toggled.connect(lambda checked: self._emit_config_changed())
+        self.gui_width.valueChanged.connect(lambda value: self._emit_config_changed())
+        self.gui_height.valueChanged.connect(lambda value: self._emit_config_changed())
+        self.bg_image.textChanged.connect(lambda text: self._emit_config_changed())
+        self.validation_footer.fix_requested.connect(self._focus_first_invalid_format)
+        self._update_validation_footer()
 
     def get_configuration(self):
         return {
@@ -160,6 +173,23 @@ class ConfigurationTab(BaseTab):
         if not self.validate():
             return ["Configuration: At least one plugin format must be selected"]
         return []
+
+    def get_invalid_field_count(self) -> int:
+        """Return 1 if no plugin format is selected, 0 otherwise."""
+        return 0 if self.validate() else 1
+
+    @Slot()
+    def _update_validation_footer(self, _checked=None):
+        """Refresh the footer to reflect whether a plugin format is selected."""
+        if self.validate():
+            self.validation_footer.set_ready()
+        else:
+            self.validation_footer.set_errors(1)
+
+    @Slot()
+    def _focus_first_invalid_format(self):
+        """Focus the VST3 checkbox as the canonical 'fix' target."""
+        self.vst3_cb.setFocus()
 
     def reset(self):
         self.standalone_cb.setChecked(False)

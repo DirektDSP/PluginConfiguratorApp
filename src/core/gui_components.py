@@ -54,13 +54,9 @@ _ALL_COMPONENTS: dict[str, GuiComponent] = {
     "DirektHeader": GuiComponent("DirektHeader", "chrome", "Plugin header bar"),
     "DirektFooter": GuiComponent("DirektFooter", "chrome", "Plugin footer bar"),
     "DirektPopupPanel": GuiComponent("DirektPopupPanel", "chrome", "Modal popup panel"),
-    "DirektPresetBrowser": GuiComponent(
-        "DirektPresetBrowser", "chrome", "Built-in preset browser"
-    ),
+    "DirektPresetBrowser": GuiComponent("DirektPresetBrowser", "chrome", "Built-in preset browser"),
     # theme
-    "DirektLookAndFeel": GuiComponent(
-        "DirektLookAndFeel", "theme", "Custom look-and-feel styling"
-    ),
+    "DirektLookAndFeel": GuiComponent("DirektLookAndFeel", "theme", "Custom look-and-feel styling"),
     "DirektColours": GuiComponent("DirektColours", "theme", "Colour palette definitions"),
     # config
     "DirektConfig": GuiComponent("DirektConfig", "config", "Runtime configuration"),

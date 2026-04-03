@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from core.base_tab import BaseTab
 from core.project_worker import ProjectWorker
+from ui.components.validation_footer import ValidationFooter
 
 
 class GenerateTab(BaseTab):
@@ -136,6 +137,11 @@ class GenerateTab(BaseTab):
         self._generate_button.setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }")
         btn_row.addWidget(self._generate_button)
         outer_layout.addLayout(btn_row)
+
+        # Validation footer - mirrors overall readiness from upstream tabs
+        self.validation_footer = ValidationFooter(self)
+        self.validation_footer.set_ready()
+        outer_layout.addWidget(self.validation_footer)
 
     def setup_connections(self):
         """Wire up signals."""

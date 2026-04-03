@@ -111,12 +111,12 @@ class AccordionExpander(QWidget):
     @property
     def is_expanded(self) -> bool:
         """Return current expanded state."""
-        return self._toggle.isChecked()
+        return bool(self._toggle.isChecked())
 
     @property
     def indicator_text(self) -> str:
         """Return the current chevron text."""
-        return self._toggle.text()
+        return str(self._toggle.text())
 
     # ------------------------------------------------------------------ #
     # Slots                                                              #
