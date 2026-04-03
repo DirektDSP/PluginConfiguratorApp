@@ -180,7 +180,8 @@ class PresetManagementDialog(QDialog):
         """Return the ``meta`` section of *preset_name*, or an empty dict on error."""
         try:
             config = self._config_manager.load_preset(preset_name)
-            return config.get("meta", {})
+            meta: dict = config.get("meta", {})
+            return meta
         except Exception:
             return {}
 

@@ -34,7 +34,6 @@ from PySide6.QtWidgets import (
 from core.base_tab import BaseTab
 from core.config_manager import ConfigurationManager
 from core.utils import generate_plugin_id
-from ui.components.validation_footer import ValidationFooter
 from core.validators import (
     validate_bundle_id,
     validate_company_name,
@@ -46,6 +45,7 @@ from core.validators import (
     validate_version,
 )
 from ui.components.field_validator import FieldValidator, make_error_label
+from ui.components.validation_footer import ValidationFooter
 
 
 def _wrap_with_error(field, error_label):

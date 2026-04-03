@@ -443,7 +443,7 @@ class FileTreePreview(QWidget):
 
     def is_updating(self) -> bool:
         """Return whether a preview refresh is currently scheduled."""
-        return self._debounce.isActive()
+        return bool(self._debounce.isActive())
 
     @staticmethod
     def _resolve_preset_format(implementations: dict) -> str:

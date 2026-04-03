@@ -36,7 +36,7 @@ class ValidationFooter(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._is_ready = False
+        self._is_ready: bool = False
         self._setup_ui()
         self.set_ready()
 
