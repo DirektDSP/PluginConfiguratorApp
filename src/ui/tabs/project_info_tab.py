@@ -138,8 +138,14 @@ class ProjectInfoTab(BaseTab):
         self.repo_url.setPlaceholderText("https://github.com/username/repo.git")
         self.repo_url.setText("https://github.com/SeamusMullan/PluginTemplate.git")
 
+        self.load_preset_button = QPushButton("Load Preset…")
+        self.load_preset_button.setToolTip(
+            "Load a saved preset configuration into all tabs"
+        )
+
         self.template_layout.addRow("Template:", self.template_combo)
         self.template_layout.addRow("Repository URL:", self.repo_url)
+        self.template_layout.addRow("", self.load_preset_button)
 
         self.template_group.setLayout(self.template_layout)
 
@@ -373,6 +379,7 @@ class ProjectInfoTab(BaseTab):
         self.project_name.textChanged.connect(self.update_from_project_name)
         self.browse_button.clicked.connect(self.browse_output_dir)
         self.generate_code_button.clicked.connect(self.generate_plugin_code)
+        self.load_preset_button.clicked.connect(self._on_load_preset_clicked)
         self.template_combo.currentIndexChanged.connect(self.update_template_selection)
         self.repo_url.textChanged.connect(self.update_repo_url)
         self.project_name.textChanged.connect(self.update_file_tree)
@@ -855,6 +862,13 @@ class ProjectInfoTab(BaseTab):
         if hasattr(main_window, "quick_start_review_generate"):
             main_window.quick_start_review_generate()
         self._update_quick_start_button_state()
+
+    @Slot()
+    def _on_load_preset_clicked(self):
+        """Open the preset load dialog and apply the selected preset to all tabs."""
+        main_window = self.window()
+        if hasattr(main_window, "show_preset_load_dialog"):
+            main_window.show_preset_load_dialog()
 
     def _has_required_quick_start_data(self) -> bool:
         """Check required fields without showing dialogs for button state."""
