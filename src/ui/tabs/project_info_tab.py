@@ -722,6 +722,27 @@ class ProjectInfoTab(BaseTab):
         # Update file tree based on loaded config
         self.update_file_tree()
 
+    def get_validation_issues(self) -> list[str]:
+        """Return a list of validation issues without showing any dialog boxes."""
+        issues = []
+        required_fields = [
+            (self.project_name, "Project Name"),
+            (self.product_name, "Product Name"),
+            (self.company_name, "Company Name"),
+            (self.bundle_id, "Bundle ID"),
+            (self.manufacturer_code, "Manufacturer Code"),
+            (self.output_directory, "Output Directory"),
+        ]
+        for field, name in required_fields:
+            if not field.text().strip():
+                issues.append(f"Project Info: {name} is required")
+
+        mfr_code = self.manufacturer_code.text().strip()
+        if mfr_code and len(mfr_code) != 4:
+            issues.append("Project Info: Manufacturer Code must be exactly 4 characters")
+
+        return issues
+
     def validate(self):
         """Validate that all required information is provided"""
         if not self._validate_required_fields(show_messages=True):

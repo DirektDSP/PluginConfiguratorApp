@@ -106,6 +106,9 @@ class MainWindow(QMainWindow):
         # Initialize persistent preview with defaults
         self._update_file_tree_preview()
 
+        # Initialize the generate-button state from the start
+        self._update_global_validation_status()
+
     def setup_menu(self):
         """Set up application menu"""
         # Create menu bar
@@ -187,6 +190,16 @@ class MainWindow(QMainWindow):
             self.user_experience_tab,
             self.development_workflow_tab,
             self.generate_tab,
+        ]
+
+    def _config_tabs(self):
+        """Return the configuration tabs (all tabs except the Generate summary tab)."""
+        return [
+            self.project_info_tab,
+            self.implementations_tab,
+            self.configuration_tab,
+            self.user_experience_tab,
+            self.development_workflow_tab,
         ]
 
     @Slot()
@@ -282,13 +295,36 @@ class MainWindow(QMainWindow):
     @Slot(dict)
     def _on_tab_config_changed(self, config):
         """Handle configuration change from any tab"""
-        self.status_bar.showMessage("Configuration updated")
         self._update_file_tree_preview()
+        self._update_global_validation_status()
 
     @Slot(bool)
     def _on_tab_validation_changed(self, is_valid):
         """Handle validation state change from any tab"""
-        pass
+        self._update_global_validation_status()
+
+    def _update_global_validation_status(self) -> None:
+        """Aggregate validation issues from all config tabs and update the UI.
+
+        Collects human-readable issues from every configuration tab, updates
+        the status bar with a concise overall status, and forwards the result
+        to the Generate tab so the Generate button can be enabled or disabled
+        with an informative tooltip listing all outstanding issues.
+        """
+        all_issues: list[str] = []
+        for tab in self._config_tabs():
+            all_issues.extend(tab.get_validation_issues())
+
+        is_valid = not all_issues
+        if is_valid:
+            self.status_bar.showMessage("✅ All configuration valid — ready to generate")
+        else:
+            count = len(all_issues)
+            self.status_bar.showMessage(
+                f"❌ {count} issue{'s' if count != 1 else ''} found — fix before generating"
+            )
+
+        self.generate_tab.set_global_validation(is_valid, all_issues)
 
     def change_theme(self, theme_name):
         """Change application theme"""

@@ -168,6 +168,12 @@ class ConfigurationTab(BaseTab):
             or self.clap_cb.isChecked()
         )
 
+    def get_validation_issues(self) -> list[str]:
+        """Return a list of validation issues without showing any dialog boxes."""
+        if not self.validate():
+            return ["Configuration: At least one plugin format must be selected"]
+        return []
+
     def get_invalid_field_count(self) -> int:
         """Return 1 if no plugin format is selected, 0 otherwise."""
         return 0 if self.validate() else 1
