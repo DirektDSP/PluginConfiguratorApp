@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 
 from core.config_manager import ConfigManager
 from ui.components import FileTreePreview
-from ui.dialogs import PresetManagementDialog
+from ui.dialogs import PresetLoadDialog, PresetManagementDialog
 from ui.tabs.configuration_tab import ConfigurationTab
 from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
 from ui.tabs.generate_tab import GenerateTab
@@ -122,6 +122,10 @@ class MainWindow(QMainWindow):
         new_action.setShortcut("Ctrl+N")
         new_action.triggered.connect(self.new_project)
 
+        load_preset_action = QAction("&Load Preset…", self)
+        load_preset_action.setShortcut("Ctrl+L")
+        load_preset_action.triggered.connect(self.show_load_preset_dialog)
+
         save_preset_action = QAction("&Save as Preset", self)
         save_preset_action.setShortcut("Ctrl+S")
         save_preset_action.triggered.connect(self.save_current_as_preset)
@@ -140,6 +144,7 @@ class MainWindow(QMainWindow):
 
         # Add actions to file menu
         file_menu.addAction(new_action)
+        file_menu.addAction(load_preset_action)
         file_menu.addAction(save_preset_action)
         file_menu.addAction(manage_presets_action)
         file_menu.addAction(generate_action)
@@ -231,6 +236,30 @@ class MainWindow(QMainWindow):
         """Open the preset management dialog."""
         dialog = PresetManagementDialog(self._config_manager, parent=self)
         dialog.exec()
+
+    @Slot()
+    def show_load_preset_dialog(self):
+        """Open the preset load dialog and apply the chosen preset to all tabs."""
+        dialog = PresetLoadDialog(self._config_manager, parent=self)
+        if not dialog.exec():
+            return
+
+        preset_name = dialog.selected_preset_name()
+        if preset_name is None:
+            return
+
+        try:
+            config = self._config_manager.load_preset(preset_name)
+        except ValueError as exc:
+            QMessageBox.warning(
+                self,
+                "Load Preset Failed",
+                f'Could not load preset "{preset_name}":\n{exc}',
+            )
+            return
+
+        self.load_preset_to_all_tabs(config)
+        self.status_bar.showMessage(f'Preset "{preset_name}" loaded')
 
     @Slot()
     def generate_project(self):

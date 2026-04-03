@@ -300,8 +300,13 @@ class ProjectInfoTab(BaseTab):
             "Skip the detailed steps and jump straight to Review & Generate with sensible defaults."
         )
         quick_actions_layout = QHBoxLayout()
+        self.load_preset_button = QPushButton("Load Preset…")
+        self.load_preset_button.setToolTip(
+            "Browse and load a saved preset to populate all configuration tabs."
+        )
         self.review_generate_button = QPushButton("Review & Generate")
         self.review_generate_button.setEnabled(False)
+        quick_actions_layout.addWidget(self.load_preset_button)
         quick_actions_layout.addWidget(self.review_generate_button)
         quick_actions_layout.addStretch()
         quick_start_layout.addWidget(self.quick_start_checkbox)
@@ -378,6 +383,7 @@ class ProjectInfoTab(BaseTab):
         self.project_name.textChanged.connect(self.update_file_tree)
         self.quick_start_checkbox.toggled.connect(self._on_quick_start_toggled)
         self.review_generate_button.clicked.connect(self._on_review_generate_clicked)
+        self.load_preset_button.clicked.connect(self._on_load_preset_clicked)
         for spin in [self.fx_wet_dry, self.fx_latency, self.instrument_polyphony]:
             spin.valueChanged.connect(self._on_plugin_type_option_changed)
         for checkbox in [self.fx_sidechain, self.instrument_midi_input]:
@@ -855,6 +861,13 @@ class ProjectInfoTab(BaseTab):
         if hasattr(main_window, "quick_start_review_generate"):
             main_window.quick_start_review_generate()
         self._update_quick_start_button_state()
+
+    @Slot()
+    def _on_load_preset_clicked(self):
+        """Open the preset load dialog and apply the chosen preset to all tabs."""
+        main_window = self.window()
+        if hasattr(main_window, "show_load_preset_dialog"):
+            main_window.show_load_preset_dialog()
 
     def _has_required_quick_start_data(self) -> bool:
         """Check required fields without showing dialogs for button state."""
