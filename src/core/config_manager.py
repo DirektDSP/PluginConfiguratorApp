@@ -190,9 +190,15 @@ class ConfigManager:
         },
     }
 
+    SCHEMA_VERSION: ClassVar[str] = "1.0"
+
     META_FIELDS: ClassVar[dict[str, dict[str, Any]]] = {
         "name": {"type": str, "default": ""},
         "description": {"type": str, "default": ""},
+        # schema_version is stored as an attribute on the root <preset> element,
+        # not as a child of <meta>.  It is included here so that _apply_defaults
+        # preserves it in the meta dict when round-tripping config through save/load.
+        "schema_version": {"type": str, "default": "1.0"},
     }
 
     def __init__(self, preset_dir: Path | None = None):
@@ -372,11 +378,23 @@ class ConfigManager:
         return value
 
     def _load_structured_preset(self, root: ET.Element, file_path: Path) -> dict:
-        config: dict[str, Any] = {"meta": {"name": root.attrib.get("name", file_path.stem)}}
+        config: dict[str, Any] = {
+            "meta": {
+                "name": root.attrib.get("name", file_path.stem),
+                # schema_version is stored as a root-element attribute, not as a
+                # child element of <meta>.  Read it here before the META_FIELDS
+                # loop so the loop's "elif key not in config['meta']" guard will
+                # not overwrite it.
+                "schema_version": root.attrib.get("schema_version", self.SCHEMA_VERSION),
+            }
+        }
 
         meta_element = root.find("meta")
         if meta_element is not None:
             for key, meta_def in self.META_FIELDS.items():
+                if key == "schema_version":
+                    # Already populated from the root attribute above.
+                    continue
                 elem = meta_element.find(key)
                 if elem is not None and elem.text is not None:
                     config["meta"][key] = elem.text
@@ -432,6 +450,7 @@ class ConfigManager:
         meta = config_with_defaults.get("meta", {})
         if meta.get("name"):
             root.set("name", str(meta.get("name")))
+        root.set("schema_version", str(meta.get("schema_version", self.SCHEMA_VERSION)))
         if meta.get("description"):
             meta_elem = ET.SubElement(root, "meta")
             desc_elem = ET.SubElement(meta_elem, "description")

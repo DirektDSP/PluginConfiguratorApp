@@ -6,6 +6,10 @@ import platform
 import shutil
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from PySide6.QtCore import Qt, QTimer, QUrl, Slot
 from PySide6.QtGui import QDesktopServices
@@ -32,7 +36,7 @@ _IDE_DEFINITIONS: list[tuple[str, str, list[str]]] = [
 ]
 
 
-def _detect_ides(project_path: str) -> list[tuple[str, callable]]:
+def _detect_ides(project_path: str) -> list[tuple[str, Callable[..., None]]]:
     """Return a list of (label, open_callable) for IDEs available on this machine.
 
     Args:
@@ -42,7 +46,7 @@ def _detect_ides(project_path: str) -> list[tuple[str, callable]]:
         List of (display_label, callable) tuples where calling the callable
         opens the project in the corresponding IDE.
     """
-    available: list[tuple[str, callable]] = []
+    available: list[tuple[str, Callable[..., None]]] = []
     current_os = platform.system()
 
     # VSCode
@@ -230,7 +234,7 @@ class SuccessDialog(QDialog):
         root.addWidget(button_box)
 
     @staticmethod
-    def _make_ide_button(label: str, callback: callable) -> QPushButton:
+    def _make_ide_button(label: str, callback: Callable[..., None]) -> QPushButton:
         """Return a styled IDE button that calls *callback* when clicked."""
         icon_map = {"VSCode": "\U0001f4bb", "Xcode": "\U0001f528", "CLion": "\U0001f6e0"}
         icon = icon_map.get(label, "\U0001f5a5")

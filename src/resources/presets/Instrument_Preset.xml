@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<preset name="Instrument">
+<preset name="Instrument" schema_version="1.0">
   <meta>
     <description>Instrument-focused configuration with CLAP/AUv3 targets and GPU-friendly options.</description>
   </meta>
@@ -21,6 +21,13 @@
     <au>true</au>
     <auv3>true</auv3>
     <clap>true</clap>
+    <au_component_type>aumu</au_component_type>
+    <au_component_subtype>inst</au_component_subtype>
+    <au_component_manufacturer>DkIN</au_component_manufacturer>
+    <au_version>1.1.0</au_version>
+    <clap_extensions>note-ports,state</clap_extensions>
+    <clap_features>instrument,synthesizer</clap_features>
+    <auv3_platform>iOS</auv3_platform>
     <gui_width>1280</gui_width>
     <gui_height>720</gui_height>
     <resizable>true</resizable>
