@@ -9,8 +9,8 @@ import pytest
 from PySide6.QtWidgets import QApplication
 
 from ui.dialogs.success_dialog import (
-    SuccessDialog,
     _CELEBRATION_FRAMES,
+    SuccessDialog,
     _detect_ides,
     _file_manager_label,
     _open_in_file_manager,
@@ -281,7 +281,7 @@ class TestSuccessDialogActions:
         called_with = []
         monkeypatch.setattr(
             "ui.dialogs.success_dialog._open_in_file_manager",
-            lambda path: called_with.append(path),
+            called_with.append,
         )
         dialog._output_directory = "/tmp/output"
         dialog._on_open_in_file_manager()
@@ -291,7 +291,7 @@ class TestSuccessDialogActions:
         called = []
         monkeypatch.setattr(
             "ui.dialogs.success_dialog._open_in_file_manager",
-            lambda path: called.append(path),
+            called.append,
         )
         dialog._output_directory = ""
         dialog._on_open_in_file_manager()

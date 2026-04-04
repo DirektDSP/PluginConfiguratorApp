@@ -17,7 +17,7 @@ the attribute is absent (backwards-compatible with older preset files).
 
 A machine-readable W3C XML Schema Definition is bundled at:
 
-```
+```text
 src/resources/presets/preset_schema.xsd
 ```
 
@@ -226,4 +226,3 @@ preset folder (`~/.plugin_configurator/presets`) on startup:
 1. **StandardAudioFX_Preset.xml** — balanced audio effect defaults with preset management.
 2. **Instrument_Preset.xml** — instrument-focused template with CLAP/AUv3 targets.
 3. **MinimalPlugin_Preset.xml** — lightweight VST3-only scaffold with no optional modules.
-
