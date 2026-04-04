@@ -2,6 +2,7 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QMainWindow,
     QMessageBox,
     QProgressBar,
@@ -14,7 +15,7 @@ from PySide6.QtWidgets import (
 
 from core.config_manager import ConfigManager
 from ui.components import FileTreePreview
-from ui.dialogs import PresetManagementDialog
+from ui.dialogs import PresetManagementDialog, SavePresetDialog
 from ui.tabs.configuration_tab import ConfigurationTab
 from ui.tabs.development_workflow_tab import DevelopmentWorkflowTab
 from ui.tabs.generate_tab import GenerateTab
@@ -222,9 +223,32 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def save_current_as_preset(self):
-        """Save current configuration as a preset"""
-        self.collect_configuration()
-        self.status_bar.showMessage("Preset saved")
+        """Prompt for a preset name then save the current configuration as a preset."""
+        dialog = SavePresetDialog(parent=self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        preset_name = dialog.preset_name()
+        description = dialog.description()
+
+        config = self.collect_configuration()
+        config["meta"] = {"name": preset_name, "description": description}
+
+        try:
+            self._config_manager.save_preset(config, preset_name)
+            self.status_bar.showMessage(f'Preset "{preset_name}" saved successfully')
+        except ValueError as exc:
+            QMessageBox.critical(
+                self,
+                "Save Failed",
+                f"Could not save preset:\n{exc}",
+            )
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                "Save Failed",
+                f"An unexpected error occurred while saving the preset:\n{exc}",
+            )
 
     @Slot()
     def show_preset_management(self):
