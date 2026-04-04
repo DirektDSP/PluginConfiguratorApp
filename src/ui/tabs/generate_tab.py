@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from core.base_tab import BaseTab
 from core.project_worker import ProjectWorker
+from ui.components.accordion_expander import AccordionExpander
 from ui.components.validation_footer import ValidationFooter
 from ui.dialogs.success_dialog import SuccessDialog
 
@@ -111,7 +112,17 @@ class GenerateTab(BaseTab):
         content_layout.addWidget(ui_group)
 
         self._modules_lbl = self._make_summary_label()
-        modules_group = self._make_section_group("Modules", self._modules_lbl)
+        self._modules_expander = AccordionExpander(
+            "",
+            subtitle="Expand to review selected optional modules",
+            start_expanded=True,
+        )
+        self._modules_expander.body_layout.addWidget(self._modules_lbl)
+        modules_group = QGroupBox("Modules")
+        modules_inner = QVBoxLayout()
+        modules_inner.setContentsMargins(6, 6, 6, 6)
+        modules_inner.addWidget(self._modules_expander)
+        modules_group.setLayout(modules_inner)
         self._section_groups["Modules"] = modules_group
         content_layout.addWidget(modules_group)
 
@@ -198,6 +209,7 @@ class GenerateTab(BaseTab):
             icon.setToolTip("")
         for group in self._section_groups.values():
             group.setStyleSheet("")
+        self._modules_expander.set_expanded(True)
         self._overall_status_lbl.setText("")
         self._log_text.clear()
         self._progress_bar.setValue(0)
