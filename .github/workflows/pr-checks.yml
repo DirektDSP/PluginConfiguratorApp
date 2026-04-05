@@ -3,102 +3,62 @@ name: Pull Request Checks
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [main, develop]
-
-env:
-  UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+    branches: [main]
 
 jobs:
-  # PR Summary with AI (optional, requires API key)
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     permissions:
       pull-requests: write
     steps:
-      - name: Comment PR Summary
-        uses: actions/github-script@v7
+      - uses: actions/github-script@v7
         with:
           script: |
-            const issue = context.payload.pull_request;
+            const pr = context.payload.pull_request;
             const repo = context.repo;
-            
-            // Get changed files
+
             const { data: files } = await github.rest.pulls.listFiles({
               owner: repo.owner,
               repo: repo.repo,
-              pull_number: issue.number
+              pull_number: pr.number
             });
-            
-            // Categorize changes
-            const pythonFiles = files.filter(f => f.filename.endsWith('.py')).length;
-            const testFiles = files.filter(f => f.filename.startsWith('tests/')).length;
+
+            const rustFiles = files.filter(f => f.filename.endsWith('.rs')).length;
+            const tomlFiles = files.filter(f => f.filename.endsWith('.toml')).length;
             const docFiles = files.filter(f => f.filename.endsWith('.md')).length;
-            const deleted = files.filter(f => f.status === 'removed').length;
-            const added = files.filter(f => f.status === 'added').length;
-            
-            const comment = `## 📊 PR Summary
-            
-            ### Changes Overview
+
+            const comment = `## PR Summary
+
+            ### Changes
             - **Files Changed**: ${files.length}
-            - **Python Files**: ${pythonFiles}
-            - **Test Files**: ${testFiles}
-            - **Documentation**: ${docFiles}
-            - **Added**: ${added}
-            - **Deleted**: ${deleted}
-            
-            ### CI Checks
-            This PR will trigger the following checks:
-            ${pythonFiles > 0 ? '- ✅ Linting (ruff, isort, black)' : ''}
-            ${pythonFiles > 0 ? '- ✅ Type Checking (mypy)' : ''}
-            ${pythonFiles > 0 || testFiles > 0 ? '- ✅ Tests (pytest)' : ''}
-            ${docFiles > 0 ? '- ✅ Markdown Linting' : ''}
-            
-            Please ensure all checks pass before merging.`;
-            
+            - **Rust**: ${rustFiles}
+            - **TOML**: ${tomlFiles}
+            - **Docs**: ${docFiles}
+
+            CI will run: build (Linux/macOS/Windows), clippy, rustfmt.`;
+
             await github.rest.issues.createComment({
-              issue_number: issue.number,
+              issue_number: pr.number,
               owner: repo.owner,
               repo: repo.repo,
               body: comment
             });
-  
-  # Validate PR labels
-  validate-labels:
-    name: Validate PR Labels
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-    steps:
-      - name: Check PR has labels
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const labels = pr.labels.map(l => l.name);
-            if (labels.length === 0) {
-              core.warning('No labels assigned to this PR. Consider adding labels to categorize the change.');
-            } else {
-              console.log(`PR has labels: ${labels.join(', ')}`);
-            }
-  
-  # Check for merge conflicts
+
   check-conflicts:
     name: Check Merge Conflicts
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Check for merge conflicts
         run: |
           git checkout origin/main
           git merge ${{ github.ref }} --no-commit --no-ff 2>&1 | grep -i "conflict" && {
-            echo "❌ Merge conflicts detected!"
+            echo "Merge conflicts detected"
             git merge --abort
             exit 1
-          } || echo "✅ No merge conflicts"
+          } || echo "No merge conflicts"
           git merge --abort || true
