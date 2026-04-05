@@ -55,9 +55,13 @@ pub fn run(input: GenerationInput, tx: mpsc::Sender<GenerationMessage>) {
             let _ = tx.send(GenerationMessage::Log(format!("ERROR: {e}")));
             // Rollback: remove partial output
             if input.output_dir.exists() {
-                let _ = tx.send(GenerationMessage::Log("Rolling back — removing partial output directory...".into()));
+                let _ = tx.send(GenerationMessage::Log(
+                    "Rolling back — removing partial output directory...".into(),
+                ));
                 if let Err(rm_err) = std::fs::remove_dir_all(&input.output_dir) {
-                    let _ = tx.send(GenerationMessage::Log(format!("Warning: rollback failed: {rm_err}")));
+                    let _ = tx.send(GenerationMessage::Log(format!(
+                        "Warning: rollback failed: {rm_err}"
+                    )));
                 }
             }
             let _ = tx.send(GenerationMessage::Error(e.to_string()));
@@ -65,10 +69,7 @@ pub fn run(input: GenerationInput, tx: mpsc::Sender<GenerationMessage>) {
     }
 }
 
-fn run_inner(
-    input: &GenerationInput,
-    tx: &mpsc::Sender<GenerationMessage>,
-) -> Result<()> {
+fn run_inner(input: &GenerationInput, tx: &mpsc::Sender<GenerationMessage>) -> Result<()> {
     let output = &input.output_dir;
     let config = &input.config;
     let gen_cfg = &input.generation;
@@ -81,18 +82,21 @@ fn run_inner(
             output.display()
         ));
     }
-    if let Some(parent) = output.parent() {
-        if !parent.exists() {
-            return Err(eyre!(
-                "Parent directory does not exist: {}",
-                parent.display()
-            ));
-        }
+    if let Some(parent) = output.parent()
+        && !parent.exists()
+    {
+        return Err(eyre!(
+            "Parent directory does not exist: {}",
+            parent.display()
+        ));
     }
     progress(tx, 0.05);
 
     // Step 2: Clone template
-    send(tx, &format!("Cloning template from {}...", gen_cfg.template_url));
+    send(
+        tx,
+        &format!("Cloning template from {}...", gen_cfg.template_url),
+    );
     git_ops::clone_template(&gen_cfg.template_url, &gen_cfg.template_branch, output)?;
     send(tx, "Template cloned successfully.");
     progress(tx, 0.25);
@@ -106,7 +110,11 @@ fn run_inner(
         let path_refs: Vec<&str> = submodule_paths.iter().map(|s| s.as_str()).collect();
         send(
             tx,
-            &format!("Initializing {} submodule(s): {}", path_refs.len(), path_refs.join(", ")),
+            &format!(
+                "Initializing {} submodule(s): {}",
+                path_refs.len(),
+                path_refs.join(", ")
+            ),
         );
         git_ops::init_submodules(output, &path_refs)?;
         send(tx, "Submodules initialized.");
@@ -155,10 +163,7 @@ fn run_inner(
     }
     progress(tx, 0.95);
 
-    send(
-        tx,
-        &format!("Project generated at: {}", output.display()),
-    );
+    send(tx, &format!("Project generated at: {}", output.display()));
 
     Ok(())
 }
@@ -168,10 +173,7 @@ fn collect_submodule_paths(
     config: &ProjectConfig,
     registry: &Option<ModuleRegistry>,
 ) -> Vec<String> {
-    let mut paths = vec![
-        "JUCE".to_string(),
-        "cmake".to_string(),
-    ];
+    let mut paths = vec!["JUCE".to_string(), "cmake".to_string()];
 
     // Map config module flags to submodule paths using the registry if available
     let module_flags: &[(&str, bool)] = &[
@@ -187,22 +189,21 @@ fn collect_submodule_paths(
             continue;
         }
         // Try to get the submodule path from the registry
-        if let Some(reg) = registry {
-            if let Some(registry_key) = ModuleRegistry::config_key_to_registry_key(config_key) {
-                if let Some(entry) = reg.get(registry_key) {
-                    paths.push(entry.submodule_path.clone());
+        if let Some(reg) = registry
+            && let Some(registry_key) = ModuleRegistry::config_key_to_registry_key(config_key)
+            && let Some(entry) = reg.get(registry_key)
+        {
+            paths.push(entry.submodule_path.clone());
 
-                    // Also init any transitive dependencies
-                    for dep_key in reg.dependencies_of(registry_key) {
-                        if let Some(dep_entry) = reg.get(&dep_key) {
-                            if !paths.contains(&dep_entry.submodule_path) {
-                                paths.push(dep_entry.submodule_path.clone());
-                            }
-                        }
-                    }
-                    continue;
+            // Also init any transitive dependencies
+            for dep_key in reg.dependencies_of(registry_key) {
+                if let Some(dep_entry) = reg.get(&dep_key)
+                    && !paths.contains(&dep_entry.submodule_path)
+                {
+                    paths.push(dep_entry.submodule_path.clone());
                 }
             }
+            continue;
         }
 
         // Fallback: hardcoded submodule paths when registry isn't available
@@ -563,9 +564,7 @@ void {name}Editor::resized() {{}}
     )
 }
 
-fn generate_moonbase_config(
-    plugin: &crate::config::project_config::PluginEntry,
-) -> String {
+fn generate_moonbase_config(plugin: &crate::config::project_config::PluginEntry) -> String {
     format!(
         r#"{{
   "product_id": "{}",

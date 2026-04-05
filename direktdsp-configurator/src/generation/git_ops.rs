@@ -42,7 +42,15 @@ pub fn init_submodules(repo_dir: &Path, submodule_paths: &[&str]) -> Result<()> 
         return Ok(());
     }
 
-    let mut args = vec!["submodule", "update", "--init", "--recursive", "--depth", "1", "--"];
+    let mut args = vec![
+        "submodule",
+        "update",
+        "--init",
+        "--recursive",
+        "--depth",
+        "1",
+        "--",
+    ];
     args.extend(submodule_paths);
 
     let status = git_command()

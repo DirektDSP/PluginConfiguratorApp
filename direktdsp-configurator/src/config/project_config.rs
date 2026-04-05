@@ -33,6 +33,7 @@ pub struct PluginEntry {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum PluginFormat {
     VST3,
     AU,
@@ -184,13 +185,11 @@ impl PluginEntry {
             name: name.into(),
             product_name: name.into(),
             bundle_id: format!("com.{}.{}", company.to_lowercase(), lower),
-            plugin_code: format!(
-                "{}",
-                name.chars()
-                    .filter(|c| c.is_alphanumeric())
-                    .take(4)
-                    .collect::<String>()
-            ),
+            plugin_code: name
+                .chars()
+                .filter(|c| c.is_alphanumeric())
+                .take(4)
+                .collect(),
             clap_features: "audio-effect".into(),
         }
     }

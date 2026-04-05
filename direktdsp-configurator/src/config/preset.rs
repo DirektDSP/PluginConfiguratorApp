@@ -49,6 +49,7 @@ pub struct PresetConfig {
     pub generation: GenerationConfig,
 }
 
+#[allow(dead_code)]
 impl PresetConfig {
     /// Convert a ProjectConfig into a PresetConfig with the given metadata.
     pub fn from_project_config(config: &ProjectConfig, meta: PresetMeta) -> Self {
@@ -87,11 +88,13 @@ pub struct PresetManager {
     presets_dir: PathBuf,
 }
 
+#[allow(dead_code)]
 impl PresetManager {
     /// Create a PresetManager using the platform-appropriate config directory.
     pub fn new() -> Result<Self> {
-        let proj_dirs = directories::ProjectDirs::from("com", "direktdsp", "direktdsp-configurator")
-            .ok_or_else(|| eyre!("Could not determine config directory"))?;
+        let proj_dirs =
+            directories::ProjectDirs::from("com", "direktdsp", "direktdsp-configurator")
+                .ok_or_else(|| eyre!("Could not determine config directory"))?;
         let presets_dir = proj_dirs.config_dir().join("presets");
         fs::create_dir_all(&presets_dir)?;
         Ok(Self { presets_dir })
@@ -160,6 +163,7 @@ impl PresetManager {
 
 /// A listing entry for a preset (without loading the full config).
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct PresetEntry {
     pub name: String,
     pub description: String,
@@ -167,6 +171,7 @@ pub struct PresetEntry {
 }
 
 /// Convert a preset name to a filesystem-safe slug.
+#[allow(dead_code)]
 fn slugify(name: &str) -> String {
     name.to_lowercase()
         .chars()
@@ -176,6 +181,7 @@ fn slugify(name: &str) -> String {
         .to_string()
 }
 
+#[allow(dead_code)]
 impl ProjectConfig {
     pub fn to_toml(&self) -> Result<String> {
         toml::to_string_pretty(self).map_err(|e| eyre!("Failed to serialize config: {e}"))

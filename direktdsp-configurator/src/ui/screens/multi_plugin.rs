@@ -13,7 +13,7 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // Help text
-            Constraint::Min(0),   // Plugin list / editor
+            Constraint::Min(0),    // Plugin list / editor
         ])
         .split(area);
 
@@ -25,7 +25,11 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     };
     let help_para = Paragraph::new(help)
         .style(Style::default().fg(Color::DarkGray))
-        .block(Block::default().borders(Borders::ALL).title(" Multi-Plugin "));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" Multi-Plugin "),
+        );
     f.render_widget(help_para, chunks[0]);
 
     if app.config.project.plugins.is_empty() {
@@ -63,10 +67,7 @@ fn draw_plugin_list(f: &mut Frame, app: &App, area: Rect) {
                 Style::default().fg(Color::White)
             };
 
-            let desc = format!(
-                "  ({}, {})",
-                plugin.bundle_id, plugin.plugin_code
-            );
+            let desc = format!("  ({}, {})", plugin.bundle_id, plugin.plugin_code);
             let desc_style = Style::default().fg(Color::DarkGray);
 
             ListItem::new(Line::from(vec![
@@ -77,15 +78,17 @@ fn draw_plugin_list(f: &mut Frame, app: &App, area: Rect) {
         .collect();
 
     let title = format!(" Plugins ({}) ", app.config.project.plugins.len());
-    let list = List::new(items).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title(title),
-    );
+    let list = List::new(items).block(Block::default().borders(Borders::ALL).title(title));
     f.render_widget(list, area);
 }
 
-fn draw_plugin_editor(f: &mut Frame, app: &App, area: Rect, plugin_idx: usize, focused_field: usize) {
+fn draw_plugin_editor(
+    f: &mut Frame,
+    app: &App,
+    area: Rect,
+    plugin_idx: usize,
+    focused_field: usize,
+) {
     let Some(pf) = app.multi_plugin.plugin_fields.get(plugin_idx) else {
         return;
     };
@@ -121,11 +124,7 @@ fn draw_plugin_editor(f: &mut Frame, app: &App, area: Rect, plugin_idx: usize, f
 
     let plugin_name = &app.config.project.plugins[plugin_idx].name;
     let title = format!(" Editing: {} ", plugin_name);
-    let list = List::new(items).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title(title),
-    );
+    let list = List::new(items).block(Block::default().borders(Borders::ALL).title(title));
     f.render_widget(list, area);
 }
 
@@ -213,9 +212,9 @@ fn handle_field_editing(app: &mut App, key: crossterm::event::KeyEvent) {
 }
 
 fn sync_field_to_plugin(app: &mut App, plugin_idx: usize) {
-    if let Some(pf) = app.multi_plugin.plugin_fields.get(plugin_idx) {
-        if plugin_idx < app.config.project.plugins.len() {
-            app.config.project.plugins[plugin_idx] = pf.to_plugin();
-        }
+    if let Some(pf) = app.multi_plugin.plugin_fields.get(plugin_idx)
+        && plugin_idx < app.config.project.plugins.len()
+    {
+        app.config.project.plugins[plugin_idx] = pf.to_plugin();
     }
 }

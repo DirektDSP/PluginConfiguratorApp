@@ -118,12 +118,10 @@ fn cycle_cpp_standard(app: &mut App, forward: bool) {
     let idx = app.config.build.cpp_standard_index();
     let new_idx = if forward {
         (idx + 1) % standards.len()
+    } else if idx == 0 {
+        standards.len() - 1
     } else {
-        if idx == 0 {
-            standards.len() - 1
-        } else {
-            idx - 1
-        }
+        idx - 1
     };
     app.config.build.cpp_standard = standards[new_idx].value;
 }

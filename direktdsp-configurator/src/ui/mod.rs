@@ -14,7 +14,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // Tab bar
-            Constraint::Min(0),   // Screen content
+            Constraint::Min(0),    // Screen content
             Constraint::Length(1), // Status bar
         ])
         .split(f.area());
@@ -52,7 +52,11 @@ fn draw_tab_bar(f: &mut Frame, app: &App, area: Rect) {
         .collect();
 
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::BOTTOM).title(" DirektDSP Plugin Configurator "))
+        .block(
+            Block::default()
+                .borders(Borders::BOTTOM)
+                .title(" DirektDSP Plugin Configurator "),
+        )
         .select(app.screen.index_in(&active))
         .highlight_style(Style::default().fg(Color::Yellow));
 

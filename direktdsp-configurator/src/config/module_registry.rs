@@ -3,8 +3,8 @@ use std::fs;
 use std::path::Path;
 
 use color_eyre::{Result, eyre::eyre};
-use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::Direction;
+use petgraph::graph::{DiGraph, NodeIndex};
 use serde::Deserialize;
 
 /// Raw representation of modules.toml on disk.
@@ -15,6 +15,7 @@ struct ModulesFile {
 
 /// A single module entry from modules.toml.
 #[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
 pub struct ModuleEntry {
     pub display_name: String,
     pub description: String,
@@ -35,6 +36,7 @@ pub struct ModuleEntry {
 
 /// The module registry: parsed modules.toml + dependency graph.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ModuleRegistry {
     modules: HashMap<String, ModuleEntry>,
     graph: DiGraph<String, ()>,
@@ -43,11 +45,12 @@ pub struct ModuleRegistry {
     provides_map: HashMap<String, String>,
 }
 
+#[allow(dead_code)]
 impl ModuleRegistry {
     /// Parse a modules.toml file into a registry with a dependency graph.
     pub fn from_file(path: &Path) -> Result<Self> {
-        let content = fs::read_to_string(path)
-            .map_err(|e| eyre!("Failed to read modules.toml: {e}"))?;
+        let content =
+            fs::read_to_string(path).map_err(|e| eyre!("Failed to read modules.toml: {e}"))?;
         Self::from_toml(&content)
     }
 
@@ -154,16 +157,18 @@ impl ModuleRegistry {
 
         for conflict_tag in &entry.conflicts {
             // Find if any enabled module provides this conflicting tag
-            if let Some(provider) = self.provides_map.get(conflict_tag) {
-                if enabled.contains(provider) {
-                    let provider_name = self.modules.get(provider)
-                        .map(|m| m.display_name.as_str())
-                        .unwrap_or(provider);
-                    conflicts.push(format!(
-                        "{} conflicts with {} (both provide/conflict on '{}')",
-                        entry.display_name, provider_name, conflict_tag
-                    ));
-                }
+            if let Some(provider) = self.provides_map.get(conflict_tag)
+                && enabled.contains(provider)
+            {
+                let provider_name = self
+                    .modules
+                    .get(provider)
+                    .map(|m| m.display_name.as_str())
+                    .unwrap_or(provider);
+                conflicts.push(format!(
+                    "{} conflicts with {} (both provide/conflict on '{}')",
+                    entry.display_name, provider_name, conflict_tag
+                ));
             }
         }
         conflicts
@@ -180,10 +185,14 @@ impl ModuleRegistry {
             let deps = self.resolve_dependencies(key);
             for dep in &deps {
                 if !enabled.contains(dep) && !auto_enabled.contains(dep) {
-                    let dep_name = self.modules.get(dep)
+                    let dep_name = self
+                        .modules
+                        .get(dep)
                         .map(|m| m.display_name.as_str())
                         .unwrap_or(dep);
-                    let key_name = self.modules.get(key)
+                    let key_name = self
+                        .modules
+                        .get(key)
                         .map(|m| m.display_name.as_str())
                         .unwrap_or(key);
                     auto_enabled.push(dep.clone());
@@ -233,6 +242,7 @@ impl ModuleRegistry {
 
 /// Result of dependency resolution.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ResolvedModules {
     /// All modules that should be enabled (user-selected + auto-enabled deps).
     pub enabled: Vec<String>,

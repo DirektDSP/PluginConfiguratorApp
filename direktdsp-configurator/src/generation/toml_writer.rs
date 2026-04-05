@@ -15,8 +15,7 @@ pub fn write_project_toml(config: &ProjectConfig, output_dir: &Path) -> Result<(
     let content = toml::to_string_pretty(&cmake_config)
         .map_err(|e| eyre!("Failed to serialize project.toml: {e}"))?;
     let path = output_dir.join("project.toml");
-    std::fs::write(&path, &content)
-        .map_err(|e| eyre!("Failed to write project.toml: {e}"))?;
+    std::fs::write(&path, &content).map_err(|e| eyre!("Failed to write project.toml: {e}"))?;
     Ok(())
 }
 

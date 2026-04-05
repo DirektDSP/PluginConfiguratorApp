@@ -21,7 +21,12 @@ fn draw_config_summary(f: &mut Frame, app: &App, area: Rect) {
     let cfg = &app.config;
     let p = &cfg.project;
 
-    let formats: String = p.formats.iter().map(|f| f.label()).collect::<Vec<_>>().join(", ");
+    let formats: String = p
+        .formats
+        .iter()
+        .map(|f| f.label())
+        .collect::<Vec<_>>()
+        .join(", ");
 
     let enabled_modules: String = ModuleConfig::MODULES
         .iter()
@@ -51,7 +56,14 @@ fn draw_config_summary(f: &mut Frame, app: &App, area: Rect) {
         Line::from(""),
         section_header("Build"),
         field("C++ Standard", &cpp_std),
-        field("Copy After Build", if cfg.build.copy_after_build { "Yes" } else { "No" }),
+        field(
+            "Copy After Build",
+            if cfg.build.copy_after_build {
+                "Yes"
+            } else {
+                "No"
+            },
+        ),
         field("IPP", if cfg.build.ipp { "Yes" } else { "No" }),
     ];
 
@@ -59,9 +71,13 @@ fn draw_config_summary(f: &mut Frame, app: &App, area: Rect) {
         lines.push(Line::from(""));
         lines.push(section_header("Plugins"));
         for plugin in &p.plugins {
-            lines.push(field("  Plugin", &format!(
-                "{} ({}, {})", plugin.name, plugin.bundle_id, plugin.plugin_code
-            )));
+            lines.push(field(
+                "  Plugin",
+                &format!(
+                    "{} ({}, {})",
+                    plugin.name, plugin.bundle_id, plugin.plugin_code
+                ),
+            ));
         }
     }
 

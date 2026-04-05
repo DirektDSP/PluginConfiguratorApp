@@ -18,19 +18,23 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(3), // Output dir
             Constraint::Length(3), // Progress bar
             Constraint::Length(3), // Status
-            Constraint::Min(0),   // Log
+            Constraint::Min(0),    // Log
         ])
         .split(area);
 
     // Output directory input
-    let dir_style = if app.generate.editing_output_dir && !app.generate.running && !app.generate.finished {
-        Style::default().fg(Color::Yellow)
-    } else {
-        Style::default().fg(Color::DarkGray)
-    };
+    let dir_style =
+        if app.generate.editing_output_dir && !app.generate.running && !app.generate.finished {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default().fg(Color::DarkGray)
+        };
     let dir_text = format!("{}/{}", app.generate.output_dir, app.config.project.name);
-    let dir_para = Paragraph::new(Line::from(Span::styled(dir_text, dir_style)))
-        .block(Block::default().borders(Borders::ALL).title(" Output Directory "));
+    let dir_para = Paragraph::new(Line::from(Span::styled(dir_text, dir_style))).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(" Output Directory "),
+    );
     f.render_widget(dir_para, chunks[0]);
 
     // Progress bar
@@ -115,25 +119,35 @@ pub fn handle_input(app: &mut App, key: crossterm::event::KeyEvent) {
             start_generation(app);
         }
         KeyCode::Char(c) => {
-            app.generate.output_dir.insert(app.generate.output_dir_cursor, c);
+            app.generate
+                .output_dir
+                .insert(app.generate.output_dir_cursor, c);
             app.generate.output_dir_cursor += c.len_utf8();
         }
         KeyCode::Backspace => {
             if app.generate.output_dir_cursor > 0 {
-                let prev = floor_char_boundary(&app.generate.output_dir, app.generate.output_dir_cursor - 1);
-                app.generate.output_dir.drain(prev..app.generate.output_dir_cursor);
+                let prev = floor_char_boundary(
+                    &app.generate.output_dir,
+                    app.generate.output_dir_cursor - 1,
+                );
+                app.generate
+                    .output_dir
+                    .drain(prev..app.generate.output_dir_cursor);
                 app.generate.output_dir_cursor = prev;
             }
         }
         KeyCode::Left => {
             if app.generate.output_dir_cursor > 0 {
-                app.generate.output_dir_cursor =
-                    floor_char_boundary(&app.generate.output_dir, app.generate.output_dir_cursor - 1);
+                app.generate.output_dir_cursor = floor_char_boundary(
+                    &app.generate.output_dir,
+                    app.generate.output_dir_cursor - 1,
+                );
             }
         }
         KeyCode::Right => {
             if app.generate.output_dir_cursor < app.generate.output_dir.len() {
-                app.generate.output_dir_cursor += app.generate.output_dir[app.generate.output_dir_cursor..]
+                app.generate.output_dir_cursor += app.generate.output_dir
+                    [app.generate.output_dir_cursor..]
                     .chars()
                     .next()
                     .map(|c| c.len_utf8())

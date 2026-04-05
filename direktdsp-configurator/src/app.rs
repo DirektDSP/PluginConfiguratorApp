@@ -63,9 +63,12 @@ pub struct App {
     pub should_quit: bool,
     pub status_message: Option<String>,
 
-    // Phase 3: Config & Preset system
+    // Phase 3: Config & Preset system (used in Phase 6 CLI mode)
+    #[allow(dead_code)]
     pub preset_manager: Option<PresetManager>,
+    #[allow(dead_code)]
     pub module_registry: Option<ModuleRegistry>,
+    #[allow(dead_code)]
     pub available_presets: Vec<PresetEntry>,
 
     // Per-screen state
@@ -127,11 +130,31 @@ impl PluginFieldSet {
     pub fn from_plugin(p: &crate::config::project_config::PluginEntry) -> Self {
         Self {
             fields: vec![
-                TextFieldState { label: "Name".into(), value: p.name.clone(), ..Default::default() },
-                TextFieldState { label: "Product Name".into(), value: p.product_name.clone(), ..Default::default() },
-                TextFieldState { label: "Bundle ID".into(), value: p.bundle_id.clone(), ..Default::default() },
-                TextFieldState { label: "Plugin Code (4 chars)".into(), value: p.plugin_code.clone(), ..Default::default() },
-                TextFieldState { label: "CLAP Features".into(), value: p.clap_features.clone(), ..Default::default() },
+                TextFieldState {
+                    label: "Name".into(),
+                    value: p.name.clone(),
+                    ..Default::default()
+                },
+                TextFieldState {
+                    label: "Product Name".into(),
+                    value: p.product_name.clone(),
+                    ..Default::default()
+                },
+                TextFieldState {
+                    label: "Bundle ID".into(),
+                    value: p.bundle_id.clone(),
+                    ..Default::default()
+                },
+                TextFieldState {
+                    label: "Plugin Code (4 chars)".into(),
+                    value: p.plugin_code.clone(),
+                    ..Default::default()
+                },
+                TextFieldState {
+                    label: "CLAP Features".into(),
+                    value: p.clap_features.clone(),
+                    ..Default::default()
+                },
             ],
         }
     }
@@ -270,16 +293,17 @@ impl App {
             Some(std::path::PathBuf::from("resources/modules.toml")),
         ];
         for candidate in candidates.into_iter().flatten() {
-            if candidate.exists() {
-                if let Ok(reg) = ModuleRegistry::from_file(&candidate) {
-                    return Some(reg);
-                }
+            if candidate.exists()
+                && let Ok(reg) = ModuleRegistry::from_file(&candidate)
+            {
+                return Some(reg);
             }
         }
         None
     }
 
     /// Load a preset into the current config, updating all UI state.
+    #[allow(dead_code)]
     pub fn load_preset(&mut self, preset: &crate::config::preset::PresetConfig) {
         self.config = preset.to_project_config();
         // Re-sync project info fields from config
@@ -304,6 +328,7 @@ impl App {
     }
 
     /// Refresh the available presets list from disk.
+    #[allow(dead_code)]
     pub fn refresh_presets(&mut self) {
         self.available_presets = self
             .preset_manager

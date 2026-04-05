@@ -12,8 +12,8 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(8),  // Logo/header
-            Constraint::Length(5),  // Menu
+            Constraint::Length(8), // Logo/header
+            Constraint::Length(5), // Menu
             Constraint::Min(0),    // Spacer
         ])
         .split(area);
@@ -55,10 +55,7 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
             } else {
                 "  "
             };
-            ListItem::new(Line::from(Span::styled(
-                format!("{prefix}{item}"),
-                style,
-            )))
+            ListItem::new(Line::from(Span::styled(format!("{prefix}{item}"), style)))
         })
         .collect();
 

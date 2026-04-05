@@ -63,7 +63,10 @@ pub fn draw(f: &mut Frame, app: &App, area: Rect) {
     };
     let mp_desc_style = Style::default().fg(Color::DarkGray);
     items.push(ListItem::new(Line::from(vec![
-        Span::styled(format!("{mp_prefix}{mp_checkbox} Multi-Plugin Project"), mp_style),
+        Span::styled(
+            format!("{mp_prefix}{mp_checkbox} Multi-Plugin Project"),
+            mp_style,
+        ),
         Span::styled("  Generate multiple plugins in one project", mp_desc_style),
     ])));
 

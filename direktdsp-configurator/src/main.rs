@@ -9,10 +9,12 @@ use std::time::Duration;
 
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::execute;
-use ratatui::backend::CrosstermBackend;
+use crossterm::terminal::{
+    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
+};
 use ratatui::Terminal;
+use ratatui::backend::CrosstermBackend;
 
 use app::{App, Screen};
 
@@ -48,42 +50,42 @@ fn run(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Result<()> {
         terminal.draw(|f| ui::draw(f, &app))?;
 
         // Use a short poll timeout so we can update generation progress
-        if event::poll(Duration::from_millis(50))? {
-            if let Event::Key(key) = event::read()? {
-                // Global keybindings
-                match (key.modifiers, key.code) {
-                    (_, KeyCode::Char('q')) if app.screen == Screen::Welcome => {
-                        app.should_quit = true;
-                    }
-                    (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
-                        app.should_quit = true;
-                    }
-                    (KeyModifiers::CONTROL, KeyCode::Char('n')) => {
-                        app.next_screen();
-                        continue;
-                    }
-                    (KeyModifiers::CONTROL, KeyCode::Char('p')) => {
-                        app.prev_screen();
-                        continue;
-                    }
-                    _ => {}
+        if event::poll(Duration::from_millis(50))?
+            && let Event::Key(key) = event::read()?
+        {
+            // Global keybindings
+            match (key.modifiers, key.code) {
+                (_, KeyCode::Char('q')) if app.screen == Screen::Welcome => {
+                    app.should_quit = true;
                 }
+                (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
+                    app.should_quit = true;
+                }
+                (KeyModifiers::CONTROL, KeyCode::Char('n')) => {
+                    app.next_screen();
+                    continue;
+                }
+                (KeyModifiers::CONTROL, KeyCode::Char('p')) => {
+                    app.prev_screen();
+                    continue;
+                }
+                _ => {}
+            }
 
-                if app.should_quit {
-                    return Ok(());
-                }
+            if app.should_quit {
+                return Ok(());
+            }
 
-                // Per-screen input handling
-                match app.screen {
-                    Screen::Welcome => ui::screens::welcome::handle_input(&mut app, key),
-                    Screen::ProjectInfo => ui::screens::project_info::handle_input(&mut app, key),
-                    Screen::Formats => ui::screens::formats::handle_input(&mut app, key),
-                    Screen::Modules => ui::screens::modules::handle_input(&mut app, key),
-                    Screen::MultiPlugin => ui::screens::multi_plugin::handle_input(&mut app, key),
-                    Screen::BuildOptions => ui::screens::build_options::handle_input(&mut app, key),
-                    Screen::Review => {} // Read-only screen
-                    Screen::Generate => ui::screens::generate::handle_input(&mut app, key),
-                }
+            // Per-screen input handling
+            match app.screen {
+                Screen::Welcome => ui::screens::welcome::handle_input(&mut app, key),
+                Screen::ProjectInfo => ui::screens::project_info::handle_input(&mut app, key),
+                Screen::Formats => ui::screens::formats::handle_input(&mut app, key),
+                Screen::Modules => ui::screens::modules::handle_input(&mut app, key),
+                Screen::MultiPlugin => ui::screens::multi_plugin::handle_input(&mut app, key),
+                Screen::BuildOptions => ui::screens::build_options::handle_input(&mut app, key),
+                Screen::Review => {} // Read-only screen
+                Screen::Generate => ui::screens::generate::handle_input(&mut app, key),
             }
         }
     }
