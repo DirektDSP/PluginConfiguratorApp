@@ -1,0 +1,76 @@
+# DirektDSP Module Registry
+# Declares all available modules for the PluginTemplate.
+# Read by the TUI configurator for module selection and dependency resolution.
+# Read by ModuleSystem.cmake for conditional module inclusion.
+
+[modules.moonbase_JUCEClient]
+display_name = "Moonbase Licensing"
+description = "DRM/licensing system via Moonbase.sh"
+url = "https://github.com/AntaresMatt/moonbase_JUCEClient.git"
+branch = "main"
+cmake_option = "ENABLE_MOONBASE"
+submodule_path = "modules/moonbase_JUCEClient"
+cmake_target = "moonbase_JUCEClient"
+provides = ["licensing"]
+requires = []
+conflicts = []
+
+[modules.melatonin_inspector]
+display_name = "Melatonin Inspector"
+description = "Debug UI overlay for inspecting JUCE components"
+url = "https://github.com/sudara/melatonin_inspector.git"
+branch = "main"
+cmake_option = "ENABLE_MELATONIN"
+submodule_path = "modules/melatonin_inspector"
+cmake_target = "melatonin_inspector"
+provides = ["debug_ui"]
+requires = []
+conflicts = []
+
+[modules.clap_juce_extensions]
+display_name = "CLAP Format"
+description = "CLAP plugin format support via clap-juce-extensions"
+url = "https://github.com/free-audio/clap-juce-extensions.git"
+branch = "main"
+cmake_option = "ENABLE_CLAP"
+submodule_path = "modules/clap-juce-extensions"
+cmake_target = "clap_juce_extensions"
+provides = ["clap"]
+requires = []
+conflicts = []
+
+[modules.DirektDSP_GUI]
+display_name = "DirektDSP GUI Framework"
+description = "Shared GUI framework with config-driven editor, controls, and theming"
+url = "https://github.com/DirektDSP/DirektDSP_GUI.git"
+branch = "main"
+cmake_option = "ENABLE_DIREKTDSP_GUI"
+submodule_path = "modules/DirektDSP_GUI"
+cmake_target = "DirektDSP_GUI"
+provides = ["gui_framework"]
+requires = []
+conflicts = []
+
+[modules.cycfi_q]
+display_name = "Cycfi Q DSP Library"
+description = "C++ DSP library for pitch detection and audio processing"
+url = "https://github.com/cycfi/q.git"
+branch = "master"
+cmake_option = "ENABLE_CYCFI_Q"
+submodule_path = "modules/cycfi_q"
+cmake_target = "cycfi_q"
+provides = ["cycfi_dsp"]
+requires = ["cycfi_infra"]
+conflicts = []
+
+[modules.cycfi_infra]
+display_name = "Cycfi Infrastructure"
+description = "Base infrastructure library for Cycfi libraries"
+url = "https://github.com/cycfi/infra.git"
+branch = "master"
+cmake_option = "ENABLE_CYCFI_INFRA"
+submodule_path = "modules/cycfi_infra"
+cmake_target = "cycfi_infra"
+provides = ["cycfi_infra"]
+requires = []
+conflicts = []

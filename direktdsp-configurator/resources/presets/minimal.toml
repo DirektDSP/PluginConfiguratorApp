@@ -1,0 +1,39 @@
+schema_version = "1.0"
+
+[meta]
+name = "Minimal"
+description = "Bare-bones plugin with no optional modules"
+author = "DirektDSP"
+created = "2026-04-05T00:00:00Z"
+
+[project]
+name = "MyPlugin"
+product_name = "My Plugin"
+company_name = "DirektDSP"
+bundle_id = "com.direktdsp.myplugin"
+manufacturer_code = "Manu"
+plugin_code = "MyPl"
+version = "1.0.0"
+formats = ["VST3", "Standalone"]
+clap_features = "audio-effect"
+multi_plugin = false
+plugins = []
+
+[modules]
+moonbase = false
+melatonin = false
+clap = false
+direktdsp_gui = false
+cycfi_q = false
+common_layer = false
+
+[build]
+cpp_standard = 20
+copy_after_build = false
+ipp = false
+
+[generation]
+template_url = "https://github.com/DirektDSP/PluginTemplate.git"
+template_branch = "main"
+init_git = true
+run_setup_script = true

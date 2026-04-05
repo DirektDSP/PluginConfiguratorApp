@@ -1,0 +1,39 @@
+schema_version = "1.0"
+
+[meta]
+name = "Standard Audio FX"
+description = "Balanced starting point for audio effect plugins"
+author = "DirektDSP"
+created = "2026-04-05T00:00:00Z"
+
+[project]
+name = "MyEffect"
+product_name = "My Effect"
+company_name = "DirektDSP"
+bundle_id = "com.direktdsp.myeffect"
+manufacturer_code = "Manu"
+plugin_code = "MyFx"
+version = "1.0.0"
+formats = ["VST3", "AU", "CLAP", "Standalone"]
+clap_features = "audio-effect"
+multi_plugin = false
+plugins = []
+
+[modules]
+moonbase = false
+melatonin = true
+clap = true
+direktdsp_gui = false
+cycfi_q = false
+common_layer = true
+
+[build]
+cpp_standard = 23
+copy_after_build = true
+ipp = false
+
+[generation]
+template_url = "https://github.com/DirektDSP/PluginTemplate.git"
+template_branch = "main"
+init_git = true
+run_setup_script = true
