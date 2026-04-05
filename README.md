@@ -1,123 +1,105 @@
-# Plugin Configurator App
+# DirektDSP Plugin Configurator
 
-A desktop application for creating and configuring audio plugin projects based on custom template repositories.
+A terminal UI application for creating and configuring audio plugin projects from the [PluginTemplate](https://github.com/DirektDSP/PluginTemplate) repository.
 
 ## Overview
 
-Plugin Configurator is a tool designed for audio developers to quickly set up new plugin projects with proper structure and build configuration. It's inspired by JUCE's Projucer but focused on modern CMake-based workflows.
+The configurator walks you through project setup — name, formats, modules, build options — then generates a ready-to-build JUCE plugin project. It clones the template, writes a `project.toml` config, selectively initializes submodules, and scaffolds per-plugin directories for multi-plugin projects.
 
 ## Features
 
-- Create new audio plugin projects with proper CMake configuration
-- **Use any compatible GitHub template repository** as your project base
-- Configure support for VST3, AU, AUv3, CLAP, and Standalone formats
-- Set up GitHub Actions for CI/CD
-- Include testing frameworks and optional modules
-- Generate consistent, well-structured plugin projects
-- Ship with ready-to-use configuration presets (see `docs/presets.md`)
-
-## Template Compatibility
-
-While the app works out of the box with our [PluginTemplate](https://github.com/SeamusMullan/PluginTemplate.git) repository, you can use any GitHub template that follows the same structure:
-
-- CMake-based build system
-- JUCE as a submodule
-- Standard plugin source file organization
-- Support for the same plugin formats
+- **Config-driven generation** — writes `project.toml` + `options.cmake`, never modifies C++ or CMake source
+- **Plugin formats** — VST3, AU, AUv3, CLAP, Standalone
+- **Module system** — Moonbase licensing, Melatonin Inspector, CLAP extensions, DirektDSP GUI, cycfi::Q
+- **Multi-plugin projects** — PedalSuite-style projects with multiple plugins sharing dependencies
+- **Common implementation layer** — standard C++ interfaces for cross-plugin interop
+- **Preset system** — save/load configuration presets
+- **Selective submodule init** — only clones what you enable
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Git (for cloning the template and managing submodules)
-- CMake 3.15 or higher (for building the generated projects)
+- Rust toolchain (1.85+)
+- Git
+- CMake 3.25+ (for building generated projects)
 
-### Method 1: Running from source
-
-```bash
-# Clone the repository
-git clone https://github.com/SeamusMullan/PluginConfiguratorApp.git
-cd PluginConfiguratorApp
-
-# Create a virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python run.py
-```
-
-### Method 2: Installation via pip
+### Build from source
 
 ```bash
-# Clone the repository
-git clone https://github.com/SeamusMullan/PluginConfiguratorApp.git
-cd PluginConfiguratorApp
-
-# Install the package
-pip install .
-
-# Run the application
-plugin-configurator
+git clone https://github.com/DirektDSP/PluginConfiguratorApp.git
+cd PluginConfiguratorApp/direktdsp-configurator
+cargo build --release
 ```
+
+The binary is at `target/release/direktdsp-configurator`.
 
 ## Usage
 
-1. Launch the application using one of the methods above
-2. Enter the GitHub URL of your template repository (or use the default)
-3. Enter basic project information:
-   - Project Name: Internal name (no spaces)
-   - Product Name: Display name in DAWs
-   - Company Name: Your company
-   - Bundle ID: Unique identifier for your plugin
-   - Manufacturer Code: 4-character manufacturer code
-4. Select output directory where your project will be created
-5. Configure plugin formats and options in the Options panel
-6. Click "Generate Project"
-7. Open the generated project in your IDE and start developing!
+```bash
+cd direktdsp-configurator
+cargo run
+```
 
-## Configuration Options
+### Navigation
 
-### Plugin Formats
+| Key | Action |
+|-----|--------|
+| Ctrl+N | Next screen |
+| Ctrl+P | Previous screen |
+| Up/Down | Navigate items |
+| Space/Enter | Toggle / select |
+| Tab/Shift+Tab | Next/prev field (in editors) |
+| q | Quit (from Welcome screen) |
+| Ctrl+C | Quit (anywhere) |
 
-- VST3
-- Audio Unit (AU)
-- Audio Unit v3 (AUv3)
-- CLAP
-- Standalone Application
+### Screens
 
-### Config Features
+1. **Welcome** — New project, load preset, or recent
+2. **Project Info** — Name, company, bundle ID, codes, version
+3. **Formats** — Plugin format toggles + multi-plugin toggle
+4. **Modules** — Enable/disable optional modules with dependency resolution
+5. **Multi-Plugin** *(conditional)* — Add/remove/edit per-plugin metadata
+6. **Build Options** — C++ standard, copy-after-build, IPP
+7. **Review** — Configuration summary + file tree preview
+8. **Generate** — Output directory, progress, log
 
-- Initialize Git Repository
-- Include Melatonin Inspector (debugging UI)
-- Moonbase Licensing
-- CLAP Export Support
-- Use JUCE Develop Branch
-- XCode Prettify (for macOS development)
+## Generated Project Structure
 
-### JUCE Options
+### Single plugin
 
-- Enable JUCE_USE_CURL
-- Enable JUCE_WEB_BROWSER
-- Enable JUCE_VST3_CAN_REPLACE_VST2
+```
+MyPlugin/
+├── CMakeLists.txt
+├── project.toml
+├── source/
+├── common/
+├── modules/
+├── assets/
+├── tests/
+└── scripts/
+```
 
-## Creating Compatible Template Repositories
+### Multi-plugin
 
-To create a repository that works with this configurator:
-
-1. Fork the [PluginTemplate](https://github.com/SeamusMullan/PluginTemplate.git) repository
-2. Modify it to your needs while keeping the basic structure
-3. Ensure your CMakeLists.txt can accept the same variables our configurator provides
-4. Use your fork's URL in the configurator
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+```
+MyProject/
+├── CMakeLists.txt
+├── project.toml
+├── plugins/
+│   ├── PluginA/
+│   │   ├── CMakeLists.txt
+│   │   ├── source/
+│   │   └── assets/
+│   └── PluginB/
+│       ├── CMakeLists.txt
+│       ├── source/
+│       └── assets/
+├── common/
+├── modules/
+└── scripts/
+```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT — see [LICENSE](LICENSE).
